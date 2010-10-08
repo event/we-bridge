@@ -1,0 +1,11 @@
+
+table #board {
+    cellpadding:3
+}
+
+table #table_center {
+    margin-left:auto;
+    margin-right:auto;
+    font-weight:bold
+}
+
