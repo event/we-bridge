@@ -15,13 +15,20 @@
 # along with Webridge.  If not, see <http://www.gnu.org/licenses/>.
 
 
+from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 
 
 class MainHandler(webapp.RequestHandler):
     def get(self):
-        self.response.out.write('Hello shitty world!')
+        user = users.get_current_user()
+
+        if user:
+            self.response.headers['Content-Type'] = 'text/plain'
+            self.response.out.write('Hello, ' + user.nickname())
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
 
 
 def main():

@@ -16,7 +16,32 @@
 
 import random as rand
 
+SUIT_SPADE = 0
+SUIT_HEART = 1
+SUIT_DIAMOND = 2
+SUIT_CLUB = 3
+
 def get_deck() :
     res = range(52)
     rand.Random().shuffle(res)
     return (res[0:13], res[13:26], res[26:39], res[39:52])
+
+def get_by_suit(hand, suit) :
+    len(filter(lambda x: x >= suit * 13 and x < (suit+1) * 13, hand))
+
+def get_distr(hand) :
+    s = 0
+    h = 0
+    d = 0
+    c = 0
+    for crd in hand :
+        if crd < 13 :
+            s += 1
+        elif crd < 26 :
+            h += 1
+        elif crd < 39 :
+            d += 1
+        else :
+            c += 1
+    return (s, h, d, c)
+
