@@ -19,20 +19,44 @@ from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 
+class Redirector(webapp.RequestHandler) :
+    def get(self) :
+        self.redirect('index.html')
 
 class MainHandler(webapp.RequestHandler):
     def get(self):
         user = users.get_current_user()
 
-        if user:
-            self.response.headers['Content-Type'] = 'text/plain'
-            self.response.out.write('Hello, ' + user.nickname())
+        if user is not None:
+            self.response.headers['Content-Type'] = 'application/json'
+            self.response.out.write('''[{"type":"hand", "value":{"player":"own", "suits":
+[{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
+{"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}},
+{"type":"hand", "value":{"player":"part", "suits":
+[{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
+{"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}},
+{"type":"hand", "value":{"player":"left", "suits":
+[{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
+{"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}},
+{"type":"hand", "value":{"player":"right", "suits":
+[{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
+{"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}}]''')
         else:
             self.redirect(users.create_login_url(self.request.uri))
 
+class StaticHandler(webapp.RequestHandler) :
+    def get(self):
+        user = users.get_current_user()
+
+        if user is not None:
+            self.response.out.write(open('index.html', 'rb').read())
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
 
 def main():
-    application = webapp.WSGIApplication([('/', MainHandler)],
+    application = webapp.WSGIApplication([('/', Redirector),
+                                          ('/index.html', StaticHandler),
+                                          ('/update.json', MainHandler)],
                                          debug=True)
     util.run_wsgi_app(application)
 
