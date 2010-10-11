@@ -47,24 +47,9 @@ class MainHandler(webapp.RequestHandler):
 
         if user is not None:
             self.response.headers['Content-Type'] = 'application/json'
-            deck = bridge.get_deck()
-            before_json = add_players(map(to_dict, deck))
-            res = json.dumps(before_json)
-            logging.warning(before_json)
-            logging.warning(res)
+            res = json.dumps(add_players(map(to_dict, bridge.get_deck())))
+            logging.debug(res)
             self.response.out.write(res)
-#             self.response.out.write('''[{"type":"hand", "value":{"player":"own", "suits":
-# [{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
-# {"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}},
-# {"type":"hand", "value":{"player":"part", "suits":
-# [{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
-# {"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}},
-# {"type":"hand", "value":{"player":"left", "suits":
-# [{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
-# {"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}},
-# {"type":"hand", "value":{"player":"right", "suits":
-# [{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
-# {"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}}]''')
         else:
             self.redirect(users.create_login_url(self.request.uri))
 
