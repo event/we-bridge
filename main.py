@@ -14,14 +14,32 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Webridge.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
+from django.utils  import simplejson as json
+import django
+import bridge
 
 class Redirector(webapp.RequestHandler) :
     def get(self) :
         self.redirect('index.html')
+
+def to_dict(hand) :
+    s, h, d, c = bridge.split_by_suits(hand)
+    return {'type': 'hand', 'value':{'suits':[{'suit': 'spades', 'cards': s}
+                                              , {'suit': 'hearts', 'cards': h}
+                                              , {'suit': 'diamonds', 'cards': d}
+                                              , {'suit': 'clubs', 'cards': c}]}}
+
+def add_players(hand_list) :
+    hand_list[0]['value']['player'] = 'own'
+    hand_list[1]['value']['player'] = 'left'
+    hand_list[2]['value']['player'] = 'right'
+    hand_list[3]['value']['player'] = 'part'
+    return hand_list
 
 class MainHandler(webapp.RequestHandler):
     def get(self):
@@ -29,18 +47,24 @@ class MainHandler(webapp.RequestHandler):
 
         if user is not None:
             self.response.headers['Content-Type'] = 'application/json'
-            self.response.out.write('''[{"type":"hand", "value":{"player":"own", "suits":
-[{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
-{"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}},
-{"type":"hand", "value":{"player":"part", "suits":
-[{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
-{"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}},
-{"type":"hand", "value":{"player":"left", "suits":
-[{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
-{"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}},
-{"type":"hand", "value":{"player":"right", "suits":
-[{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
-{"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}}]''')
+            deck = bridge.get_deck()
+            before_json = add_players(map(to_dict, deck))
+            res = json.dumps(before_json)
+            logging.warning(before_json)
+            logging.warning(res)
+            self.response.out.write(res)
+#             self.response.out.write('''[{"type":"hand", "value":{"player":"own", "suits":
+# [{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
+# {"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}},
+# {"type":"hand", "value":{"player":"part", "suits":
+# [{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
+# {"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}},
+# {"type":"hand", "value":{"player":"left", "suits":
+# [{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
+# {"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}},
+# {"type":"hand", "value":{"player":"right", "suits":
+# [{"suit":"spades", "cards":"K Q J 10 5 2"}, {"suit":"hearts", "cards":"K Q J 10 5 2"}, 
+# {"suit":"diamonds", "cards":"K Q J 10 5 2"}, {"suit":"clubs", "cards":"K Q J 10 5 2"}]}}]''')
         else:
             self.redirect(users.create_login_url(self.request.uri))
 

@@ -21,10 +21,36 @@ SUIT_HEART = 1
 SUIT_DIAMOND = 2
 SUIT_CLUB = 3
 
+RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+
 def get_deck() :
     res = range(52)
     rand.Random().shuffle(res)
     return (res[0:13], res[13:26], res[26:39], res[39:52])
+
+def split_by_suits(hand) :
+    def as_str(suit) :
+        return ' '.join(map(lambda x: RANKS[x], suit))
+    s, h, d, c = [], [], [], []
+    for crd in hand :
+        if crd < SUIT_HEART * 13 :
+            s.append(crd)
+        elif crd < SUIT_DIAMOND * 13 :
+            h.append(crd - 13)
+        elif crd < SUIT_CLUB * 13 :
+            d.append(crd - 26)
+        else :
+            c.append(crd - 39)
+    s.sort()
+    s.reverse()
+    h.sort()
+    h.reverse()
+    d.sort()
+    d.reverse()
+    c.sort()
+    c.reverse()
+    return (as_str(s), as_str(h), as_str(d), as_str(c))
+    
 
 def get_by_suit(hand, suit) :
     len(filter(lambda x: x >= suit * 13 and x < (suit+1) * 13, hand))
