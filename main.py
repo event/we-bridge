@@ -48,8 +48,8 @@ user_queue = Queue.Queue()
 def empty_queue() :
     res = []
     try :
-        while True :
-            res.append(user_queue.get_nowait())
+#        while True :
+        res.append(user_queue.get_nowait())
     except Queue.Empty :
         pass
     return res

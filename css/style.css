@@ -22,3 +22,7 @@ body {
 .hand_container div {
     display:inline;
 }
+
+.card {
+    cursor:pointer;
+}
