@@ -36,14 +36,16 @@ function load_suit(player, suit) {
     var s = suit.suit;
     var cards = suit.cards;
     var divid = "#" + player + "_" + s;
-    var card_str = cards.replace(/([2-9JQKA]|10)/g, "<div class='card' onclick=\"do_lead('" 
+    var card_str = cards.replace(/([2-9JQKA]|10)/g, "<div class='card' id='" + s + "_$1'onclick=\"do_lead('" 
 				 + player + "', '"+ s + "', '$1')\">$1</div>");
     $(divid).html(card_str);
 }
 
 function do_lead(player, suit, rank) {
-    var divid = "#" + player + "_lead";
-    $(divid).html(img_by_suit(suit) + rank);
+    var card_div_id = "#" + suit + "_" + rank;
+    $(card_div_id).detach();
+    var lead_div_id = "#" + player + "_lead";
+    $(lead_div_id).html(img_by_suit(suit) + rank);
 }
 
 function ajaxErrorHandler(event, xhr, opts, error) {
