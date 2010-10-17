@@ -45,6 +45,13 @@ def add_players(hand_list) :
 
 user_queue = Queue.Queue()
 
+def do_lead(player, suit, rank) :
+#    if valid_lead(player, suit, rank) :
+    user_queue.put_nowait({'type': 'lead', 'value': {'player': player, 'suit': suit, 'rank': rank}})
+
+action_processors = {'lead': do_lead}
+
+
 def empty_queue() :
     res = []
     try :
@@ -54,7 +61,7 @@ def empty_queue() :
         pass
     return res
 
-class MainHandler(webapp.RequestHandler):
+class UpdateHandler(webapp.RequestHandler):
     def get(self):
         user = users.get_current_user()
 
@@ -62,8 +69,24 @@ class MainHandler(webapp.RequestHandler):
             self.response.headers['Content-Type'] = 'application/json'
             data = empty_queue()
             res = json.dumps(data)
-            logging.debug(res)
+            # logging.info(res)
             self.response.out.write(res)
+        else:
+            self.redirect(users.create_login_url(self.request.uri))
+
+class ActionHandler(webapp.RequestHandler):
+    def post(self):
+        user = users.get_current_user()
+
+        if user is not None:
+            arglist = self.request.query_string.split('/')
+            action = arglist[0]
+            try :
+                f = action_processors[action]
+            except KeyError:
+                self.response.set_status(404)
+            else :
+                f(*arglist[1:])
         else:
             self.redirect(users.create_login_url(self.request.uri))
 
@@ -72,7 +95,7 @@ class StaticHandler(webapp.RequestHandler) :
         user = users.get_current_user()
 
         if user is not None:
-            self.response.out.write(open('index.html', 'rb').read())
+            self.response.out.write(open(self.request.path[1:], 'rb').read())
             hands = add_players(map(to_dict, bridge.get_deck()))
             for h in hands :
                 user_queue.put_nowait(h)
@@ -82,7 +105,8 @@ class StaticHandler(webapp.RequestHandler) :
 def main():
     application = webapp.WSGIApplication([('/', Redirector),
                                           ('/index.html', StaticHandler),
-                                          ('/update.json', MainHandler)],
+                                          ('/update.json', UpdateHandler),
+                                          ('/action.json', ActionHandler)],
                                          debug=True)
     util.run_wsgi_app(application)
 
