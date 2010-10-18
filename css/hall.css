@@ -1,0 +1,23 @@
+body {
+    width:100%;
+    background-color:green;
+}
+
+#table_list {
+    width:90%;
+    padding-left:4px;
+    align:left;
+    font-weight:bold;
+    background-color:gray;
+}
+
+.table {
+    width:90%;
+}
+
+.player {
+    color: blue;
+    width:20%;
+    height: 40px;
+    border: 2px solid black;
+}

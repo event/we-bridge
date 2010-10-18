@@ -43,10 +43,18 @@ def add_players(hand_list) :
     hand_list[3]['value']['player'] = 'part'
     return hand_list
 
+def create_test_hall_updates() :
+    return [{'type': 'table.add'}, {'type': 'table.add'}
+            # , {'type': 'table.remove', 'value': 0}
+            # , {'type': 'player.sit', 'value': {'name': 'jimmy', 'table': 0, 'position', 'N'}}
+            # , {'type': 'player.sit', 'value': {'name': 'johny', 'table': 0, 'position', 'S'}}
+            # , {'type': 'player.leave', 'value': {'table': 0, 'position', 'S'}}
+            ]
+
 user_queue = Queue.Queue()
 
 def do_lead(user, player, suit, rank) :
-#    if valid_lead(user, player, suit, rank) :
+    #    if valid_lead(user, player, suit, rank) :
     user_queue.put_nowait({'type': 'lead', 
                            'value': {'player': player, 'suit': suit, 'rank': rank, 'allowed': [suit]}})
 
@@ -96,16 +104,23 @@ class StaticHandler(webapp.RequestHandler) :
         user = users.get_current_user()
 
         if user is not None:
-            self.response.out.write(open(self.request.path[1:], 'rb').read())
-            hands = add_players(map(to_dict, bridge.get_deck()))
-            for h in hands :
-                user_queue.put_nowait(h)
+            page = self.request.path[1:]
+            self.response.out.write(open(page, 'rb').read())
+            if page == 'table.html' :
+                hands = add_players(map(to_dict, bridge.get_deck()))
+                for h in hands :
+                    user_queue.put_nowait(h)
+            elif page == 'hall.html':
+                test_updates = create_test_hall_updates()
+                for u in test_updates :
+                    user_queue.put_nowait(u)
         else:
             self.redirect(users.create_login_url(self.request.uri))
 
 def main():
     application = webapp.WSGIApplication([('/', Redirector),
-                                          ('/index.html', StaticHandler),
+                                          ('/hall.html', StaticHandler),
+                                          ('/table.html', StaticHandler),
                                           ('/update.json', UpdateHandler),
                                           ('/action.json', ActionHandler)],
                                          debug=True)
