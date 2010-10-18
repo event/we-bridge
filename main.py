@@ -46,8 +46,8 @@ def add_players(hand_list) :
 def create_test_hall_updates() :
     return [{'type': 'table.add'}, {'type': 'table.add'}
             , {'type': 'table.remove', 'value': 0}
-            # , {'type': 'player.sit', 'value': {'name': 'jimmy', 'table': 0, 'position', 'N'}}
-            # , {'type': 'player.sit', 'value': {'name': 'johny', 'table': 0, 'position', 'S'}}
+            , {'type': 'player.sit', 'value': {'name': 'jimmy', 'table': 0, 'position': 'N'}}
+            , {'type': 'player.sit', 'value': {'name': 'johny', 'table': 0, 'position': 'S'}}
             # , {'type': 'player.leave', 'value': {'table': 0, 'position', 'S'}}
             ]
 

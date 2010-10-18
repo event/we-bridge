@@ -20,4 +20,5 @@ body {
     width:20%;
     height: 40px;
     border: 2px solid black;
+    text-align: center; 
 }

@@ -1,3 +1,5 @@
+var positions = ["N", "S", "E", "W"]
+
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
     $(document.documentElement).keypress(updator)
@@ -19,8 +21,13 @@ function process_update(i, data) {
 	$("#table_list tr:last").addClass("table");
 	$("#table_list tr:last td").addClass("player");
     } else if (data.type == "table.remove") {
-	$("#table_list tr:eq(" + data.value + ")").remove();
+	$("#table_list tr:eq(" + (data.value + 1) + ")").remove();
     } else if (data.type == "player.sit") {
+	var v = data.value;
+	var table_num = v.table + 1;
+	var name = v.name;
+	var pos = v.position;
+	$("#table_list tr:eq(" + table_num + ") td:eq(" + $.inArray(pos, positions) + ")").html(name);
     } else if (data.type == "player.leave") {
     } else if (data.type == "text") {
 	window.alert("text message is not supported yet!");
