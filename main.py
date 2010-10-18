@@ -45,9 +45,10 @@ def add_players(hand_list) :
 
 user_queue = Queue.Queue()
 
-def do_lead(player, suit, rank) :
-#    if valid_lead(player, suit, rank) :
-    user_queue.put_nowait({'type': 'lead', 'value': {'player': player, 'suit': suit, 'rank': rank}})
+def do_lead(user, player, suit, rank) :
+#    if valid_lead(user, player, suit, rank) :
+    user_queue.put_nowait({'type': 'lead', 
+                           'value': {'player': player, 'suit': suit, 'rank': rank, 'allowed': [suit]}})
 
 action_processors = {'lead': do_lead}
 
@@ -66,10 +67,10 @@ class UpdateHandler(webapp.RequestHandler):
         user = users.get_current_user()
 
         if user is not None:
-            self.response.headers['Content-Type'] = 'application/json'
             data = empty_queue()
             res = json.dumps(data)
             # logging.info(res)
+            self.response.headers['Content-Type'] = 'application/json'
             self.response.out.write(res)
         else:
             self.redirect(users.create_login_url(self.request.uri))
@@ -86,7 +87,7 @@ class ActionHandler(webapp.RequestHandler):
             except KeyError:
                 self.response.set_status(404)
             else :
-                f(*arglist[1:])
+                f(user, *arglist[1:])
         else:
             self.redirect(users.create_login_url(self.request.uri))
 

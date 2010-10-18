@@ -21,7 +21,11 @@ function get_json() {
 function process_update(i, data) {
     if (data.type == "lead"){
 	var v = data.value;
-	process_lead(v.player, v.suit, v.rank);
+	var allowed = v.allowed;
+	if (allowed == null) {
+	    allowed = 'any';
+	}
+	process_lead(v.player, v.suit, v.rank, allowed);
     } else if (data.type == "bid") {
 	window.alert("bid is not supported yet!");
     } else if (data.type == "text") {
@@ -48,17 +52,25 @@ function load_suit(player, suit) {
     $(divid).html(card_str);
 }
 
-function process_lead(player, suit, rank) {
+function process_lead(player, suit, rank, allowed) {
     var card_div_id = "#" + suit + "_" + rank;
     $(card_div_id).detach();
     var lead_div_id = "#" + player + "_lead";
     $(lead_div_id).html(img_by_suit(suit) + rank);
-    $(".card").unbind('click');
-    $(".card").addClass("default_cursor");
     var np = next_player(player);
     var np_class = ".card_" + np;
-    $(np_class).bind("click", np, do_lead);
-    $(np_class).removeClass("default_cursor");
+    $(".card").unbind('click');
+    $(".card").addClass("default_cursor");
+    if (allowed == 'any') {
+	$(np_class).bind("click", np, do_lead);
+	$(np_class).removeClass("default_cursor");
+    } else {
+	for (var i = 0; i < allowed.length; i += 1) {
+	    var np_suit_class = np_class + "_" + allowed[i];
+	    $(np_suit_class).bind("click", np, do_lead);
+	    $(np_suit_class).removeClass("default_cursor");
+	}
+    }
 }
 
 function next_player(player) {
