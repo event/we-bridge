@@ -1,5 +1,5 @@
 var positions = ["N", "S", "E", "W"];
-var empty_sit = "<a>take a sit</a>";
+var empty_sit = "<a href=table.html?{id}>take a sit</a>";
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
@@ -21,7 +21,7 @@ function process_update(i, data) {
 	$("#table_list").append("<tr><td></td><td></td><td></td><td></td></tr>");
 	$("#table_list tr:last").addClass("table");
 	$("#table_list tr:last td").addClass("player");
-	$("#table_list tr:last td").html(empty_sit);
+	$("#table_list tr:last td").html(empty_sit.replace("{id}", data.value));
     } else if (data.type == "table.remove") {
 	$("#table_list tr:eq(" + (data.value + 1) + ")").remove();
     } else if (data.type == "player.sit") {

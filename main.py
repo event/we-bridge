@@ -16,6 +16,7 @@
 
 import logging
 import Queue
+import threading
 
 from google.appengine.api import users
 from google.appengine.ext import webapp
@@ -24,6 +25,15 @@ from django.utils  import simplejson as json
 
 import bridge
 
+class TableIdGen :
+    lock = threading.Lock()
+    i = 0;
+    def next(self) :
+        self.lock.acquire();
+        res = self.i
+        self.i += 1
+        self.lock.release()
+        return res
 
 class Redirector(webapp.RequestHandler) :
     def get(self) :
@@ -43,8 +53,9 @@ def add_players(hand_list) :
     hand_list[3]['value']['player'] = 'part'
     return hand_list
 
+table_idgen = TableIdGen()
 def create_test_hall_updates() :
-    return [{'type': 'table.add'}, {'type': 'table.add'}
+    return [{'type': 'table.add', 'value':table_idgen.next()}, {'type': 'table.add', 'value':table_idgen.next()}
             , {'type': 'table.remove', 'value': 0}
             , {'type': 'player.sit', 'value': {'name': 'jimmy', 'table': 0, 'position': 'N'}}
             , {'type': 'player.sit', 'value': {'name': 'johny', 'table': 0, 'position': 'S'}}
@@ -106,11 +117,11 @@ class StaticHandler(webapp.RequestHandler) :
         if user is not None:
             page = self.request.path[1:]
             self.response.out.write(open(page, 'rb').read())
-            if page == 'table.html' :
+            if page.startswith('table.html') :
                 hands = add_players(map(to_dict, bridge.get_deck()))
                 for h in hands :
                     user_queue.put_nowait(h)
-            elif page == 'hall.html':
+            elif page.startswith('hall.html') :
                 test_updates = create_test_hall_updates()
                 for u in test_updates :
                     user_queue.put_nowait(u)
