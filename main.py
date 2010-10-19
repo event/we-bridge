@@ -48,7 +48,7 @@ def create_test_hall_updates() :
             , {'type': 'table.remove', 'value': 0}
             , {'type': 'player.sit', 'value': {'name': 'jimmy', 'table': 0, 'position': 'N'}}
             , {'type': 'player.sit', 'value': {'name': 'johny', 'table': 0, 'position': 'S'}}
-            # , {'type': 'player.leave', 'value': {'table': 0, 'position', 'S'}}
+            , {'type': 'player.leave', 'value': {'table': 0, 'position': 'S'}}
             ]
 
 user_queue = Queue.Queue()

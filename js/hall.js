@@ -1,4 +1,5 @@
-var positions = ["N", "S", "E", "W"]
+var positions = ["N", "S", "E", "W"];
+var empty_sit = "<a>take a sit</a>";
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
@@ -20,6 +21,7 @@ function process_update(i, data) {
 	$("#table_list").append("<tr><td></td><td></td><td></td><td></td></tr>");
 	$("#table_list tr:last").addClass("table");
 	$("#table_list tr:last td").addClass("player");
+	$("#table_list tr:last td").html(empty_sit);
     } else if (data.type == "table.remove") {
 	$("#table_list tr:eq(" + (data.value + 1) + ")").remove();
     } else if (data.type == "player.sit") {
@@ -29,6 +31,10 @@ function process_update(i, data) {
 	var pos = v.position;
 	$("#table_list tr:eq(" + table_num + ") td:eq(" + $.inArray(pos, positions) + ")").html(name);
     } else if (data.type == "player.leave") {
+	var v = data.value;
+	var table_num = v.table + 1;
+	var pos = v.position;
+	$("#table_list tr:eq(" + table_num + ") td:eq(" + $.inArray(pos, positions) + ")").html(empty_sit);
     } else if (data.type == "text") {
 	window.alert("text message is not supported yet!");
     }
