@@ -18,10 +18,11 @@ function get_json() {
 
 function process_update(i, data) {
     if (data.type == "table.add"){
-	$("#table_list").append("<tr><td></td><td></td><td></td><td></td></tr>");
-	$("#table_list tr:last").addClass("table");
-	$("#table_list tr:last td").addClass("player");
-	$("#table_list tr:last td").each(empty_sit.replace("{id}", data.value));
+	$("#table_list").append("<tr class='table'><td class='player'></td><td class='player'></td>"
+				+ "<td class='player'></td><td class='player'></td></tr>");
+	$("#table_list tr:last td").each(function(i, e){
+		$(e).append(empty_sit.replace("{id}", data.value + "/" + positions[i]))});
+	$("#table_list tr:last").data("table_id", data.value);
     } else if (data.type == "table.remove") {
 	$("#table_list tr:eq(" + (data.value + 1) + ")").remove();
     } else if (data.type == "player.sit") {
@@ -33,8 +34,10 @@ function process_update(i, data) {
     } else if (data.type == "player.leave") {
 	var v = data.value;
 	var table_num = v.table + 1;
-	var pos = v.position;
-	$("#table_list tr:eq(" + table_num + ") td:eq(" + $.inArray(pos, positions) + ")").html(empty_sit);
+	var pos = v.position;	
+	var table_id = $("#table_list tr:eq(" + table_num + ")").data("table_id");
+	$("#table_list tr:eq(" + table_num + ") td:eq(" + $.inArray(pos, positions) + ")")
+	    .html(empty_sit.replace("{id}", table_id + "/" + pos));
     } else if (data.type == "text") {
 	window.alert("text message is not supported yet!");
     }
