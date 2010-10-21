@@ -21,7 +21,17 @@ SUIT_HEART = 1
 SUIT_DIAMOND = 2
 SUIT_CLUB = 3
 
+SUITS = ['S', 'H', 'D', 'C']
 RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+
+def suit_rank_to_num(suit, rank):
+    return 13 * SUITS.index(suit) + RANKS.index(rank)
+
+def num_to_suit_rank(num) :
+    return (SUITS[num / 13], RANKS[num % 13])
+    
+def check_lead(hand, card, current_round):
+    return True
 
 def get_deck() :
     res = range(52)
