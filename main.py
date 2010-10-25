@@ -76,7 +76,8 @@ def is_deck_empty(deck) :
     return result
 
 def do_lead_server(user, player, suit, rank) :
-    hand = current_deck[player_names.index(player)]
+    current_hand = player_names.index(player)
+    hand = current_deck[current_hand]
     last_round = lead_history[-1]
     if len(last_round) == 4 :
         current_round = []
@@ -88,13 +89,24 @@ def do_lead_server(user, player, suit, rank) :
     if result :
         hand.remove(card)
         current_round.append(card)
-    return result
+        if len(current_round) == 4 :
+            next_allowed = 'any' 
+        else : 
+            next_hand = current_deck[(current_hand + 1) % 4]
+            if bridge.has_same_suit(next_hand, card)  :
+                next_allowed = suit
+            else : 
+                next_allowed = 'any'
+    else: 
+        next_allowed = None
+    return result, next_allowed
 
 
 def do_lead(user, player, suit, rank) :
-    if do_lead_server(user, player, suit[0].upper(), rank) :
+    correct_lead, next_allowed = do_lead_server(user, player, suit, rank)
+    if  correct_lead :
         user_queue.put_nowait({'type': 'lead', 
-                           'value': {'player': player, 'suit': suit, 'rank': rank, 'allowed': [suit]}})
+                           'value': {'player': player, 'suit': suit, 'rank': rank, 'allowed': next_allowed}})
         if is_deck_empty(current_deck) :
             create_and_send_new_deck()
 

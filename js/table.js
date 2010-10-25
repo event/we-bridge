@@ -59,17 +59,15 @@ function process_lead(player, suit, rank, allowed) {
     $(lead_div_id).html(img_by_suit(suit) + rank);
     var np = next_player(player);
     var np_class = ".card_" + np;
-    $(".card").unbind('click');
+    $(".card").unbind("click");
     $(".card").addClass("default_cursor");
     if (allowed == 'any') {
 	$(np_class).bind("click", np, do_lead);
 	$(np_class).removeClass("default_cursor");
     } else {
-	for (var i = 0; i < allowed.length; i += 1) {
-	    var np_suit_class = np_class + "_" + allowed[i];
-	    $(np_suit_class).bind("click", np, do_lead);
-	    $(np_suit_class).removeClass("default_cursor");
-	}
+	var np_suit_class = np_class + "_" + allowed;
+	$(np_suit_class).bind("click", np, do_lead);
+	$(np_suit_class).removeClass("default_cursor");
     }
 }
 

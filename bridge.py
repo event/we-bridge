@@ -21,7 +21,7 @@ SUIT_HEART = 1
 SUIT_DIAMOND = 2
 SUIT_CLUB = 3
 
-SUITS = ['S', 'H', 'D', 'C']
+SUITS = ['spades', 'hearts', 'diamonds', 'clubs']
 RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
 def suit_rank_to_num(suit, rank):
@@ -29,7 +29,17 @@ def suit_rank_to_num(suit, rank):
 
 def num_to_suit_rank(num) :
     return (SUITS[num / 13], RANKS[num % 13])
-    
+
+def has_same_suit(hand, card) :
+    lbound = (card / 13) * 13
+    hbound = lbound + 13
+    i = len(hand)
+    result = False
+    while i > 0 and not result :
+        i -= 1
+        result = hand[i] > lbound and hand[i] < hbound
+    return result
+
 def check_lead(hand, card, current_round):
     return True
 
