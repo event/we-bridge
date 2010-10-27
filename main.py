@@ -24,6 +24,7 @@ from google.appengine.ext.webapp import util
 from django.utils  import simplejson as json
 
 import bridge
+import actions
 
 class TableIdGen :
     lock = threading.Lock()
@@ -35,25 +36,9 @@ class TableIdGen :
         self.lock.release()
         return res
 
-player_names = ['own', 'left', 'right', 'part']
-
-class Redirector(webapp.RequestHandler) :
-    def get(self) :
-        self.redirect('index.html')
-
-def to_dict(hand) :
-    s, h, d, c = bridge.split_by_suits(hand)
-    return {'type': 'hand', 'value':{'suits':[{'suit': 'spades', 'cards': s}
-                                              , {'suit': 'hearts', 'cards': h}
-                                              , {'suit': 'diamonds', 'cards': d}
-                                              , {'suit': 'clubs', 'cards': c}]}}
-
-def add_players(hand_list) :
-    for i in xrange(4) :
-        hand_list[i]['value']['player'] = player_names[i]
-    return hand_list
-
 table_idgen = TableIdGen()
+
+
 def create_test_hall_updates() :
     return [{'type': 'table.add', 'value':table_idgen.next()}, {'type': 'table.add', 'value':table_idgen.next()}
             , {'type': 'table.remove', 'value': 0}
@@ -63,54 +48,6 @@ def create_test_hall_updates() :
             ]
 
 user_queue = Queue.Queue()
-current_deck = None
-lead_history = None
-
-def is_deck_empty(deck) :
-    result = True;
-    i = len(deck)
-    while i > 0 and result :
-        i -= 1
-        result = len(deck[i]) == 0
-        
-    return result
-
-def do_lead_server(user, player, suit, rank) :
-    current_hand = player_names.index(player)
-    hand = current_deck[current_hand]
-    last_round = lead_history[-1]
-    if len(last_round) == 4 :
-        current_round = []
-        lead_history.append(current_round)
-    else :
-        current_round = last_round
-    card = bridge.suit_rank_to_num(suit, rank)
-    result = bridge.check_lead(hand, card, current_round)
-    if result :
-        hand.remove(card)
-        current_round.append(card)
-        if len(current_round) == 4 :
-            next_allowed = 'any' 
-        else : 
-            next_hand = current_deck[(current_hand + 1) % 4]
-            if bridge.has_same_suit(next_hand, card)  :
-                next_allowed = suit
-            else : 
-                next_allowed = 'any'
-    else: 
-        next_allowed = None
-    return result, next_allowed
-
-
-def do_lead(user, player, suit, rank) :
-    correct_lead, next_allowed = do_lead_server(user, player, suit, rank)
-    if  correct_lead :
-        user_queue.put_nowait({'type': 'lead', 
-                           'value': {'player': player, 'suit': suit, 'rank': rank, 'allowed': next_allowed}})
-        if is_deck_empty(current_deck) :
-            create_and_send_new_deck()
-
-action_processors = {'lead': do_lead}
 
 def empty_queue() :
     res = []
@@ -120,6 +57,10 @@ def empty_queue() :
     except Queue.Empty :
         pass
     return res
+
+class Redirector(webapp.RequestHandler) :
+    def get(self) :
+        self.redirect('index.html')
 
 class UpdateHandler(webapp.RequestHandler):
     def get(self):
@@ -142,23 +83,13 @@ class ActionHandler(webapp.RequestHandler):
             arglist = self.request.query_string.split('/')
             action = arglist[0]
             try :
-                f = action_processors[action]
+                f = actions.action_processors[action]
             except KeyError:
                 self.response.set_status(404)
             else :
-                f(user, *arglist[1:])
+                map(user_queue.put_nowait, f(user, *arglist[1:]))
         else:
             self.redirect(users.create_login_url(self.request.uri))
-
-def create_and_send_new_deck() :
-    global current_deck
-    global lead_history
-    deck = bridge.get_deck()
-    current_deck = deck
-    hands = add_players(map(to_dict, deck))
-    lead_history = [[]]
-    for h in hands :
-        user_queue.put_nowait(h)
 
 class StaticHandler(webapp.RequestHandler) :
     def get(self):
@@ -168,11 +99,9 @@ class StaticHandler(webapp.RequestHandler) :
             page = self.request.path[1:]
             self.response.out.write(open(page, 'rb').read())
             if page.startswith('table.html') :
-                create_and_send_new_deck()
+                map(user_queue.put_nowait, actions.create_new_deck())
             elif page.startswith('hall.html') :
-                test_updates = create_test_hall_updates()
-                for u in test_updates :
-                    user_queue.put_nowait(u)
+                map(user_queue.put_nowait, create_test_hall_updates())
         else:
             self.redirect(users.create_login_url(self.request.uri))
 

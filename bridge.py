@@ -40,6 +40,15 @@ def has_same_suit(hand, card) :
         result = hand[i] > lbound and hand[i] < hbound
     return result
 
+def is_deck_empty(deck) :
+    result = True;
+    i = len(deck)
+    while i > 0 and result :
+        i -= 1
+        result = len(deck[i]) == 0
+        
+    return result
+
 def check_lead(hand, card, current_round):
     return True
 
