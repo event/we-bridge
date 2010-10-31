@@ -28,12 +28,14 @@ class Deal(db.Model) :
     createDate = db.DateTimeProperty(auto_now_add=True)
     hand2side = {'N' : 'n_hand', 'S' : 's_hand', 'E' : 'e_hand', 'W' : 'w_hand'}
     @staticmethod
-    def create(deal) :
+    def create(deal, vuln, dealer) :
         d = Deal()
         d.n_hand = deal[0]
         d.s_hand = deal[1]
         d.e_hand = deal[2]
         d.w_hand = deal[3]
+        d.vulnerability = vuln
+        d.dealer = dealer
         d.put()
         return d
 

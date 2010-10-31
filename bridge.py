@@ -74,8 +74,11 @@ def check_move(hand, card, current_round):
 
 def get_deck() :
     res = range(52)
-    rand.Random().shuffle(res)
-    return (res[0:13], res[13:26], res[26:39], res[39:52])
+    random = rand.Random()
+    random.shuffle(res)
+    return (res[0:13], res[13:26], res[26:39], res[39:52])\
+        , random.choice([VULN_NONE, VULN_NS, VULN_EW, VULN_BOTH])\
+        , random.choice([DEALER_N, DEALER_S, DEALER_E, DEALER_W])
 
 def split_by_suits(hand) :
     def as_str(suit) : 

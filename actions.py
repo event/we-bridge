@@ -61,8 +61,8 @@ def to_dict(hand) :
 def create_new_deck(user) :
     global deal_id
     global dealplay_id
-    deck = bridge.get_deck()
-    deal = repo.Deal.create(deck) 
+    deck, vuln, dealer = bridge.get_deck()
+    deal = repo.Deal.create(deck, vuln, dealer) 
     deal_id = deal.key().id()
     dealplay_id = repo.Protocol.create(deal, user, user, user, user)
     return add_players(map(to_dict, deck))
