@@ -99,7 +99,7 @@ class StaticHandler(webapp.RequestHandler) :
             page = self.request.path[1:]
             self.response.out.write(open(page, 'rb').read())
             if page.startswith('table.html') :
-                map(user_queue.put_nowait, actions.create_new_deck())
+                map(user_queue.put_nowait, actions.create_new_deck(user))
             elif page.startswith('hall.html') :
                 map(user_queue.put_nowait, create_test_hall_updates())
         else:

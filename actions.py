@@ -17,40 +17,38 @@
 import logging
 
 import bridge
+import repository as repo
 
 player_names = ['own', 'left', 'part', 'right']
+sides2names = {'own' : 'S', 'left' : 'W', 'part' : 'N', 'right' : 'E'}
 
-
-current_deck = None
-lead_history = None
+deal_id = None
+dealplay_id = None
 
 def do_lead(user, player, suit, rank) :
-    current_hand = player_names.index(player)
-    hand = current_deck[current_hand]
-    last_round = lead_history[-1]
-    if len(last_round) == 4 :
-        current_round = []
-        lead_history.append(current_round)
-    else :
-        current_round = last_round
+    protocol = repo.Protocol.get_by_id(dealplay_id)
+    deal = protocol.deal
+    side = sides2names[player]
+    hand = deal.hand_by_side(side)
+    last_round = protocol.last_round()
     card = bridge.suit_rank_to_num(suit, rank)
-    correct_lead = bridge.check_lead(hand, card, current_round)
+    correct_move = bridge.check_move(hand, card, last_round)
     result = []
-    if correct_lead :
-        hand.remove(card)
-        current_round.append(card)
-        if len(current_round) == 4 :
+    if correct_move :
+        protocol.add_move(card)
+        protocol.put()
+        if len(last_round) == 3 :
             next_allowed = 'any' 
         else : 
-            next_hand = current_deck[(current_hand + 1) % 4]
+            next_hand = deal.hand_by_side(sides2names[player_names[(player_names.index(player) + 1) % 4]])
             if bridge.has_same_suit(next_hand, card)  :
                 next_allowed = suit
             else : 
                 next_allowed = 'any'
         result.append({'type': 'lead', 'value': 
                       {'player': player, 'suit': suit, 'rank': rank, 'allowed': next_allowed}})
-        if bridge.is_deck_empty(current_deck) :
-            result += create_new_deck()
+        if protocol.finished() :
+            result += create_new_deck(user)
     return result
 
 def to_dict(hand) :
@@ -60,12 +58,13 @@ def to_dict(hand) :
                                               , {'suit': 'diamonds', 'cards': d}
                                               , {'suit': 'clubs', 'cards': c}]}}
 
-def create_new_deck() :
-    global current_deck
-    global lead_history
+def create_new_deck(user) :
+    global deal_id
+    global dealplay_id
     deck = bridge.get_deck()
-    current_deck = deck
-    lead_history = [[]]
+    deal = repo.Deal.create(deck) 
+    deal_id = deal.key().id()
+    dealplay_id = repo.Protocol.create(deal, user, user, user, user)
     return add_players(map(to_dict, deck))
 
 def add_players(hand_list) :

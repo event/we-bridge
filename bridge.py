@@ -16,10 +16,30 @@
 
 import random as rand
 
-SUIT_SPADE = 0
-SUIT_HEART = 1
-SUIT_DIAMOND = 2
-SUIT_CLUB = 3
+VULN_NONE = 0
+VULN_NS = 1
+VULN_EW = 2
+VULN_BOTH = 3
+
+DEALER_N = 0
+DEALER_S = 1
+DEALER_E = 2
+DEALER_W = 3
+
+# bids from 1 club to 7 no trump are coded w/ numbers from 0 to 34 resp
+BID_PASS = 35
+BID_DOUBLE = 36
+BID_REDOUBLE = 37
+
+# cards are represented with number from 0 (2 of clubs) to 51 (ace of spades)
+STRAIN_CLUB = 0
+STRAIN_DIAMOND = 1
+STRAIN_HEART = 2
+STRAIN_SPADE = 3
+STRAIN_NT = 4
+
+CARDS_IN_SUIT = 13
+CARDS_IN_HAND = 13
 
 SUITS = ['spades', 'hearts', 'diamonds', 'clubs']
 RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
@@ -49,7 +69,7 @@ def is_deck_empty(deck) :
         
     return result
 
-def check_lead(hand, card, current_round):
+def check_move(hand, card, current_round):
     return True
 
 def get_deck() :
@@ -58,28 +78,16 @@ def get_deck() :
     return (res[0:13], res[13:26], res[26:39], res[39:52])
 
 def split_by_suits(hand) :
-    def as_str(suit) :
+    def as_str(suit) : 
+        suit.sort()
+        suit.reverse()
         return ' '.join(map(lambda x: RANKS[x], suit))
-    s, h, d, c = [], [], [], []
+
+    res = [[], [], [], []]
     for crd in hand :
-        if crd < SUIT_HEART * 13 :
-            s.append(crd)
-        elif crd < SUIT_DIAMOND * 13 :
-            h.append(crd - 13)
-        elif crd < SUIT_CLUB * 13 :
-            d.append(crd - 26)
-        else :
-            c.append(crd - 39)
-    s.sort()
-    s.reverse()
-    h.sort()
-    h.reverse()
-    d.sort()
-    d.reverse()
-    c.sort()
-    c.reverse()
-    return (as_str(s), as_str(h), as_str(d), as_str(c))
-    
+        res[crd / CARDS_IN_SUIT].append(crd % CARDS_IN_SUIT)
+
+    return map(as_str, res)
 
 def get_by_suit(hand, suit) :
     len(filter(lambda x: x >= suit * 13 and x < (suit+1) * 13, hand))
