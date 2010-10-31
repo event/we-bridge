@@ -58,10 +58,8 @@ class Protocol(db.Model) :
     def create(dealmodel, N, S, E, W) :
         return Protocol(deal = dealmodel, N = N, S = S, E = E, W = W).put().id()
     
-    def last_round(self) :
-        cardsplayed = len(self.moves)
-        lidx = ((cardsplayed - 1) / 4) * 4
-        return self.moves[lidx:cardsplayed]
+    def round_ended(self) :
+        return len(self.moves) % 4 == 0
 
     def add_move(self, move) :
         self.moves.append(move)

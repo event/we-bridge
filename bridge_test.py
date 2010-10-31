@@ -14,6 +14,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Webridge.  If not, see <http://www.gnu.org/licenses/>.
 
+import bridge
+
 
 def test_deck_generator(deck_gen_func) :
     """
@@ -47,3 +49,7 @@ def test_deck_generator(deck_gen_func) :
             distr = get_distr(hand)
             update(result, sort(distr))
     show_res(result, (i + 1)*4)
+
+
+if __name__ == '__main__':
+    test_deck_generator(bridge.get_deck)

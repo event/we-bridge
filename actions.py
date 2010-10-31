@@ -30,14 +30,13 @@ def do_lead(user, player, suit, rank) :
     deal = protocol.deal
     side = sides2names[player]
     hand = deal.hand_by_side(side)
-    last_round = protocol.last_round()
     card = bridge.suit_rank_to_num(suit, rank)
-    correct_move = bridge.check_move(hand, card, last_round)
+    correct_move = bridge.check_move(hand, card, protocol.moves)
     result = []
     if correct_move :
         protocol.add_move(card)
         protocol.put()
-        if len(last_round) == 3 :
+        if protocol.round_ended() :
             next_allowed = 'any' 
         else : 
             next_hand = deal.hand_by_side(sides2names[player_names[(player_names.index(player) + 1) % 4]])

@@ -60,17 +60,24 @@ def has_same_suit(hand, card) :
         result = hand[i] > lbound and hand[i] < hbound
     return result
 
-def is_deck_empty(deck) :
-    result = True;
-    i = len(deck)
-    while i > 0 and result :
-        i -= 1
-        result = len(deck[i]) == 0
-        
-    return result
+def same_suit(card1, card2) :
+    return card1 / 13 == card2 / 13
 
-def check_move(hand, card, current_round):
-    return True
+def check_move(hand, card, all_moves):
+    if not card in hand or card in all_moves :
+        return False
+    
+    if len(all_moves) % 4 == 0 :
+        return True
+
+    fst_move_idx = (len(all_moves) / 4) * 4
+    fst_move = all_moves[fst_move_idx]  # first move in this round
+    if same_suit(fst_move, card) :
+        return True
+
+    hand.remove(card)
+    return not has_same_suit(hand, fst_move)
+
 
 def get_deck() :
     res = range(52)
