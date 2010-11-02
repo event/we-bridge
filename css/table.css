@@ -8,11 +8,28 @@ body {
     background-color:green;
 }
 
-#table_center {
-    margin-left:auto;
+#board .board_column {
+    width: 33%;
+}
+
+#vuln_dealer {
+    margin-left:10%;
     margin-right:auto;
+    padding-right: 1%;
     font-weight:bold;
-    background-color:gray;
+    background-color: #C0C0C0;
+    width: 25%;
+    text-align: center;
+    border-width: 0px;
+    border-collapse: collapse;
+}
+
+#vuln_dealer tr td {
+    width: 34%;
+}
+
+.vuln_NS, .vuln_EW{
+    background-color: red;
 }
 
 .hand_container td {
@@ -29,5 +46,37 @@ body {
 
 .default_cursor {
     cursor:default;
+}
+
+.hidden {
+    display: none;
+}
+
+.bidbox_pass {
+    background-color: green;
+    border: 2px solid grey;
+    background-color: #00FF28;
+}
+
+.bidbox_dbl {
+    background-color: red;
+    border: 1px solid grey;
+}
+
+.bidbox_rdbl {
+    background-color: blue;
+    border: 1px solid grey;
+}
+
+.bidbox {
+    border-collapse: collapse;
+    border: 2px solid grey;
+    text-align: center;
+    background-color: #B09060;
+}
+
+.bidbox_bid {
+    padding: 3px;
+    border: 1px solid grey;
 }
 

@@ -39,6 +39,10 @@ function process_update(i, data) {
 	    
     } else if (data.type == "claim") {
 	window.alert("claim is not supported yet!");
+    } else if (data.type = "start.bidding") {
+	kick_bidding();
+    } else if (data.type = "start.play") {
+	window.alert("start.play is not supported yet!")
     }
 }
 
@@ -101,5 +105,10 @@ function img_by_suit(suit) {
 	var c = suit.charAt(0);
 	return suit_image_template.replace("{suit}", c).replace("{alt_suit}", c.toUpperCase());
     }
+    
+}
+
+function kick_bidding() {
+    $("#lead_area").addClass("hidden");
     
 }

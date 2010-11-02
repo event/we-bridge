@@ -11,10 +11,13 @@
     <h1>Webridge</h1>
 
     <table id="board">
-      <tr><td><table id="table_center">
- 	    <tr><td></td><td>N</td><td></td></tr>
-	    <tr><td>W</td><td></td><td>E</td></tr>
-	    <tr><td></td><td>S</td><td></td></tr>
+      <col class="board_column left_col"/>
+      <col class="board_column center_col"/>
+      <col class="board_column right_col"/>
+      <tr><td><table id="vuln_dealer">
+ 	    <tr><td class="vuln_NS vuln_EW"></td><td class="vuln_NS">N</td><td class="vuln_NS vuln_EW"></td></tr>
+	    <tr><td class="vuln_EW">W</td><td></td><td class="vuln_EW">E</td></tr>
+	    <tr><td class="vuln_NS vuln_EW"></td><td class="vuln_NS">S</td><td class="vuln_NS vuln_EW"></td></tr>
 	  </table>
 	</td><td>
 	  <div id="part_hand" class="hand_container">
@@ -37,6 +40,9 @@
 	    </table>
 	  </div>
 	</td><td>
+	  <table id="bidding_area">	
+	    <tr id="biddin_header"><th>N</th><th>E</th><th>S</th><th>W</th></tr>
+	  </table>
 	  <table id="lead_area">
 	    <tr><td></td><td class="lead" id="part_lead"></td><td></td></tr>
 	    <tr><td class="lead" id="left_lead"></td><td></td><td class="lead" id="right_lead"></td></tr>
@@ -61,7 +67,59 @@
 	      <tr><td><img src="../images/c.gif" alt="C"/><div id="own_clubs"></div> </td></tr>
 	    </table>
 	  </div>
-	</td><td></td></tr>
+	</td><td><div id="bidding_box">    <table class="bidbox">
+      <tr>
+	<td colspan="3" class="bidbox_pass"><h3>Pass</h3></td>
+	<td colspan="2" class="bidbox_dbl"><h3>X</h3></td>
+	<td colspan="2" class="bidbox_rdbl"><h3>XX</h3></td>
+      </tr>
+      <tr>
+	<td class="bidbox_bid">1<img src="images/c.gif" alt="C"/></td>
+	<td class="bidbox_bid">2<img src="images/c.gif" alt="C"/></td>
+	<td class="bidbox_bid">3<img src="images/c.gif" alt="C"/></td>
+	<td class="bidbox_bid">4<img src="images/c.gif" alt="C"/></td>
+	<td class="bidbox_bid">5<img src="images/c.gif" alt="C"/></td>
+	<td class="bidbox_bid">6<img src="images/c.gif" alt="C"/></td>
+	<td class="bidbox_bid">7<img src="images/c.gif" alt="C"/></td>
+      </tr>
+      <tr>
+	<td class="bidbox_bid">1<img src="images/d.gif" alt="D"/></td>
+	<td class="bidbox_bid">2<img src="images/d.gif" alt="D"/></td>
+	<td class="bidbox_bid">3<img src="images/d.gif" alt="D"/></td>
+	<td class="bidbox_bid">4<img src="images/d.gif" alt="D"/></td>
+	<td class="bidbox_bid">5<img src="images/d.gif" alt="D"/></td>
+	<td class="bidbox_bid">6<img src="images/d.gif" alt="D"/></td>
+	<td class="bidbox_bid">7<img src="images/d.gif" alt="D"/></td>
+      </tr>
+      <tr>
+	<td class="bidbox_bid">1<img src="images/h.gif" alt="H"/></td>
+	<td class="bidbox_bid">2<img src="images/h.gif" alt="H"/></td>
+	<td class="bidbox_bid">3<img src="images/h.gif" alt="H"/></td>
+	<td class="bidbox_bid">4<img src="images/h.gif" alt="H"/></td>
+	<td class="bidbox_bid">5<img src="images/h.gif" alt="H"/></td>
+	<td class="bidbox_bid">6<img src="images/h.gif" alt="H"/></td>
+	<td class="bidbox_bid">7<img src="images/h.gif" alt="H"/></td>
+      </tr>
+      <tr>
+	<td class="bidbox_bid">1<img src="images/s.gif" alt="S"/></td>
+	<td class="bidbox_bid">2<img src="images/s.gif" alt="S"/></td>
+	<td class="bidbox_bid">3<img src="images/s.gif" alt="S"/></td>
+	<td class="bidbox_bid">4<img src="images/s.gif" alt="S"/></td>
+	<td class="bidbox_bid">5<img src="images/s.gif" alt="S"/></td>
+	<td class="bidbox_bid">6<img src="images/s.gif" alt="S"/></td>
+	<td class="bidbox_bid">7<img src="images/s.gif" alt="S"/></td>
+      </tr>
+      <tr>
+	<td class="bidbox_bid">1NT</td>
+	<td class="bidbox_bid">2NT</td>
+	<td class="bidbox_bid">3NT</td>
+	<td class="bidbox_bid">4NT</td>
+	<td class="bidbox_bid">5NT</td>
+	<td class="bidbox_bid">6NT</td>
+	<td class="bidbox_bid">7NT</td>
+      </tr>
+    </table>
+</div></td></tr>
     </table>
 
 
