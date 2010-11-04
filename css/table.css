@@ -40,7 +40,7 @@ body {
     display:inline;
 }
 
-.card {
+.clickable {
     cursor:pointer;
 }
 
@@ -56,16 +56,19 @@ body {
     background-color: green;
     border: 2px solid grey;
     background-color: #00FF28;
+    padding: 0px;
 }
 
 .bidbox_dbl {
     background-color: red;
     border: 1px solid grey;
+    padding: 0px;
 }
 
 .bidbox_rdbl {
     background-color: blue;
     border: 1px solid grey;
+    padding: 0px;
 }
 
 .bidbox {
@@ -76,7 +79,7 @@ body {
 }
 
 .bidbox_bid {
-    padding: 3px;
+    padding: 2px;
     border: 1px solid grey;
 }
 

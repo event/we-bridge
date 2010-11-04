@@ -2,6 +2,7 @@ var suits = ["spades", "hearts", "diamonds", "clubs"];
 var players = ["own", "left", "part", "right"];
 var suit_image_template = "<img src='../images/{suit}.gif' alt='{alt_suit}'/>";
 var update_cnt = 1000;
+var current_bidder;
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
@@ -19,15 +20,21 @@ function get_json() {
 }
 
 function process_update(i, data) {
-    if (data.type == "lead"){
+    if (data.type == "move"){
 	var v = data.value;
 	var allowed = v.allowed;
 	if (allowed == null) {
-	    allowed = 'any';
+	    allowed = "any";
 	}
 	process_lead(v.player, v.suit, v.rank, allowed);
     } else if (data.type == "bid") {
-	window.alert("bid is not supported yet!");
+	var v = data.value;
+	var side = v.side;
+	var bid = v.bid;
+	$("#bidding_area tr:last td:eq(" + side + ")").html(bid);
+	if (side == 3) {
+	    $("#bidding_area").append("<tr class='bidding_row'><td></td><td></td><td></td><td></td></tr>")
+	}
     } else if (data.type == "text") {
 	window.alert("text message is not supported yet!");
     } else if (data.type == "hand") {
@@ -51,7 +58,7 @@ function load_suit(player, suit) {
     var cards = suit.cards;
     var divid = "#" + player + "_" + s;
     var card_str = cards.replace(/([2-9JQKA]|10)/g, "<div"
-				 + " class='card card_" + player + " card_" + player + "_" + s + "'"
+				 + " class='clickable card card_" + player + " card_" + player + "_" + s + "'"
 				 + " id='" + s + "_$1'>$1</div>");
     $(divid).html(card_str);
 }
@@ -85,12 +92,11 @@ function next_player(player) {
 }
 
 function do_lead(event) {
-    // process_lead(player, suit, rank);
     var player = event.data;
     var splitted_id = event.target.id.split("_");
     var suit = splitted_id[0];
     var rank = splitted_id[1];
-    var url = "action.json?lead/" + player + "/" + suit + "/" + rank;
+    var url = "action.json?move/" + player + "/" + suit + "/" + rank;
     $.post(url);
 }
 
@@ -110,5 +116,15 @@ function img_by_suit(suit) {
 
 function kick_bidding() {
     $("#lead_area").addClass("hidden");
+    $(".bidbox_bid,.bidbox_pass,.bidbox_dbl,.bidbox_rdbl").bind("click", do_bid).addClass("clickable");
+    current_bidder = 0;
+}
+
+function do_bid(event) {
+    var splitted_id = event.currentTarget.id.split("_");
+    var bid = splitted_id[1];
     
+    var url = "action.json?bid/" + players[current_bidder] + "/" + bid;
+    current_bidder = (current_bidder + 1) % 4;
+    $.post(url);
 }

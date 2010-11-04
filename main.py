@@ -100,6 +100,7 @@ class StaticHandler(webapp.RequestHandler) :
             self.response.out.write(open(page, 'rb').read())
             if page.startswith('table.html') :
                 map(user_queue.put_nowait, actions.create_new_deck(user))
+                user_queue.put_nowait({'type': 'start.bidding'})
             elif page.startswith('hall.html') :
                 map(user_queue.put_nowait, create_test_hall_updates())
         else:

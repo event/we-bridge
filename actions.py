@@ -44,7 +44,7 @@ def do_lead(user, player, suit, rank) :
                 next_allowed = suit
             else : 
                 next_allowed = 'any'
-        result.append({'type': 'lead', 'value': 
+        result.append({'type': 'move', 'value': 
                       {'player': player, 'suit': suit, 'rank': rank, 'allowed': next_allowed}})
         if protocol.finished() :
             result += create_new_deck(user)
@@ -71,5 +71,11 @@ def add_players(hand_list) :
         hand_list[i]['value']['player'] = player_names[i]
     return hand_list
 
-action_processors = {'lead': do_lead}
+cur_side = 3
+def do_bid(user, player, bid) :
+    global cur_side
+    cur_side = (cur_side + 1) % 4
+    return [{'type': 'bid', 'value': {'side': cur_side, 'bid': bid}}]
+
+action_processors = {'move': do_lead, 'bid': do_bid}
 
