@@ -1,6 +1,6 @@
 var suits = ["spades", "hearts", "diamonds", "clubs"];
 var players = ["own", "left", "part", "right"];
-var suit_image_template = "<img src='../images/{suit}.gif' alt='{alt_suit}'/>";
+var suit_image_template = "<img src='images/{suit}.gif' alt='{alt_suit}'/>";
 var update_cnt = 1000;
 var current_bidder;
 
@@ -30,8 +30,10 @@ function process_update(i, data) {
     } else if (data.type == "bid") {
 	var v = data.value;
 	var side = v.side;
-	var bid = v.bid;
-	$("#bidding_area tr:last td:eq(" + side + ")").html(bid);
+	var bid = v.bid;	
+	var c = bid[1].toLowerCase();
+	var img = suit_image_template.replace("{suit}", c).replace("{alt_suit}", c.toUpperCase());
+	$("#bidding_area tr:last td:eq(" + side + ")").html(bid[0] + img);
 	if (side == 3) {
 	    $("#bidding_area").append("<tr class='bidding_row'><td></td><td></td><td></td><td></td></tr>")
 	}
