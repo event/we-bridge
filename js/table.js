@@ -2,7 +2,16 @@ var suits = ["spades", "hearts", "diamonds", "clubs"];
 var players = ["own", "left", "part", "right"];
 var suit_image_template = "<img src='images/{suit}.gif' alt='{alt_suit}'/>";
 var update_cnt = 1000;
+var pass_dbl_rdbl = ["pass", "dbl", "rdbl"];
+
 var current_bidder;
+
+
+var update_handlers = new Array();
+update_handlers["move"] = process_lead;
+update_handlers["bid"] = process_bid;
+update_handlers["hand"] = process_hand;
+update_handlers["start.bidding"] = kick_bidding;
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
@@ -20,39 +29,20 @@ function get_json() {
 }
 
 function process_update(i, data) {
-    if (data.type == "move"){
-	var v = data.value;
-	var allowed = v.allowed;
-	if (allowed == null) {
-	    allowed = "any";
-	}
-	process_lead(v.player, v.suit, v.rank, allowed);
-    } else if (data.type == "bid") {
-	var v = data.value;
-	var side = v.side;
-	var bid = v.bid;	
-	var c = bid[1].toLowerCase();
-	var img = suit_image_template.replace("{suit}", c).replace("{alt_suit}", c.toUpperCase());
-	$("#bidding_area tr:last td:eq(" + side + ")").html(bid[0] + img);
-	if (side == 3) {
-	    $("#bidding_area").append("<tr class='bidding_row'><td></td><td></td><td></td><td></td></tr>")
-	}
-    } else if (data.type == "text") {
-	window.alert("text message is not supported yet!");
-    } else if (data.type == "hand") {
-	var v = data.value;
-	var player = v.player;
-	var suits = v.suits;
-	$.each(suits, function(i, suit){load_suit(player, suit)});
-	$(".card_" + player).bind("click", player, do_lead)
-	    
-    } else if (data.type == "claim") {
-	window.alert("claim is not supported yet!");
-    } else if (data.type = "start.bidding") {
-	kick_bidding();
-    } else if (data.type = "start.play") {
-	window.alert("start.play is not supported yet!")
+    handler = update_handlers[data.type];
+    if (handler == undefined) {
+	window.alert("action " + data.type + " is not yet supported!");
+    } else {
+	handler(data.value);
     }
+}
+
+
+function process_hand(v) {
+    var player = v.player;
+    var suits = v.suits;
+    $.each(suits, function(i, suit){load_suit(player, suit)});
+    $(".card_" + player).bind("click", player, do_lead)
 }
 
 function load_suit(player, suit) {
@@ -65,22 +55,75 @@ function load_suit(player, suit) {
     $(divid).html(card_str);
 }
 
-function process_lead(player, suit, rank, allowed) {
+function process_bid(v) {
+	var side = v.side;
+	var bid = v.bid;
+	var bid_html;
+	var idx = $.inArray(bid, pass_dbl_rdbl);
+	if (idx >= 0) {
+	    bid_html = bid;
+	    if (idx == 1) {
+		prohibit_bid("#bid_dbl");	
+		allow_bid("#bid_rdbl");
+	    } else if (idx == 2) {
+		prohibit_bid("#bid_dbl");
+		prohibit_bid("#bid_rdbl");
+	    }
+	} else {
+	    var r = bid[0];
+	    var s = bid[1];
+	    if (s != 'Z') {
+		var img = suit_image_template.replace("{suit}", s.toLowerCase()).replace("{alt_suit}", s);
+		bid_html = r + img;
+	    } else {
+		bid_html = r + "NT";
+	    }
+
+	    allow_bid("#bid_dbl");
+	    disallow_lower_bids(parseInt(r), s);
+	}
+	$("#bidding_area tr:last td:eq(" + side + ")").html(bid_html);
+	if (side == 3) {
+	    $("#bidding_area").append("<tr class='bidding_row'><td></td><td></td><td></td><td></td></tr>")
+	}
+}
+
+function prohibit_bid(bid_selector) {
+    $(bid_selector).unbind("click").removeClass("clickable").addClass("prohibited_bid");
+}
+
+function allow_bid(bid_selector) {
+    $(bid_selector).bind("click", do_bid).addClass("clickable").removeClass("prohibited_bid");
+}
+
+function disallow_lower_bids(r, s) {
+    var bid_id = "bid_" + r + s;
+    var alowed_bids = $(".clickable.bidbox_bid");
+    var filtered = alowed_bids.filter(function(index){return this.id < bid_id});
+    filtered.unbind("click").removeClass("clickable").addClass("prohibited_bid");
+}
+
+function process_lead(v) {
+    var v = data.value;
+    var player = v.player;
+    var suit = v.suit;
+    var rank = v.rank;
+    var allowed = v.allowed;
+    if (allowed == null) {
+	allowed = "any";
+    }
     var card_div_id = "#" + suit + "_" + rank;
     $(card_div_id).detach();
     var lead_div_id = "#" + player + "_lead";
     $(lead_div_id).html(img_by_suit(suit) + rank);
     var np = next_player(player);
     var np_class = ".card_" + np;
-    $(".card").unbind("click");
-    $(".card").addClass("default_cursor");
+    $(".card").unbind("click").removeClass("clickable");
     if (allowed == 'any') {
-	$(np_class).bind("click", np, do_lead);
-	$(np_class).removeClass("default_cursor");
+	$(np_class).bind("click", np, do_lead).addClass("clickable");
     } else {
 	var np_suit_class = np_class + "_" + allowed;
-	$(np_suit_class).bind("click", np, do_lead);
-	$(np_suit_class).removeClass("default_cursor");
+	$(np_suit_class).bind("click", np, do_lead).addClass("clickable");
     }
 }
 
