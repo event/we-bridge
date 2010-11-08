@@ -58,18 +58,17 @@ function load_suit(player, suit) {
 function process_bid(v) {
 	var side = v.side;
 	var bid = v.bid;
+	var dbl_rdbl_allowed = v.dbl_mode;
+	prohibit_bid("#bid_dbl.clickable");
+	prohibit_bid("#bid_rdbl.clickable");
+	if (dbl_rdbl_allowed == "dbl") {
+	    allow_bid("#bid_dbl:not(.clickable)");
+	} else if (dbl_rdbl_allowed == "rdbl") {
+	    allow_bid("#bid_rdbl:not(.clickable)");
+	}
 	var bid_html;
 	var idx = $.inArray(bid, pass_dbl_rdbl);
-	if (idx >= 0) {
-	    bid_html = bid;
-	    if (idx == 1) {
-		prohibit_bid("#bid_dbl");	
-		allow_bid("#bid_rdbl");
-	    } else if (idx == 2) {
-		prohibit_bid("#bid_dbl");
-		prohibit_bid("#bid_rdbl");
-	    }
-	} else {
+	if (idx == -1) {
 	    var r = bid[0];
 	    var s = bid[1];
 	    if (s != 'Z') {
@@ -79,8 +78,9 @@ function process_bid(v) {
 		bid_html = r + "NT";
 	    }
 
-	    allow_bid("#bid_dbl");
 	    disallow_lower_bids(parseInt(r), s);
+	} else {
+	    bid_html = bid;
 	}
 	$("#bidding_area tr:last td:eq(" + side + ")").html(bid_html);
 	if (side == 3) {
@@ -99,7 +99,7 @@ function allow_bid(bid_selector) {
 function disallow_lower_bids(r, s) {
     var bid_id = "bid_" + r + s;
     var alowed_bids = $(".clickable.bidbox_bid");
-    var filtered = alowed_bids.filter(function(index){return this.id < bid_id});
+    var filtered = alowed_bids.filter(function(index){return this.id <= bid_id});
     filtered.unbind("click").removeClass("clickable").addClass("prohibited_bid");
 }
 
@@ -161,7 +161,9 @@ function img_by_suit(suit) {
 
 function kick_bidding() {
     $("#lead_area").addClass("hidden");
-    $(".bidbox_bid,.bidbox_pass,.bidbox_dbl,.bidbox_rdbl").bind("click", do_bid).addClass("clickable");
+    $(".bidbox_bid,.bidbox_pass").bind("click", do_bid).addClass("clickable");
+    prohibit_bid("#bid_dbl");
+    prohibit_bid("#bid_rdbl");
     current_bidder = 0;
 }
 
