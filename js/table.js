@@ -12,6 +12,7 @@ update_handlers["move"] = process_lead;
 update_handlers["bid"] = process_bid;
 update_handlers["hand"] = process_hand;
 update_handlers["start.bidding"] = kick_bidding;
+update_handlers["start.play"] = kick_play;
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);

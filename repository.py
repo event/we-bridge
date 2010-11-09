@@ -24,7 +24,7 @@ class Deal(db.Model) :
     w_hand = db.ListProperty(int)
     vulnerability = db.IntegerProperty(choices = [bridge.VULN_NONE, bridge.VULN_NS
                                                   , bridge.VULN_EW, bridge.VULN_BOTH])
-    dealer = db.IntegerProperty(choices = [bridge.DEALER_N, bridge.DEALER_S, bridge.DEALER_E, bridge.DEALER_W])
+    dealer = db.IntegerProperty(choices = bridge.DEALERS)
     createDate = db.DateTimeProperty(auto_now_add=True)
     hand2side = {'N' : 'n_hand', 'S' : 's_hand', 'E' : 'e_hand', 'W' : 'w_hand'}
     @staticmethod
@@ -48,7 +48,7 @@ class Protocol(db.Model) :
     S = db.UserProperty()
     E = db.UserProperty()
     W = db.UserProperty()
-    bidding = db.ListProperty(int)
+    bidding = db.StringListProperty()
     moves = db.ListProperty(int)
     deal = db.ReferenceProperty(Deal)
     result = db.IntegerProperty() # 0 = just made, +1 = one overtrick, -1 = one down
@@ -67,11 +67,31 @@ class Protocol(db.Model) :
     def finished(self) :
         return self.moves == 52
 
-    # FIXME: these below are all wrong. Should do full checks and exec in transaction        
     def add_bid(self, bid) :
-        self.bidding.append(bid)
-        self.put()
+        bidding = self.bidding
+        bid_cnt = len(bidding)
+        if bid == bridge.BID_PASS :
+            res = True
+        elif bid == bridge.BID_DOUBLE :
+            res = bid_cnt > 0 and bridge.is_value_bid(bidding[-1]) \
+                or bid_cnt > 2 and bridge.is_value_bid(bidding[-3]) \
+                and bidding[-2] == bidding[-1] == bridge.BID_PASS
+        elif bid == bridge.BID_REDOUBLE :
+            res = bid_cnt > 0 and bidding[-1] == bridge.BID_DOUBLE \
+                or bid_cnt > 2 and bidding[-3] == bridge.BID_DOUBLE \
+                and bidding[-2] == bidding[-1] == bridge.BID_PASS
+        else :
+            i = 1;
+            while i <= bid_cnt and not bridge.is_value_bid(bidding[-i]) :
+                i += 1
+            res = i > bid_cnt or bidding[-i] < bid
 
+        if res :
+            self.bidding.append(bid)
+            self.put()
+        return res
+
+    # FIXME: these below are all wrong. Should do full checks and exec in transaction        
     def add_card(self, card) :
         self.cardplay.append(card)
         self.put()

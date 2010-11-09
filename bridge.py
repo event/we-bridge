@@ -22,14 +22,18 @@ VULN_EW = 2
 VULN_BOTH = 3
 
 DEALER_N = 0
-DEALER_S = 1
-DEALER_E = 2
+DEALER_E = 1
+DEALER_S = 2
 DEALER_W = 3
 
-# bids from 1 club to 7 no trump are coded w/ numbers from 0 to 34 resp
-BID_PASS = 35
-BID_DOUBLE = 36
-BID_REDOUBLE = 37
+DEALERS = [DEALER_N, DEALER_E, DEALER_S, DEALER_W]
+
+# bids are strings like '1C', '1D', '1H', '1S', '1Z'..'7S', '7Z'. 
+# 'Z' is chosen for NT to have bids comparable as strings
+BID_PASS = 'pass'
+BID_DOUBLE = 'dbl'
+BID_REDOUBLE = 'rdbl'
+SPECIAL_BIDS = [BID_PASS, BID_DOUBLE, BID_REDOUBLE]
 
 # cards are represented with number from 0 (2 of clubs) to 51 (ace of spades)
 STRAIN_CLUB = 0
@@ -43,6 +47,9 @@ CARDS_IN_HAND = 13
 
 SUITS = ['spades', 'hearts', 'diamonds', 'clubs']
 RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+
+def is_value_bid(bid) :
+    return bid not in SPECIAL_BIDS
 
 def suit_rank_to_num(suit, rank):
     return 13 * SUITS.index(suit) + RANKS.index(rank)

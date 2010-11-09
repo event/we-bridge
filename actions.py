@@ -71,11 +71,41 @@ def add_players(hand_list) :
         hand_list[i]['value']['player'] = player_names[i]
     return hand_list
 
-cur_side = 3
 def do_bid(user, player, bid) :
-    global cur_side
-    cur_side = (cur_side + 1) % 4
-    return [{'type': 'bid', 'value': {'side': cur_side, 'bid': bid}}]
+    if not is_allowed_user_player(user, player) :
+        return []
+    
+    protocol = repo.Protocol.get_by_id(dealplay_id)
+    logging.warn('fetched proto')
+    if not protocol.add_bid(bid) :
+        logging.warn('bid adding failed')
+        return []
+
+    bid_cnt = len(protocol.bidding)
+    if bid_cnt > 3 and reduce(lambda x, y: x and y == bridge.BID_PASS \
+                                                , protocol.bidding[-3:], True) :
+        return [{'type': 'start.play', 'value' \
+                    : {'contract': bridge.get_contract(protocol.bidding)\
+                           , 'declearer': bridge.get_rel_declearer(protocol.bidding) \
+                                          + bridge.DEALERS.index(protocol.deal.dealer)}}]
+    cur_side = (bid_cnt + bridge.DEALERS.index(protocol.deal.dealer)) % 4
+
+    if bid == bridge.BID_DOUBLE or bid_cnt > 2 and protocol.bidding[-3] == bridge.BID_DOUBLE \
+            and protocol.bidding[-2] == bid == bridge.BID_PASS :
+        dbl_mode = 'rdbl'
+    elif bridge.is_value_bid(bid) or bid_cnt > 2 and bridge.is_value_bid(protocol.bidding[-3]) \
+            and protocol.bidding[-2] == bid == bridge.BID_PASS: 
+        dbl_mode = 'dbl'
+    else : 
+        dbl_mode = 'none'
+
+    return [{'type': 'bid', 'value': {'side': cur_side, 'bid': bid, 'dbl_mode':dbl_mode}}]
+
+
+def is_allowed_user_player(user, player) :
+    '''Checks whenever user is allowed to bid for corresponding side.
+    In most cases user is allowed to bid for 'own' only. Also check whether it is user's turn'''
+    return True
 
 action_processors = {'move': do_lead, 'bid': do_bid}
 
