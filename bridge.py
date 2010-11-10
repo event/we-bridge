@@ -14,6 +14,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Webridge.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
 import random as rand
 
 VULN_NONE = 0
@@ -45,8 +46,28 @@ STRAIN_NT = 4
 CARDS_IN_SUIT = 13
 CARDS_IN_HAND = 13
 
-SUITS = ['spades', 'hearts', 'diamonds', 'clubs']
+SUITS = ['clubs', 'diamonds', 'hearts', 'spades']
 RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+
+def get_contract_and_lead_maker(bidding) :
+    bidding = bidding[:-3]
+    lastbid = bidding[-1]
+    i = len(bidding) - 1
+    dbl = ''
+    if lastbid == BID_PASS :
+        return BID_PASS, None
+    elif lastbid == BID_DOUBLE :
+        dbl = 'd'
+        i -= 1
+    elif lastbid == BID_REDOUBLE :
+        dbl = 'r'
+        i -= 1
+    # some try-catch could be here to handle erroneous bidding
+    while bidding[i] in SPECIAL_BIDS :
+        i -= 1
+
+    return bidding[i] + dbl, i % 4
+
 
 def is_value_bid(bid) :
     return bid not in SPECIAL_BIDS
@@ -71,19 +92,25 @@ def same_suit(card1, card2) :
     return card1 / 13 == card2 / 13
 
 def check_move(hand, card, all_moves):
+    logging.info('checking for %s in %s', card, hand)
     if not card in hand or card in all_moves :
+        logging.info('not allowed')
         return False
     
     if len(all_moves) % 4 == 0 :
+        logging.info('round start: allowed')
         return True
 
     fst_move_idx = (len(all_moves) / 4) * 4
     fst_move = all_moves[fst_move_idx]  # first move in this round
     if same_suit(fst_move, card) :
+        logging.info('fst_move is %s, now - %s: allowed', fst_move, card)
         return True
 
     hand.remove(card)
-    return not has_same_suit(hand, fst_move)
+    res = not has_same_suit(hand, fst_move)
+    logging.info('finally %s', res)
+    return res
 
 
 def get_deck() :

@@ -31,8 +31,8 @@ class Deal(db.Model) :
     def create(deal, vuln, dealer) :
         d = Deal()
         d.n_hand = deal[0]
-        d.s_hand = deal[1]
-        d.e_hand = deal[2]
+        d.e_hand = deal[1]
+        d.s_hand = deal[2]
         d.w_hand = deal[3]
         d.vulnerability = vuln
         d.dealer = dealer
@@ -56,7 +56,7 @@ class Protocol(db.Model) :
     
     @staticmethod
     def create(dealmodel, N, S, E, W) :
-        return Protocol(deal = dealmodel, N = N, S = S, E = E, W = W).put().id()
+        return Protocol(deal = dealmodel, N = N, E = E, S = S, W = W).put().id()
     
     def round_ended(self) :
         return len(self.moves) % 4 == 0

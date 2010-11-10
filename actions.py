@@ -19,7 +19,7 @@ import logging
 import bridge
 import repository as repo
 
-player_names = ['own', 'left', 'part', 'right']
+player_names = ['part', 'right', 'own', 'left']
 sides2names = {'own' : 'S', 'left' : 'W', 'part' : 'N', 'right' : 'E'}
 
 deal_id = None
@@ -51,11 +51,11 @@ def do_lead(user, player, suit, rank) :
     return result
 
 def to_dict(hand) :
-    s, h, d, c = bridge.split_by_suits(hand)
-    return {'type': 'hand', 'value':{'suits':[{'suit': 'spades', 'cards': s}
-                                              , {'suit': 'hearts', 'cards': h}
+    c, d, h, s = bridge.split_by_suits(hand)
+    return {'type': 'hand', 'value':{'suits':[{'suit': 'clubs', 'cards': c}
                                               , {'suit': 'diamonds', 'cards': d}
-                                              , {'suit': 'clubs', 'cards': c}]}}
+                                              , {'suit': 'hearts', 'cards': h}
+                                              , {'suit': 'spades', 'cards': s}]}}
 
 def create_new_deck(user) :
     global deal_id
@@ -76,18 +76,16 @@ def do_bid(user, player, bid) :
         return []
     
     protocol = repo.Protocol.get_by_id(dealplay_id)
-    logging.warn('fetched proto')
     if not protocol.add_bid(bid) :
-        logging.warn('bid adding failed')
         return []
 
     bid_cnt = len(protocol.bidding)
     if bid_cnt > 3 and reduce(lambda x, y: x and y == bridge.BID_PASS \
-                                                , protocol.bidding[-3:], True) :
-        return [{'type': 'start.play', 'value' \
-                    : {'contract': bridge.get_contract(protocol.bidding)\
-                           , 'declearer': bridge.get_rel_declearer(protocol.bidding) \
-                                          + bridge.DEALERS.index(protocol.deal.dealer)}}]
+                                  , protocol.bidding[-3:], True) :
+        contract, lead_maker = bridge.get_contract_and_lead_maker(protocol.bidding)
+        return [{'type': 'start.play', 'value'
+                 : {'contract': contract 
+                    , 'lead': lead_maker + bridge.DEALERS.index(protocol.deal.dealer)}}]
     cur_side = (bid_cnt + bridge.DEALERS.index(protocol.deal.dealer)) % 4
 
     if bid == bridge.BID_DOUBLE or bid_cnt > 2 and protocol.bidding[-3] == bridge.BID_DOUBLE \

@@ -1,11 +1,10 @@
-var suits = ["spades", "hearts", "diamonds", "clubs"];
+var suits = ["clubs", "diamonds", "hearts", "spades"];
 var players = ["own", "left", "part", "right"];
 var suit_image_template = "<img src='images/{suit}.gif' alt='{alt_suit}'/>";
 var update_cnt = 1000;
 var pass_dbl_rdbl = ["pass", "dbl", "rdbl"];
 
 var current_bidder;
-
 
 var update_handlers = new Array();
 update_handlers["move"] = process_lead;
@@ -43,7 +42,6 @@ function process_hand(v) {
     var player = v.player;
     var suits = v.suits;
     $.each(suits, function(i, suit){load_suit(player, suit)});
-    $(".card_" + player).bind("click", player, do_lead)
 }
 
 function load_suit(player, suit) {
@@ -51,7 +49,7 @@ function load_suit(player, suit) {
     var cards = suit.cards;
     var divid = "#" + player + "_" + s;
     var card_str = cards.replace(/([2-9JQKA]|10)/g, "<div"
-				 + " class='clickable card card_" + player + " card_" + player + "_" + s + "'"
+				 + " class='card card_" + player + " card_" + player + "_" + s + "'"
 				 + " id='" + s + "_$1'>$1</div>");
     $(divid).html(card_str);
 }
@@ -103,9 +101,15 @@ function disallow_lower_bids(r, s) {
     var filtered = alowed_bids.filter(function(index){return this.id <= bid_id});
     filtered.unbind("click").removeClass("clickable").addClass("prohibited_bid");
 }
-
+var lead_count;
 function process_lead(v) {
-    var v = data.value;
+    if (lead_count % 4 == 0) {
+	for (var i = 0; i < 4; i += 1) {
+	    $("#" + players[i] + "_lead").html("&nbsp;");
+   	}
+    }
+
+
     var player = v.player;
     var suit = v.suit;
     var rank = v.rank;
@@ -126,6 +130,7 @@ function process_lead(v) {
 	var np_suit_class = np_class + "_" + allowed;
 	$(np_suit_class).bind("click", np, do_lead).addClass("clickable");
     }
+    lead_count += 1;
 }
 
 function next_player(player) {
@@ -166,6 +171,17 @@ function kick_bidding() {
     prohibit_bid("#bid_dbl");
     prohibit_bid("#bid_rdbl");
     current_bidder = 0;
+}
+
+function kick_play(v) {
+    var contract = v.contract;
+    var lead_maker = v.lead;
+    var player = players[lead_maker];
+    lead_count = 0;
+    $("#bidding_area,.bidbox").addClass("hidden");
+    $("#lead_area").removeClass("hidden");
+    $(".card_" + player).bind("click", player, do_lead).addClass("clickable");
+	
 }
 
 function do_bid(event) {
