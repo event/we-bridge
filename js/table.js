@@ -1,6 +1,6 @@
-var suits = ["clubs", "diamonds", "hearts", "spades"];
 var players = ["own", "left", "part", "right"];
-var suit_image_template = "<img src='images/{suit}.gif' alt='{alt_suit}'/>";
+var suit_image_template = "<img src='images/{suit}.png' alt='{alt_suit}'/>";
+var big_suit_image_template = "<img src='images/{suit}big.png' alt='{alt_suit}'/>";
 var update_cnt = 1000;
 var pass_dbl_rdbl = ["pass", "dbl", "rdbl"];
 
@@ -12,6 +12,8 @@ update_handlers["bid"] = process_bid;
 update_handlers["hand"] = process_hand;
 update_handlers["start.bidding"] = kick_bidding;
 update_handlers["start.play"] = kick_play;
+update_handlers["trick.our"] = our_trick_inc;
+update_handlers["trick.their"] = their_trick_inc;
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
@@ -101,6 +103,7 @@ function disallow_lower_bids(r, s) {
     var filtered = alowed_bids.filter(function(index){return this.id <= bid_id});
     filtered.unbind("click").removeClass("clickable").addClass("prohibited_bid");
 }
+
 var lead_count;
 function process_lead(v) {
     if (lead_count % 4 == 0) {
@@ -111,6 +114,7 @@ function process_lead(v) {
 
 
     var player = v.player;
+    var next = v.next;
     var suit = v.suit;
     var rank = v.rank;
     var allowed = v.allowed;
@@ -121,7 +125,12 @@ function process_lead(v) {
     $(card_div_id).detach();
     var lead_div_id = "#" + player + "_lead";
     $(lead_div_id).html(img_by_suit(suit) + rank);
-    var np = next_player(player);
+    var np;
+    if (next == null) {
+	np = next_player(player);
+    } else {
+	np = next;
+    }
     var np_class = ".card_" + np;
     $(".card").unbind("click").removeClass("clickable");
     if (allowed == 'any') {
@@ -158,11 +167,8 @@ function ajaxErrorHandler(event, xhr, opts, error) {
 }
 
 function img_by_suit(suit) {
-    if (suits.indexOf(suit) >= 0) {
-	var c = suit.charAt(0);
-	return suit_image_template.replace("{suit}", c).replace("{alt_suit}", c.toUpperCase());
-    }
-    
+    var c = suit.charAt(0);
+    return suit_image_template.replace("{suit}", c.toLowerCase()).replace("{alt_suit}", c.toUpperCase());
 }
 
 function kick_bidding() {
@@ -181,7 +187,16 @@ function kick_play(v) {
     $("#bidding_area,.bidbox").addClass("hidden");
     $("#lead_area").removeClass("hidden");
     $(".card_" + player).bind("click", player, do_lead).addClass("clickable");
-	
+    var csuit = contract[1];
+    var cntrct_html;
+    if (csuit != "Z") {
+	cntrct_html = contract[0] + 
+	    big_suit_image_template.replace("{suit}", csuit.toLowerCase())
+	    .replace("{alt_suit}", csuit.toUpperCase());;
+    } else {
+	cntrct_html = contract[0] + "NT";
+    }
+    $("#contract").html(cntrct_html);
 }
 
 function do_bid(event) {
@@ -191,4 +206,14 @@ function do_bid(event) {
     var url = "action.json?bid/" + players[current_bidder] + "/" + bid;
     current_bidder = (current_bidder + 1) % 4;
     $.post(url);
+}
+
+function inc(s) {
+    return parseInt(s) + 1;
+}
+
+function their_trick_inc(v) {
+    $("#their_tricks").text();
+    
+	
 }

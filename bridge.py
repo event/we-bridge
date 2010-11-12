@@ -42,12 +42,23 @@ STRAIN_DIAMOND = 1
 STRAIN_HEART = 2
 STRAIN_SPADE = 3
 STRAIN_NT = 4
+S2STRAIN = {'C': STRAIN_CLUB, 'D': STRAIN_DIAMOND, 'H': STRAIN_HEART, 'S': STRAIN_SPADE, 'Z': STRAIN_NT}
 
 CARDS_IN_SUIT = 13
 CARDS_IN_HAND = 13
 
 SUITS = ['clubs', 'diamonds', 'hearts', 'spades']
 RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+
+def get_trick_taker_offset(last_round, trump) :
+    suits = map(lambda x: x / CARDS_IN_SUIT, last_round)
+    t = S2STRAIN[trump]
+    lead_suit = suits[0]
+    if t == STRAIN_NT or t not in suits :
+        t = lead_suit
+
+    to_suit = filter(lambda x: x / CARDS_IN_SUIT == t, last_round)
+    return last_round.index(max(to_suit))
 
 def get_contract_and_lead_maker(bidding) :
     bidding = bidding[:-3]
@@ -92,6 +103,9 @@ def same_suit(card1, card2) :
     return card1 / 13 == card2 / 13
 
 def check_move(hand, card, all_moves):
+    h = set(hand)
+    h.difference_update(all_moves)
+    hand = list(h)
     logging.info('checking for %s in %s', card, hand)
     if not card in hand or card in all_moves :
         logging.info('not allowed')

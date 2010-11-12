@@ -86,3 +86,25 @@ body {
 .prohibited_bid{
     background-color: gray;
 }
+
+#contract {
+    font-weight: bold;
+    font-size: 150%;
+}
+
+#contract img {
+    width:20px;
+    height:20px;
+}
+
+#our_tricks {
+    font-weight: bold;
+    font-size: 150%;
+    font-color: #5555E8;
+}
+
+#their_tricks {
+    font-weight: bold;
+    font-size: 150%;
+    font-color: #E85555;
+}

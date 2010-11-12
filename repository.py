@@ -51,6 +51,7 @@ class Protocol(db.Model) :
     bidding = db.StringListProperty()
     moves = db.ListProperty(int)
     deal = db.ReferenceProperty(Deal)
+    contract = db.StringProperty() 
     result = db.IntegerProperty() # 0 = just made, +1 = one overtrick, -1 = one down
     playStarted = db.DateTimeProperty(auto_now_add=True)
     
@@ -88,7 +89,6 @@ class Protocol(db.Model) :
 
         if res :
             self.bidding.append(bid)
-            self.put()
         return res
 
     # FIXME: these below are all wrong. Should do full checks and exec in transaction        
