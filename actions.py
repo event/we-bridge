@@ -44,12 +44,14 @@ def do_lead(user, player, suit, rank) :
             mes['next'] = next
             mes['allowed'] = 'any' 
         else : 
+            # TODO: detecting of lead have to be corrected
             fst_card_in_round = protocol.moves[-(len(protocol.moves) % 4)]
-            logger.info('first card ' + fst_card_in_round)
+            logging.info('first card %s', fst_card_in_round)
+            logging.info('moves %s', protocol.moves)
             next_hand = set(deal.hand_by_side(sides2names[player_names[(player_names.index(player) + 1) % 4]]))
             next_hand.difference_update(protocol.moves)
-            if bridge.has_same_suit(list(next_hand), card)  :
-                mes['allowed'] = suit
+            if bridge.has_same_suit(list(next_hand), fst_card_in_round)  :
+                mes['allowed'] = bridge.num_to_suit_rank(fst_card_in_round)[0]
             else : 
                 mes['allowed'] = 'any' 
         logging.info('sending %s', mes)
