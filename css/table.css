@@ -90,21 +90,34 @@ body {
 #contract {
     font-weight: bold;
     font-size: 150%;
+    margin-left: 25px;
 }
+
 
 #contract img {
     width:20px;
     height:20px;
 }
 
-#our_tricks {
+#trick_cntnr {
+    margin-top: 5px;
+}
+
+.tricks {
     font-weight: bold;
     font-size: 150%;
-    font-color: #5555E8;
+    margin-left: 10px;
+    margin-right: 10px;
+}
+
+#our_tricks {
+    color: #5555E8;
 }
 
 #their_tricks {
-    font-weight: bold;
-    font-size: 150%;
-    font-color: #E85555;
+    color: #E85555;
+}
+
+#bidding_header th {
+    padding: 15px;
 }

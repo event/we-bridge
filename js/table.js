@@ -12,8 +12,6 @@ update_handlers["bid"] = process_bid;
 update_handlers["hand"] = process_hand;
 update_handlers["start.bidding"] = kick_bidding;
 update_handlers["start.play"] = kick_play;
-update_handlers["trick.our"] = our_trick_inc;
-update_handlers["trick.their"] = their_trick_inc;
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
@@ -114,9 +112,9 @@ function process_lead(v) {
 
 
     var player = v.player;
-    var next = v.next;
     var suit = v.suit;
     var rank = v.rank;
+    var next = v.next;
     var allowed = v.allowed;
     if (allowed == null) {
 	allowed = "any";
@@ -129,6 +127,12 @@ function process_lead(v) {
     if (next == null) {
 	np = next_player(player);
     } else {
+	var idx = $.inArray(next, players);
+	if (idx % 2 == 1) {
+	    $("#their_tricks").text(trick_inc);
+	} else {
+	    $("#our_tricks").text(trick_inc);
+	}
 	np = next;
     }
     var np_class = ".card_" + np;
@@ -208,12 +212,10 @@ function do_bid(event) {
     $.post(url);
 }
 
-function inc(s) {
-    return parseInt(s) + 1;
-}
-
-function their_trick_inc(v) {
-    $("#their_tricks").text();
-    
-	
+function trick_inc(i, s) {
+    if (s.length == 0) {
+	return 1;
+    } else {
+	return parseInt(s) + 1;
+    }
 }
