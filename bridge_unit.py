@@ -20,22 +20,65 @@ import bridge
 
 class CheckMoveTestCase(unittest.TestCase) :
     def test_card_not_in_hand(self) :
-        assert not bridge.check_move([2], 1, None), 'card not in hand'
+        self.assertFalse(bridge.check_move([2], 1, []), 'card not in hand')
 
     def test_card_played_already(self) :
-        assert not bridge.check_move([1], 1, [1]), 'card is already played'
+        self.assertFalse(bridge.check_move([1], 1, [1]), 'card is already played')
 
     def test_card_new_round(self) :
-        assert bridge.check_move([1], 1, []), 'new round - everything allowed'
+        self.assertTrue(bridge.check_move([1], 1, []), 'new round - everything allowed')
 
     def test_card_right_suit(self) :
-        assert bridge.check_move([1], 1, [0]), 'same suit - allowed'
+        self.assertTrue(bridge.check_move([1], 1, [0]), 'same suit - allowed')
 
     def test_card_no_suit(self) :
-        assert bridge.check_move([1], 1, [15]), 'no same suit - allowed'
+        self.assertTrue(bridge.check_move([1], 1, [15]), 'no same suit - allowed')
 
     def test_card_wrong_suit(self) :
-        assert not bridge.check_move([1, 14], 1, [15]), 'another suit - disallowed'
+        self.assertFalse(bridge.check_move([1, 14], 1, [15]), 'another suit - disallowed')
+
+        
+class CheckResCalcTestCase(unittest.TestCase) :
+    def test_undertricks(self) :
+        self.assertEquals(-50, bridge.tricks_to_result('1C', False, 6))
+        self.assertEquals(-100, bridge.tricks_to_result('1C', True, 6))
+
+        self.assertEquals(-100, bridge.tricks_to_result('1Cd', False, 6))
+        self.assertEquals(-200, bridge.tricks_to_result('1Cd', True, 6))
+
+        self.assertEquals(-200, bridge.tricks_to_result('1Cr', False, 6))
+        self.assertEquals(-400, bridge.tricks_to_result('1Cr', True, 6))
+
+    def test_1_club_even(self) :
+        self.assertEquals(70, bridge.tricks_to_result('1C', False, 7))
+        self.assertEquals(70, bridge.tricks_to_result('1C', True, 7))
+
+        self.assertEquals(140, bridge.tricks_to_result('1Cd', False, 7))
+        self.assertEquals(140, bridge.tricks_to_result('1Cd', True, 7))
+
+        self.assertEquals(230, bridge.tricks_to_result('1Cr', False, 7))
+        self.assertEquals(230, bridge.tricks_to_result('1Cr', True, 7))
+
+    def test_1_club_over(self) :
+        self.assertEquals(90, bridge.tricks_to_result('1C', True, 8))
+
+        self.assertEquals(240, bridge.tricks_to_result('1Cd', False, 8))
+        self.assertEquals(340, bridge.tricks_to_result('1Cd', True, 8))
+
+        self.assertEquals(430, bridge.tricks_to_result('1Cr', False, 8))
+        self.assertEquals(630, bridge.tricks_to_result('1Cr', True, 8))
+
+    def test_2_heart_plain(self) :
+        self.assertEquals(110, bridge.tricks_to_result('2H', True, 8))
+
+        self.assertEquals(470, bridge.tricks_to_result('2Hd', False, 8))
+        self.assertEquals(670, bridge.tricks_to_result('2Hd', True, 8))
+
+        self.assertEquals(640, bridge.tricks_to_result('2Hr', False, 8))
+        self.assertEquals(840, bridge.tricks_to_result('2Hr', True, 8))
+
+    def test_3nt(self) :
+        self.assertEquals(400, bridge.tricks_to_result('3Z', False, 9))
 
 
 

@@ -58,6 +58,7 @@ def do_lead(user, player, suit, rank) :
         result.append({'type': 'move', 'value': mes})
         if protocol.finished() :
             result += create_new_deck(user)
+            protocol.result = bridge.points(protocol.contract, protocol.moves)
     return result
 
 def to_dict(hand) :

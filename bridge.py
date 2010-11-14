@@ -166,3 +166,84 @@ def get_distr(hand) :
             c += 1
     return (s, h, d, c)
 
+def tricks_to_result(contract, vuln, decl_tricks) :
+    d = decl_tricks - (int(contract[0]) + 6)
+    doubled = len(contract) == 3 and contract[2] == 'd'
+    redoubled = len(contract) == 3 and contract[2] == 'r'
+    plain = not doubled and not redoubled
+    if d < 0 :
+        if plain :
+            vfac = 2 if vuln else 1
+            return d * 50 * vfac
+        else :
+            vadd = 100 if vuln else 0
+            v = 300
+            res = 0
+            while d < -3 :
+                res += v
+                d += 1
+            v -= 100 - vadd
+            while d < -1 :
+                res += v
+                d += 1
+            return (res + v - 100) * (-2 if redoubled else -1)
+    else :
+        level = int(contract[0])
+        suit = contract[1]
+        if suit in ['H', 'S', 'Z'] :
+            base = 30
+        else : 
+            base = 20
+        pts = base * level
+        if suit == 'Z' :
+            pts += 10
+
+        if doubled :
+            pts *= 2
+            insult = 50
+        elif redoubled :
+            pts *= 4
+            insult = 100
+        else :
+            insult = 0
+        game = pts >= 100
+        pts += insult
+        slam = level == 6
+        gslam = level == 7
+        if not game :
+            pts += 50
+        else :
+            pts += 500 if vuln else 300
+            if slam :
+                pts += 750 if vuln else 500
+            elif gslam :
+                pts += 1500 if vuln else 1000
+
+        if not plain : 
+            over_price = 100
+            if redoubled :
+                over_price *= 2
+            if vuln :
+                over_price *= 2
+        else :
+            over_price = base
+        return pts + (d * over_price)
+        
+                
+                
+                    
+        
+
+def points(contract, vuln, moves) :
+    rounds = [moves[i: i+4] for i in xrange(0,52,4)]
+    decl_tricks = 0
+    decl_move = False
+    old_o = 0
+    for r in rounds :
+        o = get_trick_taker_offset(r, contract[1])
+        o = (o + old_o) % 4
+        if o == 1 or o == 3 :
+            decl_tricks += 1
+        old_o = o
+    return tricks_to_result(contract, vuln, decl_tricks)
+    
