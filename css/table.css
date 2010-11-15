@@ -28,10 +28,9 @@ body {
     width: 34%;
 }
 
-.vuln_NS, .vuln_EW{
+.vulnerable{
     background-color: red;
 }
-
 .hand_container td {
     border:5px solid green;
 }

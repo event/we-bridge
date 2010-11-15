@@ -181,6 +181,13 @@ function kick_bidding(v) {
     prohibit_bid("#bid_dbl");
     prohibit_bid("#bid_rdbl");
     current_bidder = v.dealer;
+    if (v.vuln & 1) {
+	$(".vuln_NS").addClass("vulnerable");
+    }
+
+    if (v.vuln & 2) {
+	$(".vuln_EW").addClass("vulnerable");
+    }
 }
 
 function kick_play(v) {
