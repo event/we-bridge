@@ -91,6 +91,20 @@ class CheckTrickCalc(unittest.TestCase) :
         self.assertEquals(1, bridge.declearer_tricks([0,1,8,3,4,5,6,7], 'Z'))
         self.assertEquals(0, bridge.declearer_tricks([8,1,2,3,9,5,6,7], 'Z'))
 
+class CheckContractCalc(unittest.TestCase) :
+    def test_simple(self):
+        self.assertEquals(('1C', 0), bridge.get_contract_and_declearer(['1C', 'pass', 'pass', 'pass']))
+        self.assertEquals(('2S', 3), bridge.get_contract_and_declearer(['pass', 'pass', 'pass', '2S'\
+                                                                            , 'pass', 'pass', 'pass']))
+
+    def test_w_doubles(self):
+        self.assertEquals(('1Cd', 0), bridge.get_contract_and_declearer(['1C', 'pass', 'pass', 'dbl' \
+                                                                             , 'pass', 'pass', 'pass']))
+
+        self.assertEquals(('2Sr', 3), bridge.get_contract_and_declearer(['1C', '1S', 'pass', '2S'\
+                                                                             , 'dbl', 'rdbl', 'pass' \
+                                                                             , 'pass', 'pass']))
+
 
 if __name__ == '__main__' :
     unittest.main()

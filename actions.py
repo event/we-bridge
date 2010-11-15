@@ -45,8 +45,6 @@ def do_lead(user, player, suit, rank) :
             mes['allowed'] = 'any' 
         else : 
             fst_card_in_round = protocol.moves[-(len(protocol.moves) % 4)]
-            logging.info('first card %s', fst_card_in_round)
-            logging.info('moves %s', protocol.moves)
             next_hand = set(deal.hand_by_side(sides2names[player_names[(player_names.index(player) + 1) % 4]]))
             next_hand.difference_update(protocol.moves)
             if bridge.has_same_suit(list(next_hand), fst_card_in_round)  :
@@ -74,7 +72,7 @@ def create_new_deck(user) :
     deal = repo.Deal.create(deck, vuln, dealer) 
     deal_id = deal.key().id()
     dealplay_id = repo.Protocol.create(deal, user, user, user, user)
-    return add_players(map(to_dict, deck))
+    return add_players(map(to_dict, deck)), vuln, dealer
 
 def add_players(hand_list) :
     for i in xrange(4) :
@@ -86,21 +84,23 @@ def do_bid(user, player, bid) :
         return []
     
     protocol = repo.Protocol.get_by_id(dealplay_id)
+    old_cnt = len(protocol.bidding)
     if not protocol.add_bid(bid) :
         return []
 
     bid_cnt = len(protocol.bidding)
     if bid_cnt > 3 and reduce(lambda x, y: x and y == bridge.BID_PASS \
                                   , protocol.bidding[-3:], True) :
-        contract, lead_maker = bridge.get_contract_and_lead_maker(protocol.bidding)
-        protocol.contract = contract
+        contract, rel_declearer = bridge.get_contract_and_declearer(protocol.bidding)
+        declearer = (rel_declearer + protocol.deal.dealer) % 4
+        protocol.contract = contract + bridge.SIDES[declearer]
         protocol.put()
-        logging.info('contract ' + contract)
+        logging.info('contract %s by %s', contract, bridge.SIDES[declearer])
         return [{'type': 'start.play', 'value'
                  : {'contract': contract 
-                    , 'lead': lead_maker + bridge.DEALERS.index(protocol.deal.dealer)}}]
+                    , 'lead': (declearer + 1) % 4}}]
     protocol.put()
-    cur_side = (bid_cnt + bridge.DEALERS.index(protocol.deal.dealer)) % 4
+    cur_side = (old_cnt + protocol.deal.dealer) % 4
 
     if bid == bridge.BID_DOUBLE or bid_cnt > 2 and protocol.bidding[-3] == bridge.BID_DOUBLE \
             and protocol.bidding[-2] == bid == bridge.BID_PASS :

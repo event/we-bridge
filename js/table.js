@@ -1,4 +1,4 @@
-var players = ["own", "left", "part", "right"];
+var players = ["part", "right", "own", "left"];
 var suit_image_template = "<img src='images/{suit}.png' alt='{alt_suit}'/>";
 var big_suit_image_template = "<img src='images/{suit}big.png' alt='{alt_suit}'/>";
 var update_cnt = 1000;
@@ -175,12 +175,12 @@ function img_by_suit(suit) {
     return suit_image_template.replace("{suit}", c.toLowerCase()).replace("{alt_suit}", c.toUpperCase());
 }
 
-function kick_bidding() {
+function kick_bidding(v) {
     $("#lead_area").addClass("hidden");
     $(".bidbox_bid,.bidbox_pass").bind("click", do_bid).addClass("clickable");
     prohibit_bid("#bid_dbl");
     prohibit_bid("#bid_rdbl");
-    current_bidder = 0;
+    current_bidder = v.dealer;
 }
 
 function kick_play(v) {

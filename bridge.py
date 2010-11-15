@@ -21,6 +21,7 @@ VULN_NONE = 0
 VULN_NS = 1
 VULN_EW = 2
 VULN_BOTH = 3
+VULN_OPTIONS = [VULN_NONE, VULN_NS, VULN_EW, VULN_BOTH]
 
 DEALER_N = 0
 DEALER_E = 1
@@ -28,7 +29,7 @@ DEALER_S = 2
 DEALER_W = 3
 
 DEALERS = [DEALER_N, DEALER_E, DEALER_S, DEALER_W]
-
+SIDES = ['N', 'E', 'S', 'W']
 # bids are strings like '1C', '1D', '1H', '1S', '1Z'..'7S', '7Z'. 
 # 'Z' is chosen for NT to have bids comparable as strings
 BID_PASS = 'pass'
@@ -60,7 +61,7 @@ def get_trick_taker_offset(last_round, trump) :
     to_suit = filter(lambda x: x / CARDS_IN_SUIT == t, last_round)
     return last_round.index(max(to_suit))
 
-def get_contract_and_lead_maker(bidding) :
+def get_contract_and_declearer(bidding) :
     bidding = bidding[:-3]
     lastbid = bidding[-1]
     i = len(bidding) - 1
@@ -132,8 +133,8 @@ def get_deck() :
     random = rand.Random()
     random.shuffle(res)
     return (res[0:13], res[13:26], res[26:39], res[39:52])\
-        , random.choice([VULN_NONE, VULN_NS, VULN_EW, VULN_BOTH])\
-        , random.choice([DEALER_N, DEALER_S, DEALER_E, DEALER_W])
+        , random.choice(VULN_OPTIONS)\
+        , random.choice(DEALERS)
 
 def split_by_suits(hand) :
     def as_str(suit) : 
@@ -166,6 +167,20 @@ def get_distr(hand) :
             c += 1
     return (s, h, d, c)
 
+def doubled_undertricks_to_result(undertricks, vuln) :
+    vadd = 100 if vuln else 0
+    v = 300
+    res = 0
+    while undertricks > 3 :
+        res += v
+        undertricks -= 1
+    v -= 100 - vadd
+    while undertricks > 1 :
+        res += v
+        undertricks -= 1
+    return (res + v - 100)
+    
+
 def tricks_to_result(contract, vuln, decl_tricks) :
     d = decl_tricks - (int(contract[0]) + 6)
     doubled = len(contract) == 3 and contract[2] == 'd'
@@ -176,17 +191,10 @@ def tricks_to_result(contract, vuln, decl_tricks) :
             vfac = 2 if vuln else 1
             return d * 50 * vfac
         else :
-            vadd = 100 if vuln else 0
-            v = 300
-            res = 0
-            while d < -3 :
-                res += v
-                d += 1
-            v -= 100 - vadd
-            while d < -1 :
-                res += v
-                d += 1
-            return (res + v - 100) * (-2 if redoubled else -1)
+            dbld_res = doubled_undertricks_to_result(-d, vuln)
+            if redoubled :
+                dbld_res *= 2
+            return -dbld_res
     else :
         level = int(contract[0])
         suit = contract[1]

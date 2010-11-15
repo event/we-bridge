@@ -69,7 +69,7 @@ class UpdateHandler(webapp.RequestHandler):
         if user is not None:
             data = empty_queue()
             res = json.dumps(data)
-            # logging.info(res)
+            logging.info(res)
             self.response.headers['Content-Type'] = 'application/json'
             self.response.out.write(res)
         else:
@@ -99,8 +99,9 @@ class StaticHandler(webapp.RequestHandler) :
             page = self.request.path[1:]
             self.response.out.write(open(page, 'rb').read())
             if page.startswith('table.html') :
-                map(user_queue.put_nowait, actions.create_new_deck(user))
-                user_queue.put_nowait({'type': 'start.bidding'})
+                deck, vuln, dealer = actions.create_new_deck(user)
+                map(user_queue.put_nowait, deck)
+                user_queue.put_nowait({'type': 'start.bidding', 'value' : {'vuln': vuln, 'dealer': dealer}})
             elif page.startswith('hall.html') :
                 map(user_queue.put_nowait, create_test_hall_updates())
         else:

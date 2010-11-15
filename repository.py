@@ -22,8 +22,7 @@ class Deal(db.Model) :
     s_hand = db.ListProperty(int)
     e_hand = db.ListProperty(int)
     w_hand = db.ListProperty(int)
-    vulnerability = db.IntegerProperty(choices = [bridge.VULN_NONE, bridge.VULN_NS
-                                                  , bridge.VULN_EW, bridge.VULN_BOTH])
+    vulnerability = db.IntegerProperty(choices = bridge.VULN_OPTIONS)
     dealer = db.IntegerProperty(choices = bridge.DEALERS)
     createDate = db.DateTimeProperty(auto_now_add=True)
     hand2side = {'N' : 'n_hand', 'S' : 's_hand', 'E' : 'e_hand', 'W' : 'w_hand'}
