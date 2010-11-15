@@ -231,19 +231,20 @@ def tricks_to_result(contract, vuln, decl_tricks) :
         
                 
                 
-                    
-        
-
-def points(contract, vuln, moves) :
-    rounds = [moves[i: i+4] for i in xrange(0,52,4)]
+def declearer_tricks(moves, trump) :
+    rounds = [moves[i: i+4] for i in xrange(0,len(moves),4)]
     decl_tricks = 0
     decl_move = False
     old_o = 0
     for r in rounds :
-        o = get_trick_taker_offset(r, contract[1])
+        o = get_trick_taker_offset(r, trump)
         o = (o + old_o) % 4
         if o == 1 or o == 3 :
             decl_tricks += 1
         old_o = o
-    return tricks_to_result(contract, vuln, decl_tricks)
+    return decl_tricks
+        
+
+def points(contract, vuln, moves) :
+    return tricks_to_result(contract, vuln, declearer_tricks(moves, contract[1]))
     

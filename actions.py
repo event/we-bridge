@@ -44,7 +44,6 @@ def do_lead(user, player, suit, rank) :
             mes['next'] = next
             mes['allowed'] = 'any' 
         else : 
-            # TODO: detecting of lead have to be corrected
             fst_card_in_round = protocol.moves[-(len(protocol.moves) % 4)]
             logging.info('first card %s', fst_card_in_round)
             logging.info('moves %s', protocol.moves)

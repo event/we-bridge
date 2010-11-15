@@ -80,6 +80,16 @@ class CheckResCalcTestCase(unittest.TestCase) :
     def test_3nt(self) :
         self.assertEquals(400, bridge.tricks_to_result('3Z', False, 9))
 
+class CheckTrickCalc(unittest.TestCase) :
+    def test_1_trick(self):
+        self.assertEquals(1, bridge.declearer_tricks([0,1,2,3], 'Z'))
+        self.assertEquals(0, bridge.declearer_tricks([0,1,4,3], 'Z'))
+
+    def test_2_tricks(self) :
+        self.assertEquals(1, bridge.declearer_tricks([0,1,2,3,4,5,6,7], 'Z'))
+        self.assertEquals(2, bridge.declearer_tricks([0,1,2,3,4,5,8,7], 'Z'))
+        self.assertEquals(1, bridge.declearer_tricks([0,1,8,3,4,5,6,7], 'Z'))
+        self.assertEquals(0, bridge.declearer_tricks([8,1,2,3,9,5,6,7], 'Z'))
 
 
 if __name__ == '__main__' :
