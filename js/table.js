@@ -1,4 +1,5 @@
 var players = ["part", "right", "own", "left"];
+var sides = ["N", "E", "S", "W"];
 var suit_image_template = "<img src='images/{suit}.png' alt='{alt_suit}'/>";
 var big_suit_image_template = "<img src='images/{suit}big.png' alt='{alt_suit}'/>";
 var update_cnt = 1000;
@@ -188,6 +189,10 @@ function kick_bidding(v) {
     if (v.vuln & 2) {
 	$(".vuln_EW").addClass("vulnerable");
     }
+
+    side = sides[v.dealer];
+    $("#dealer_" + side).addClass("dealer");
+	
 }
 
 function kick_play(v) {
