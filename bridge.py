@@ -107,24 +107,19 @@ def check_move(hand, card, all_moves):
     h = set(hand)
     h.difference_update(all_moves)
     hand = list(h)
-    logging.info('checking for %s in %s', card, hand)
-    if not card in hand or card in all_moves :
-        logging.info('not allowed')
+    if not card in hand :
         return False
     
     if len(all_moves) % 4 == 0 :
-        logging.info('round start: allowed')
         return True
 
     fst_move_idx = (len(all_moves) / 4) * 4
     fst_move = all_moves[fst_move_idx]  # first move in this round
     if same_suit(fst_move, card) :
-        logging.info('fst_move is %s, now - %s: allowed', fst_move, card)
         return True
 
     hand.remove(card)
     res = not has_same_suit(hand, fst_move)
-    logging.info('finally %s', res)
     return res
 
 
@@ -253,6 +248,7 @@ def declearer_tricks(moves, trump) :
     return decl_tricks
         
 
-def points(contract, vuln, moves) :
-    return tricks_to_result(contract, vuln, declearer_tricks(moves, contract[1]))
+def deal_result(contract, vuln, moves) :
+    tricks = declearer_tricks(moves, contract[1])
+    return tricks_to_result(contract, vuln, tricks), tricks
     

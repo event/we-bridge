@@ -35,7 +35,6 @@ def do_lead(user, player, suit, rank) :
     result = []
     if correct_move :
         protocol.add_move(card)
-        protocol.put()
         mes = {'player': player, 'suit': suit, 'rank': rank}
         if protocol.round_ended() :
             last_round = protocol.moves[-4:]
@@ -54,8 +53,15 @@ def do_lead(user, player, suit, rank) :
         logging.info('sending %s', mes)
         result.append({'type': 'move', 'value': mes})
         if protocol.finished() :
-            result += create_new_deck(user)
-            protocol.result = bridge.points(protocol.contract, protocol.moves)
+            protocol.result, tricks = bridge.points(protocol.contract \
+                                                        , protocol.deal.vulnerability, protocol.moves)
+            result.append({'type': 'end.play', 'value': {'contract': protocol.contract[:-1]\
+                                                             , 'declearer': protocol.contract[-1]\
+                                                             , 'points': protocol.result\
+                                                             , 'tricks': tricks}})
+            result += create_new_deck_messages(user)
+
+        protocol.put()
     return result
 
 def to_dict(hand) :
@@ -73,6 +79,11 @@ def create_new_deck(user) :
     deal_id = deal.key().id()
     dealplay_id = repo.Protocol.create(deal, user, user, user, user)
     return add_players(map(to_dict, deck)), vuln, dealer
+
+def create_new_deck_messages(user) :
+    messages, vuln, dealer = create_new_deck(user)
+    messages.append({'type': 'start.bidding', 'value' : {'vuln': vuln, 'dealer': dealer}})
+    return messages
 
 def add_players(hand_list) :
     for i in xrange(4) :
