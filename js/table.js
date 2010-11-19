@@ -5,6 +5,7 @@ var big_suit_image_template = "<img src='images/{suit}big.png' alt='{alt_suit}'/
 var update_cnt = 1000;
 var pass_dbl_rdbl = ["pass", "dbl", "rdbl"];
 
+var lead_count;
 var current_bidder;
 
 var update_handlers = new Array();
@@ -13,6 +14,7 @@ update_handlers["bid"] = process_bid;
 update_handlers["hand"] = process_hand;
 update_handlers["start.bidding"] = kick_bidding;
 update_handlers["start.play"] = kick_play;
+update_handlers["end.play"] = end_play;
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
@@ -103,7 +105,6 @@ function disallow_lower_bids(r, s) {
     filtered.unbind("click").removeClass("clickable").addClass("prohibited_bid");
 }
 
-var lead_count;
 function process_lead(v) {
     if (lead_count % 4 == 0) {
 	for (var i = 0; i < 4; i += 1) {
@@ -177,7 +178,6 @@ function img_by_suit(suit) {
 }
 
 function kick_bidding(v) {
-    $("#lead_area").addClass("hidden");
     $(".bidbox_bid,.bidbox_pass").bind("click", do_bid).addClass("clickable");
     prohibit_bid("#bid_dbl");
     prohibit_bid("#bid_rdbl");
@@ -230,4 +230,18 @@ function trick_inc(i, s) {
     } else {
 	return parseInt(s) + 1;
     }
+}
+
+
+function end_play(v) {
+    $(".vuln_NS,.vuln_EW").removeClass("vulnerable");
+    $("#dealer_N,#dealer_E,#dealer_S,#dealer_W").removeClass("dealer");
+    $("#bidding_area,.bidbox").removeClass("hidden");
+    $("#lead_area").addClass("hidden");
+    $("#contract,.tricks").html("");
+    $("#bidding_area tr:gt(1)").remove();
+    $("#bidding_area tr:gt(0) td").text("");
+    $(".bidbox_bid,.bidbox_pass,.bidbox_dbl,.bidbox_rdbl")
+	.unbind("click").removeClass("prohibited_bid clickable");
+    $(".lead").text("")
 }

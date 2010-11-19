@@ -53,8 +53,8 @@ def do_lead(user, player, suit, rank) :
         logging.info('sending %s', mes)
         result.append({'type': 'move', 'value': mes})
         if protocol.finished() :
-            protocol.result, tricks = bridge.points(protocol.contract \
-                                                        , protocol.deal.vulnerability, protocol.moves)
+            protocol.result, tricks = bridge.deal_result(protocol.contract \
+                                                             , protocol.deal.vulnerability, protocol.moves)
             result.append({'type': 'end.play', 'value': {'contract': protocol.contract[:-1]\
                                                              , 'declearer': protocol.contract[-1]\
                                                              , 'points': protocol.result\
