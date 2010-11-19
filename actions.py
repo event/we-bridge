@@ -100,6 +100,7 @@ def do_bid(user, player, bid) :
         return []
 
     bid_cnt = len(protocol.bidding)
+    cur_side = (old_cnt + protocol.deal.dealer) % 4
     if bid_cnt > 3 and reduce(lambda x, y: x and y == bridge.BID_PASS \
                                   , protocol.bidding[-3:], True) :
         contract, rel_declearer = bridge.get_contract_and_declearer(protocol.bidding)
@@ -107,11 +108,11 @@ def do_bid(user, player, bid) :
         protocol.contract = contract + bridge.SIDES[declearer]
         protocol.put()
         logging.info('contract %s by %s', contract, bridge.SIDES[declearer])
-        return [{'type': 'start.play', 'value'
-                 : {'contract': contract 
-                    , 'lead': (declearer + 1) % 4}}]
+        return [{'type': 'bid', 'value': {'side': cur_side, 'bid': bid, 'dbl_mode':'none'}}\
+                , {'type': 'start.play', 'value'
+                   : {'contract': contract 
+                      , 'lead': (declearer + 1) % 4}}]
     protocol.put()
-    cur_side = (old_cnt + protocol.deal.dealer) % 4
 
     if bid == bridge.BID_DOUBLE or bid_cnt > 2 and protocol.bidding[-3] == bridge.BID_DOUBLE \
             and protocol.bidding[-2] == bid == bridge.BID_PASS :

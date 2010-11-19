@@ -200,7 +200,8 @@ function kick_play(v) {
     var lead_maker = v.lead;
     var player = players[lead_maker];
     lead_count = 0;
-    $("#bidding_area,.bidbox").addClass("hidden");
+    $(".bidbox").addClass("hidden").after($("#bidding_area").detach());
+    
     $("#lead_area").removeClass("hidden");
     $(".card_" + player).bind("click", player, do_lead).addClass("clickable");
     var csuit = contract[1];
@@ -243,5 +244,6 @@ function end_play(v) {
     $("#bidding_area tr:gt(0) td").text("");
     $(".bidbox_bid,.bidbox_pass,.bidbox_dbl,.bidbox_rdbl")
 	.unbind("click").removeClass("prohibited_bid clickable");
-    $(".lead").text("")
+    $(".lead").text("");
+    $("#lead_area").before($("#bidding_area").detach())
 }
