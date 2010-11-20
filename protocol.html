@@ -1,0 +1,65 @@
+<html>
+  <head>
+    <title>Protocol #{{protocol_id}}</title>
+  </head>
+  <body>
+    <h1>Protocol ##{{protocol_id}}</h1>
+
+    <table id="board">
+      <col class="board_column left_col"/>
+      <col class="board_column center_col"/>
+      <col class="board_column right_col"/>
+      <tr><td>
+	</td><td>
+	  <div id="N_hand" class="hand_container">
+	    <table>
+	      <tr><td><img src="images/s.png" alt="S"/>{{N.spades}}</td></tr>
+	      <tr><td><img src="images/h.png" alt="H"/>{{N.hearts}}</td></tr>
+	      <tr><td><img src="images/d.png" alt="D"/>{{N.diamonds}}</td></tr>
+ 	      <tr><td><img src="images/c.png" alt="C"/>{{N.clubs}}</td></tr>
+	    </table>
+	  </div>
+	</td><td></td></tr>
+      <tr><td>
+	  <div id="W_hand" class="hand_container">
+	    <table>
+	      <tr><td><img src="images/s.png" alt="S"/>{{W.spades}}</td></tr>
+	      <tr><td><img src="images/h.png" alt="H"/>{{W.hearts}}</td></tr>
+	      <tr><td><img src="images/d.png" alt="D"/>{{W.diamonds}}</td></tr>
+	      <tr><td><img src="images/c.png" alt="C"/>{{W.clubs}}</td></tr>
+	    </table>
+	  </div>
+	</td><td>
+	  <table id="vuln_dealer">
+ 	    <tr><td class="vuln_NS vuln_EW"></td>
+	      <td id="dealer_N" class="vuln_NS">N</td>
+	      <td class="vuln_NS vuln_EW"></td></tr>
+	    <tr><td id="dealer_W" class="vuln_EW">W</td><td></td>
+	      <td id="dealer_E" class="vuln_EW">E</td></tr>
+	    <tr><td class="vuln_NS vuln_EW"></td>
+	      <td id="dealer_S" class="vuln_NS">S</td>
+	      <td class="vuln_NS vuln_EW"></td></tr>
+	  </table>
+	</td><td>
+	  <div id="E_hand" class="hand_container">
+	    <table>
+	      <tr><td><img src="images/s.png" alt="S"/>{{E.spades}}</td></tr>
+	      <tr><td><img src="images/h.png" alt="H"/>{{E.hearts}}</td></tr>
+	      <tr><td><img src="images/d.png" alt="D"/>{{E.diamonds}}</td></tr>
+	      <tr><td><img src="images/c.png" alt="C"/>{{E.clubs}}</td></tr>
+	    </table>
+	  </div>
+      </td></tr>
+      <tr><td></td><td>
+	  <div id="S_hand" class="hand_container">
+	    <table>
+	      <tr><td><img src="images/s.png" alt="S"/>{{S.spades}}</td></tr>
+	      <tr><td><img src="images/h.png" alt="H"/>{{S.hearts}} </td> </tr>
+	      <tr><td><img src="images/d.png" alt="D"/>{{S.diamonds}} </td></tr>
+	      <tr><td><img src="images/c.png" alt="C"/>{{S.clubs}} </td></tr>
+	    </table>
+	  </div>
+	</td><td>
+    </table>
+</body>
+</html>
