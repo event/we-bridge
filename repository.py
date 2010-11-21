@@ -58,6 +58,10 @@ class Protocol(db.Model) :
     def create(dealmodel, N, S, E, W) :
         return Protocol(deal = dealmodel, N = N, E = E, S = S, W = W).put().id()
     
+    @staticmethod
+    def get_by_dealid(dealid) :
+        return Protocol.all().filter('deal = KEY(%s, %s)'%(Deal.kind(), dealid)).order("playStarted")
+
     def round_ended(self) :
         return len(self.moves) % 4 == 0
 

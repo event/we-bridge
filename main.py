@@ -25,6 +25,7 @@ from django.utils  import simplejson as json
 
 import bridge
 import actions
+import repository as repo
 
 def checklogin(f) :
     def decorated(self):
@@ -111,16 +112,21 @@ class ProtocolHandler(webapp.RequestHandler) :
     @checklogin
     def get(self):
         page = self.request.path[1:]
-        values = {'protocol_id': self.request.query_string, 'vuln_EW': True, 'vuln_NS': False, 'dealer': 'S'
-                  , 'N' : {'spades': 'A K Q', 'hearts': 'J 10 9', 'diamonds': '8 7 6', 'clubs': '5 4 3 2'}
-                  , 'E' : {'spades': 'J 10 9', 'hearts': '8 7 6', 'diamonds': '5 4 3 2', 'clubs':  'A K Q'}
-                  , 'S' : {'spades': '5 4 3 2', 'hearts': 'A K Q', 'diamonds': 'J 10 9', 'clubs':  '8 7 6'}
-                  , 'W' : {'spades': '8 7 6', 'hearts': '5 4 3 2', 'diamonds': 'A K Q', 'clubs': 'J 10 9'}
+        dealid = int(self.request.query_string)
+        deal = repo.Deal.get_by_id(dealid)
+        hands = map(bridge.split_by_suits, [deal.n_hand, deal.e_hand, deal.s_hand, deal.w_hand])
+        h_val = dict(zip(bridge.SIDES, [dict(zip(['clubs',  'diamonds', 'hearts', 'spades'], h)) for h in hands]))
+        values = {'protocol_id': dealid, 'vuln_EW': deal.vulnerability & bridge.VULN_EW
+                  , 'vuln_NS': deal.vulnerability & bridge.VULN_NS, 'dealer': bridge.SIDES[deal.dealer]
                   , 'records': [{'N': 'Piotr', 'E': 'Johny', 'S': 'Susy', 'W': 'Wallet'
                                  , 'contract': '5<img src="images/s.png" alt="S"/>', 'decl': 'S'
                                  , 'lead': '<img src="images/s.png" alt="S"/>5', 'tricks': '='
                                  , 'result': '+670'}]}
+        values.update(h_val)
         self.response.out.write(template.render(page, values))
+
+
+
 
 def main():
     application = webapp.WSGIApplication([('/', Redirector),

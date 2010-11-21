@@ -143,9 +143,6 @@ def split_by_suits(hand) :
 
     return map(as_str, res)
 
-def get_by_suit(hand, suit) :
-    len(filter(lambda x: x >= suit * 13 and x < (suit+1) * 13, hand))
-
 def get_distr(hand) :
     s = 0
     h = 0
