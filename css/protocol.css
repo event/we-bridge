@@ -1,0 +1,57 @@
+body {
+    width:100%;
+}
+
+#board {
+    cellpadding:3;
+    width:98%;
+    background-color:green;
+}
+
+#board .board_column {
+    width: 33%;
+}
+
+#vuln_dealer {
+    margin-left:10%;
+    margin-right:auto;
+    padding-right: 1%;
+    font-weight:bold;
+    background-color: #C0C0C0;
+    width: 80px;
+    text-align: center;
+    border-width: 0px;
+    border-collapse: collapse;
+}
+
+#vuln_dealer tr td {
+    width: 34%;
+}
+
+.hand_container td {
+    border:5px solid green;
+}
+
+.hand_container div {
+    display:inline;
+}
+
+.results {
+    width: 98%;
+    background-color: #C39126;
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.results tr td {
+    text-align: center;
+    border: 1px solid black;
+}
+
+.results tr th {
+    border: 1px solid black;
+}
+
+.highlight{
+    background-color: red;
+}

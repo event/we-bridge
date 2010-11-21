@@ -1,9 +1,25 @@
 <html>
   <head>
     <title>Protocol #{{protocol_id}}</title>
+    <link rel="stylesheet" type="text/css" href="css/protocol.css"/>
+    <style type="text/css">
+      {% if vuln_EW %}
+      .vuln_EW {
+      background-color: red;
+      }
+      {% endif %}
+      {% if vuln_NS %}
+      .vuln_NS {
+      background-color: red;
+      }
+      {% endif %}
+      #dealer_{{dealer}} {
+      border: 3px solid black;
+      }
+    </style>
   </head>
   <body>
-    <h1>Protocol ##{{protocol_id}}</h1>
+    <h1>Protocol #{{protocol_id}}</h1>
 
     <table id="board">
       <col class="board_column left_col"/>
@@ -31,6 +47,9 @@
 	  </div>
 	</td><td>
 	  <table id="vuln_dealer">
+	    <col class="vd_left"/>
+	    <col class="vd_center"/>
+	    <col class="vd_right"/>
  	    <tr><td class="vuln_NS vuln_EW"></td>
 	      <td id="dealer_N" class="vuln_NS">N</td>
 	      <td class="vuln_NS vuln_EW"></td></tr>
@@ -60,6 +79,25 @@
 	    </table>
 	  </div>
 	</td><td>
+    </table>
+    <table class="results">
+      <col class="player_column"/>
+      <col class="player_column"/>
+      <col class="player_column"/>
+      <col class="player_column"/>
+      <col class="contract_column"/>
+      <col class="decl_column"/>
+      <col class="lead_column"/>
+      <col class="tricks_column"/>
+      <col class="result_column"/>
+      <tr><th>N</th><th>E</th><th>S</th><th>W</th><th>Contract</th><th>Declearer</th>
+	<th>Lead</th><th>Tricks</th><th>Result</th></tr>
+      {% for record in records %}
+      <tr {% if record.highlight %}class="highlight"{% endif %}>
+	<td>{{record.N}}</td><td>{{record.E}}</td><td>{{record.S}}</td><td>{{record.W}}</td>
+	<td>{{record.contract}}</td><td>{{record.decl}}</td><td>{{record.lead}}</td>
+	<td>{{record.tricks}}</td><td>{{record.result}}</td></tr>
+      {% endfor %}
     </table>
 </body>
 </html>
