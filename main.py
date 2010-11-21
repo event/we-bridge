@@ -110,7 +110,7 @@ class StaticHandler(webapp.RequestHandler) :
             
         self.response.out.write(open(page, 'rb').read())
 
-def protocol2map(p) :
+def protocol2map(curuser, p) :
     lead = bridge.num_to_suit_rank(p.moves[0])
     lead_s = lead[0][0]
     lead =  IMAGE_TEMPLATE % (lead_s, lead_s.upper()) + lead[1]
@@ -119,7 +119,8 @@ def protocol2map(p) :
     cntrct = cntrct[0] + IMAGE_TEMPLATE % (cntrct_s.lower(), cntrct_s) + cntrct[2:]
     return {'N': p.N.nickname(), 'E': p.E.nickname(), 'S': p.S.nickname(), 'W': p.W.nickname(), 
             'contract': cntrct, 'decl': p.contract[-1]
-            , 'lead': lead, 'tricks': p.tricks, 'result': p.result}
+            , 'lead': lead, 'tricks': '=' if p.tricks == 0 else p.tricks, 'result': p.result
+            , 'highlight': curuser in [p.N, p.E, p.S, p.W] }
 
 class ProtocolHandler(webapp.RequestHandler) :
     @checklogin
@@ -128,13 +129,14 @@ class ProtocolHandler(webapp.RequestHandler) :
         dealid = int(self.request.query_string)
         deal = repo.Deal.get_by_id(dealid)
         hands = map(bridge.split_by_suits, [deal.n_hand, deal.e_hand, deal.s_hand, deal.w_hand])
-        h_val = dict(zip(bridge.SIDES, [dict(zip(['clubs',  'diamonds', 'hearts', 'spades'], h)) for h in hands]))
+        h_val = dict(zip(bridge.SIDES
+                         , [dict(zip(['clubs',  'diamonds', 'hearts', 'spades'], h)) for h in hands]))
 
         protoiter = repo.Protocol.get_by_deal(deal)
         
         values = {'protocol_id': dealid, 'vuln_EW': deal.vulnerability & bridge.VULN_EW
                   , 'vuln_NS': deal.vulnerability & bridge.VULN_NS, 'dealer': bridge.SIDES[deal.dealer]
-                  , 'records': map(protocol2map, protoiter)}
+                  , 'records': map(lambda x: protocol2map(users.get_current_user(), x), protoiter)}
         values.update(h_val)
         self.response.out.write(template.render(page, values))
 
