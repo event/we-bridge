@@ -27,6 +27,8 @@ import bridge
 import actions
 import repository as repo
 
+IMAGE_TEMPLATE = '<img src="images/%s.png" alt="%s"/>'
+
 def checklogin(f) :
     def decorated(self):
         if users.get_current_user() is not None :
@@ -108,6 +110,17 @@ class StaticHandler(webapp.RequestHandler) :
             
         self.response.out.write(open(page, 'rb').read())
 
+def protocol2map(p) :
+    lead = bridge.num_to_suit_rank(p.moves[0])
+    lead_s = lead[0][0]
+    lead =  IMAGE_TEMPLATE % (lead_s, lead_s.upper()) + lead[1]
+    cntrct = p.contract[:-1].replace('d', 'X').replace('r','XX')
+    cntrct_s = cntrct[1]
+    cntrct = cntrct[0] + IMAGE_TEMPLATE % (cntrct_s.lower(), cntrct_s) + cntrct[2:]
+    return {'N': p.N.nickname(), 'E': p.E.nickname(), 'S': p.S.nickname(), 'W': p.W.nickname(), 
+            'contract': cntrct, 'decl': p.contract[-1]
+            , 'lead': lead, 'tricks': p.tricks, 'result': p.result}
+
 class ProtocolHandler(webapp.RequestHandler) :
     @checklogin
     def get(self):
@@ -116,12 +129,12 @@ class ProtocolHandler(webapp.RequestHandler) :
         deal = repo.Deal.get_by_id(dealid)
         hands = map(bridge.split_by_suits, [deal.n_hand, deal.e_hand, deal.s_hand, deal.w_hand])
         h_val = dict(zip(bridge.SIDES, [dict(zip(['clubs',  'diamonds', 'hearts', 'spades'], h)) for h in hands]))
+
+        protoiter = repo.Protocol.get_by_deal(deal)
+        
         values = {'protocol_id': dealid, 'vuln_EW': deal.vulnerability & bridge.VULN_EW
                   , 'vuln_NS': deal.vulnerability & bridge.VULN_NS, 'dealer': bridge.SIDES[deal.dealer]
-                  , 'records': [{'N': 'Piotr', 'E': 'Johny', 'S': 'Susy', 'W': 'Wallet'
-                                 , 'contract': '5<img src="images/s.png" alt="S"/>', 'decl': 'S'
-                                 , 'lead': '<img src="images/s.png" alt="S"/>5', 'tricks': '='
-                                 , 'result': '+670'}]}
+                  , 'records': map(protocol2map, protoiter)}
         values.update(h_val)
         self.response.out.write(template.render(page, values))
 

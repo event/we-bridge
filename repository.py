@@ -50,8 +50,9 @@ class Protocol(db.Model) :
     bidding = db.StringListProperty()
     moves = db.ListProperty(int)
     deal = db.ReferenceProperty(Deal)
-    contract = db.StringProperty() 
-    result = db.IntegerProperty() # 0 = just made, +1 = one overtrick, -1 = one down
+    contract = db.StringProperty() # <level><suit>[d|r]<decl> eg. 3SdN, 2DS 
+    tricks = db.IntegerProperty() # 0 = just made, +1 = one overtrick, -1 = one down
+    result = db.IntegerProperty() # +100, -800, etc.
     playStarted = db.DateTimeProperty(auto_now_add=True)
     
     @staticmethod
@@ -59,8 +60,8 @@ class Protocol(db.Model) :
         return Protocol(deal = dealmodel, N = N, E = E, S = S, W = W).put().id()
     
     @staticmethod
-    def get_by_dealid(dealid) :
-        return Protocol.all().filter('deal = KEY(%s, %s)'%(Deal.kind(), dealid)).order("playStarted")
+    def get_by_deal(deal) :
+        return Protocol.all().filter('deal =', deal).order("playStarted")
 
     def round_ended(self) :
         return len(self.moves) % 4 == 0
