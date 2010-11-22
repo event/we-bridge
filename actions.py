@@ -57,7 +57,7 @@ def do_lead(user, player, suit, rank) :
             protocol.result, protocol.tricks = bridge.deal_result(cntrct \
                                                              , protocol.deal.vulnerability, protocol.moves)
             result.append({'type': 'end.play', 'value': 
-                           {'contract': cntrct\
+                           {'contract': cntrct.replace('d', 'x').replace('r','xx').replace('Z', 'NT')\
                                 , 'declearer': protocol.contract[-1]\
                                 , 'points': protocol.result\
                                 , 'tricks': protocol.tricks\
@@ -98,6 +98,8 @@ def do_bid(user, player, bid) :
         return []
     
     protocol = repo.Protocol.get_by_id(dealplay_id)
+    if protocol.contract is not None :
+        return []
     old_cnt = len(protocol.bidding)
     if not protocol.add_bid(bid) :
         return []
