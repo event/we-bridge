@@ -213,7 +213,7 @@ function kick_play(v) {
     } else {
 	cntrct_html = contract[0] + "NT";
     }
-    $("#contract").html(cntrct_html);
+    $("#contract").html(cntrct_html + contract.substr(2, 2));
 }
 
 function do_bid(event) {

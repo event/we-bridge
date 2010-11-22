@@ -57,7 +57,7 @@ def do_lead(user, player, suit, rank) :
             protocol.result, protocol.tricks = bridge.deal_result(cntrct \
                                                              , protocol.deal.vulnerability, protocol.moves)
             result.append({'type': 'end.play', 'value': 
-                           {'contract': cntrct.replace('d', 'x').replace('r','xx').replace('Z', 'NT')\
+                           {'contract': cntrct.replace('d', 'x').replace('r','xx')\
                                 , 'declearer': protocol.contract[-1]\
                                 , 'points': protocol.result\
                                 , 'tricks': protocol.tricks\
@@ -115,7 +115,7 @@ def do_bid(user, player, bid) :
         logging.info('contract %s by %s', contract, bridge.SIDES[declearer])
         return [{'type': 'bid', 'value': {'side': cur_side, 'bid': bid, 'dbl_mode':'none'}}\
                 , {'type': 'start.play', 'value'
-                   : {'contract': contract 
+                   : {'contract': contract.replace('d', 'x').replace('r','xx') 
                       , 'lead': (declearer + 1) % 4}}]
     protocol.put()
 

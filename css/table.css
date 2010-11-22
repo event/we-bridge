@@ -122,8 +122,19 @@ body {
     color: #E85555;
 }
 
+#bidding_area {
+    border-collapse: collapse;
+    background-color: darkGreen;
+}
+
 #bidding_header th {
-    padding: 15px;
+    padding: 5px 15px 1px 15px;
+    border-bottom: 1px solid yellow;
+}
+
+.bidding_row td {
+    text-align: center;
+    padding-top: 7px;
 }
 
 div.popup {
