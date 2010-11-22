@@ -76,7 +76,7 @@ class CheckResCalcTestCase(unittest.TestCase) :
 
         self.assertEquals(640, bridge.tricks_to_result('2Hr', False, 8))
         self.assertEquals(840, bridge.tricks_to_result('2Hr', True, 8))
-
+        
     def test_3nt(self) :
         self.assertEquals(400, bridge.tricks_to_result('3Z', False, 9))
 

@@ -114,7 +114,7 @@ def protocol2map(curuser, p) :
     lead = bridge.num_to_suit_rank(p.moves[0])
     lead_s = lead[0][0]
     lead =  IMAGE_TEMPLATE % (lead_s, lead_s.upper()) + lead[1]
-    cntrct = p.contract[:-1].replace('d', 'X').replace('r','XX')
+    cntrct = p.contract[:-1].replace('d', 'x').replace('r','xx').replace('Z', 'NT')
     cntrct_s = cntrct[1]
     cntrct = cntrct[0] + IMAGE_TEMPLATE % (cntrct_s.lower(), cntrct_s) + cntrct[2:]
     return {'N': p.N.nickname(), 'E': p.E.nickname(), 'S': p.S.nickname(), 'W': p.W.nickname(), 

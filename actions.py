@@ -53,12 +53,15 @@ def do_lead(user, player, suit, rank) :
         logging.info('sending %s', mes)
         result.append({'type': 'move', 'value': mes})
         if protocol.finished() :
-            protocol.result, protocol.tricks = bridge.deal_result(protocol.contract \
+            cntrct = protocol.contract[:-1]
+            protocol.result, protocol.tricks = bridge.deal_result(cntrct \
                                                              , protocol.deal.vulnerability, protocol.moves)
-            result.append({'type': 'end.play', 'value': {'contract': protocol.contract[:-1]\
-                                                             , 'declearer': protocol.contract[-1]\
-                                                             , 'points': protocol.result\
-                                                             , 'tricks': protocol.tricks}})
+            result.append({'type': 'end.play', 'value': 
+                           {'contract': cntrct\
+                                , 'declearer': protocol.contract[-1]\
+                                , 'points': protocol.result\
+                                , 'tricks': protocol.tricks\
+                                , 'protocol_url': 'protocol.html?%s' % deal.key().id()}})
             result += create_new_deck_messages(user)
 
         protocol.put()

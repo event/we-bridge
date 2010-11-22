@@ -245,5 +245,29 @@ function end_play(v) {
     $(".bidbox_bid,.bidbox_pass,.bidbox_dbl,.bidbox_rdbl")
 	.unbind("click").removeClass("prohibited_bid clickable");
     $(".lead").text("");
-    $("#lead_area").before($("#bidding_area").detach())
+    $("#lead_area").before($("#bidding_area").detach());
+    var contract = v.contract;
+    var decl = v.declearer;
+    var points = v.points;
+    var tricks = v.tricks;
+    var url = v.protocol_url;
+    var sign = "";
+    if (points > 0) {
+	sign = "+";
+    }
+    var contract_html;
+    var r = contract[0];
+    var s = contract[1];
+    if (s != 'Z') {
+	var img = suit_image_template.replace("{suit}", s.toLowerCase()).replace("{alt_suit}", s);
+	contract_html = r + img;
+    } else {
+	contract_html = r + "NT";
+    }
+    contract_html += contract.substr(2, 2);
+    $("#popup_res").html("<a href='" + url + "' target='_blank'>" +  tricks 
+			 + " tricks, " + sign + points + "</a>");
+    $("#popup_contract").html(contract_html + " by " + decl);
+    $(".popup").bPopup();
+	
 }

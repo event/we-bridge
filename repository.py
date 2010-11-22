@@ -70,7 +70,7 @@ class Protocol(db.Model) :
         self.moves.append(move)
 
     def finished(self) :
-        return len(self.moves) == 2
+        return len(self.moves) == 52
 
     def add_bid(self, bid) :
         bidding = self.bidding
