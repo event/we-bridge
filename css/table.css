@@ -151,3 +151,35 @@ div.popup {
     margin-top: 5px;
     text-align: center;
 }
+
+.hand_container{
+    position: relative;
+}
+
+.card {
+    width: 71px;
+    height: 96px;
+    position: absolute;
+    left: 7%
+    top: 0px;
+}
+
+#card1 {
+    width: 71px;
+    height: 96px;
+    background: url(../images/cards.png) 0 0;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: 1;
+}
+
+#card2 {
+    width: 71px;
+    height: 96px;
+    background: url(../images/cards.png) -71px 0;
+    position: absolute;
+    left: 7%;
+    top: 0px;
+    z-index: 2;
+}
