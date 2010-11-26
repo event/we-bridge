@@ -68,11 +68,12 @@ def do_lead(user, player, suit, rank) :
     return result
 
 def to_dict(hand) :
-    c, d, h, s = bridge.split_by_suits(hand)
-    return {'type': 'hand', 'value':{'suits':[{'suit': 'clubs', 'cards': c}
-                                              , {'suit': 'diamonds', 'cards': d}
-                                              , {'suit': 'hearts', 'cards': h}
-                                              , {'suit': 'spades', 'cards': s}]}}
+    # c, d, h, s = bridge.split_by_suits(hand)
+    # return {'type': 'hand', 'value':{'suits':[{'suit': 'clubs', 'cards': c}
+    #                                           , {'suit': 'diamonds', 'cards': d}
+    #                                           , {'suit': 'hearts', 'cards': h}
+    #                                           , {'suit': 'spades', 'cards': s}]}}
+    return {'type': 'hand', 'value': {'cards': hand}}
 
 def create_new_deck(user) :
     global deal_id

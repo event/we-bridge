@@ -1,11 +1,22 @@
+html {
+    height:100%;
+}
+
 body {
-    width:100%;
+    height: 85%;
+    width:99%;
 }
 
 #board {
     cellpadding:3;
-    width:80%;
+    width:100%;
+    height: 99%;
     background-color:green;
+    text-align: center;
+}
+
+#board tr {
+    height: 33%;
 }
 
 #board .board_column {
@@ -36,12 +47,34 @@ body {
     border: 3px solid black;
 }
 
+.hand_container{
+    position: relative;
+    height: 100px;
+}
+
+
+
 .hand_container td {
     border:5px solid green;
 }
 
 .hand_container div {
     display:inline;
+}
+
+.card {
+    width: 71px;
+    height: 96px;
+    position: absolute;
+    left: 7%;
+}
+
+#part_hand_cell {
+    vertical-align: top;
+}
+
+#own_hand_cell {
+    vertical-align: bottom;
 }
 
 .clickable {
@@ -75,10 +108,15 @@ body {
     padding: 0px;
 }
 
-.bidbox {
+#bidbox_cell {
+    text-align: right;
+}
+
+#bidbox {
     border-collapse: collapse;
     border: 2px solid grey;
     text-align: center;
+    display: inline-block;
     background-color: #B09060;
 }
 
@@ -125,6 +163,7 @@ body {
 #bidding_area {
     border-collapse: collapse;
     background-color: darkGreen;
+    display: inline-block;
 }
 
 #bidding_header th {
@@ -152,34 +191,3 @@ div.popup {
     text-align: center;
 }
 
-.hand_container{
-    position: relative;
-}
-
-.card {
-    width: 71px;
-    height: 96px;
-    position: absolute;
-    left: 7%
-    top: 0px;
-}
-
-#card1 {
-    width: 71px;
-    height: 96px;
-    background: url(../images/cards.png) 0 0;
-    position: absolute;
-    left: 0px;
-    top: 0px;
-    z-index: 1;
-}
-
-#card2 {
-    width: 71px;
-    height: 96px;
-    background: url(../images/cards.png) -71px 0;
-    position: absolute;
-    left: 7%;
-    top: 0px;
-    z-index: 2;
-}

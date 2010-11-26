@@ -1,4 +1,4 @@
-var players = ["part", "right", "own", "left"];
+var player_positions = ["part", "right", "own", "left"];
 var sides = ["N", "E", "S", "W"];
 var suit_image_template = "<img src='images/{suit}.png' alt='{alt_suit}'/>";
 var big_suit_image_template = "<img src='images/{suit}big.png' alt='{alt_suit}'/>";
@@ -43,10 +43,38 @@ function process_update(i, data) {
 
 function process_hand(v) {
     var player = v.player;
-    var suits = v.suits;
-    $.each(suits, function(i, suit){load_suit(player, suit)});
+    var cards = v.cards;
+    // var suits = v.suits;
+    // $.each(suits, function(i, suit){load_suit(player, suit)});
+    load_hand(player, cards);
 }
 
+function card_sort(c1, c2) {
+    if (Math.floor(c1/13) + Math.floor(c2/13) == 1) {
+	return c1 - c2;
+    } else {
+	return c2 - c1;
+    }
+}
+
+
+function load_hand(player, cards) {
+    var pos = $.inArray(player, player_positions);
+    if (pos == 0 || pos == 2) {
+	cards.sort(card_sort);
+	var h = $("#" + player + "_hand");
+	$.each(cards, 
+	       function(idx, value) {
+		   var s = document.createElement("span");
+		   $(s).addClass("card")
+		       var bg = "url(images/cards.png) " + (value * -71) +  "px 0";
+		   $(s).css({"background": bg, "z-index": idx + 1, "left": idx * 7 + "%"});
+		   h.append(s);
+	       });
+    }
+}
+
+/* FIXME: remove when card pic used */
 function load_suit(player, suit) {
     var s = suit.suit;
     var cards = suit.cards;
@@ -108,7 +136,7 @@ function disallow_lower_bids(r, s) {
 function process_lead(v) {
     if (lead_count % 4 == 0) {
 	for (var i = 0; i < 4; i += 1) {
-	    $("#" + players[i] + "_lead").html("&nbsp;");
+	    $("#" + player_positions[i] + "_lead").html("&nbsp;");
    	}
     }
 
@@ -129,7 +157,7 @@ function process_lead(v) {
     if (next == null) {
 	np = next_player(player);
     } else {
-	var idx = $.inArray(next, players);
+	var idx = $.inArray(next, player_positions);
 	if (idx % 2 == 1) {
 	    $("#their_tricks").text(trick_inc);
 	} else {
@@ -149,11 +177,11 @@ function process_lead(v) {
 }
 
 function next_player(player) {
-    var idx = $.inArray(player, players);
+    var idx = $.inArray(player, player_positions);
     if (idx == 3) {
-	return players[0];
+	return player_positions[0];
     } else {
-	return players[idx + 1];
+	return player_positions[idx + 1];
     }
 }
 
@@ -198,7 +226,7 @@ function kick_bidding(v) {
 function kick_play(v) {
     var contract = v.contract;
     var lead_maker = v.lead;
-    var player = players[lead_maker];
+    var player = player_positions[lead_maker];
     lead_count = 0;
     $(".bidbox").addClass("hidden").after($("#bidding_area").detach());
     
@@ -220,7 +248,7 @@ function do_bid(event) {
     var splitted_id = event.currentTarget.id.split("_");
     var bid = splitted_id[1];
     
-    var url = "action.json?bid/" + players[current_bidder] + "/" + bid;
+    var url = "action.json?bid/" + player_positions[current_bidder] + "/" + bid;
     current_bidder = (current_bidder + 1) % 4;
     $.post(url);
 }

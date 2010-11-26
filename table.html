@@ -25,26 +25,14 @@
 	      <td id="dealer_S" class="vuln_NS">S</td>
 	      <td class="vuln_NS vuln_EW"></td></tr>
 	  </table>
-	</td><td>
+	</td><td id="part_hand_cell">
 	  <div id="part_hand" class="hand_container">
-	    <table>
-	      <tr><td><img src="images/s.png" alt="S"/>  <div id="part_spades"></div></td></tr>
-	      <tr><td><img src="images/h.png" alt="H"/>  <div id="part_hearts"></div></td></tr>
-	      <tr><td><img src="images/d.png" alt="D"/>  <div id="part_diamonds"></div></td></tr>
- 	      <tr><td><img src="images/c.png" alt="C"/>  <div id="part_clubs"></div></td></tr>
-	    </table>
 	  </div>
 	</td><td><span id="contract"></span><div id="trick_cntnr">
 	  <span id="our_tricks" class="tricks"></span>
 	  <span id="their_tricks" class="tricks"></span></div></td></tr>
-      <tr><td>
+      <tr><td id="left_hand_cell">
 	  <div id="left_hand" class="hand_container">
-	    <table>
-	      <tr><td><img src="images/s.png" alt="S"/>  <div id="left_spades"></div></td></tr>
-	      <tr><td><img src="images/h.png" alt="H"/>  <div id="left_hearts"></div></td></tr>
-	      <tr><td><img src="images/d.png" alt="D"/>  <div id="left_diamonds"></div></td></tr>
-	      <tr><td><img src="images/c.png" alt="C"/>  <div id="left_clubs"></div></td></tr>
-	    </table>
 	  </div>
 	</td><td>
 	  <table id="bidding_area">	
@@ -56,26 +44,14 @@
 	    <tr><td class="lead" id="left_lead"></td><td></td><td class="lead" id="right_lead"></td></tr>
 	    <tr><td></td><td class="lead" id="own_lead"></td><td></td></tr>
 	  </table>
-	</td><td>
+	</td><td id="right_hand_cell">
 	  <div id="right_hand" class="hand_container">
-	    <table>
-	      <tr><td><img src="images/s.png" alt="S"/> <div id="right_spades"></div></td></tr>
-	      <tr><td><img src="images/h.png" alt="H"/> <div id="right_hearts"></div></td></tr>
-	      <tr><td><img src="images/d.png" alt="D"/> <div id="right_diamonds"></div></td></tr>
-	      <tr><td><img src="images/c.png" alt="C"/> <div id="right_clubs"></div></td></tr>
-	    </table>
 	  </div>
       </td></tr>
-      <tr><td></td><td>
+      <tr><td></td><td id="own_hand_cell">
 	  <div id="own_hand" class="hand_container">
-	    <table>
-	      <tr><td><img src="images/s.png" alt="S"/><div id="own_spades"></div></td></tr>
-	      <tr><td><img src="images/h.png" alt="H"/><div id="own_hearts"></div> </td> </tr>
-	      <tr><td><img src="images/d.png" alt="D"/><div id="own_diamonds"></div> </td></tr>
-	      <tr><td><img src="images/c.png" alt="C"/><div id="own_clubs"></div> </td></tr>
-	    </table>
 	  </div>
-	</td><td><table class="bidbox">
+	</td><td id="bidbox_cell"><table id="bidbox">
 	    <tr>
 	      <td colspan="3" class="bidbox_pass" id="bid_pass"><h3>Pass</h3></td>
 	      <td colspan="2" class="bidbox_dbl" id="bid_dbl"><h3>X</h3></td>
@@ -136,8 +112,5 @@
       <div id="popup_res"><a href="#"></a></div>
       <div id="popup_contract"></div>
     </div>
-    <address>
-      <a href="mailto:event.riga@gmail.com">Leo</a>
-    </address>
   </body>
 </html>
