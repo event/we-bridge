@@ -60,9 +60,9 @@ function card_sort(c1, c2) {
 
 function load_hand(player, cards) {
     var pos = $.inArray(player, player_positions);
+    cards.sort(card_sort);
+    var h = $("#" + player + "_hand");
     if (pos == 0 || pos == 2) {
-	cards.sort(card_sort);
-	var h = $("#" + player + "_hand");
 	$.each(cards, 
 	       function(idx, value) {
 		   var s = document.createElement("span");
@@ -71,18 +71,31 @@ function load_hand(player, cards) {
 		   $(s).css({"background": bg, "z-index": idx + 1, "left": idx * 7 + "%"});
 		   h.append(s);
 	       });
+    } else {
+	var old_suit = Math.floor(cards[0]/13);
+	var voffset = 0;
+	var hoffset = -7;
+	var hoffset_diff = 7;
+	var z = 0;
+	for (var i = 0; i < cards.length; i += 1) {
+	    var c = cards[i];
+	    var new_suit = Math.floor(c/13)
+	    if (old_suit != new_suit) {
+		voffset += 35;
+		hoffset = 0;
+		old_suit = new_suit;
+		hoffset_diff += 1;
+	    } else {
+		hoffset += hoffset_diff;
+	    }
+	    z += 1;
+	    var s = document.createElement("span");
+	    $(s).addClass("card")
+		var bg = "url(images/cards.png) " + (c * -71) +  "px 0";
+	    $(s).css({"background": bg, "z-index": z, "left":  hoffset + "%", "top": voffset + "%"});
+	    h.append(s);
+	}
     }
-}
-
-/* FIXME: remove when card pic used */
-function load_suit(player, suit) {
-    var s = suit.suit;
-    var cards = suit.cards;
-    var divid = "#" + player + "_" + s;
-    var card_str = cards.replace(/([2-9JQKA]|10)/g, "<div"
-				 + " class='card card_" + player + " card_" + player + "_" + s + "'"
-				 + " id='" + s + "_$1'>$1</div>");
-    $(divid).html(card_str);
 }
 
 function process_bid(v) {
