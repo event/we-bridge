@@ -25,17 +25,17 @@ sides2names = {'own' : 'S', 'left' : 'W', 'part' : 'N', 'right' : 'E'}
 deal_id = None
 dealplay_id = None
 
-def do_lead(user, player, suit, rank) :
+def do_lead(user, player, scard) :
     protocol = repo.Protocol.get_by_id(dealplay_id)
     deal = protocol.deal
     side = sides2names[player]
     hand = deal.hand_by_side(side)
-    card = bridge.suit_rank_to_num(suit, rank)
+    card = int(scard)
     correct_move = bridge.check_move(hand, card, protocol.moves)
     result = []
     if correct_move :
         protocol.add_move(card)
-        mes = {'player': player, 'suit': suit, 'rank': rank}
+        mes = {'player': player, 'card': card}
         if protocol.round_ended() :
             last_round = protocol.moves[-4:]
             taker = bridge.get_trick_taker_offset(last_round, protocol.contract[1])
@@ -47,7 +47,7 @@ def do_lead(user, player, suit, rank) :
             next_hand = set(deal.hand_by_side(sides2names[player_names[(player_names.index(player) + 1) % 4]]))
             next_hand.difference_update(protocol.moves)
             if bridge.has_same_suit(list(next_hand), fst_card_in_round)  :
-                mes['allowed'] = bridge.num_to_suit_rank(fst_card_in_round)[0]
+                mes['allowed'] = fst_card_in_round / 13
             else : 
                 mes['allowed'] = 'any' 
         logging.info('sending %s', mes)
@@ -68,11 +68,6 @@ def do_lead(user, player, suit, rank) :
     return result
 
 def to_dict(hand) :
-    # c, d, h, s = bridge.split_by_suits(hand)
-    # return {'type': 'hand', 'value':{'suits':[{'suit': 'clubs', 'cards': c}
-    #                                           , {'suit': 'diamonds', 'cards': d}
-    #                                           , {'suit': 'hearts', 'cards': h}
-    #                                           , {'suit': 'spades', 'cards': s}]}}
     return {'type': 'hand', 'value': {'cards': hand}}
 
 def create_new_deck(user) :
@@ -87,6 +82,7 @@ def create_new_deck(user) :
 def create_new_deck_messages(user) :
     messages, vuln, dealer = create_new_deck(user)
     messages.append({'type': 'start.bidding', 'value' : {'vuln': vuln, 'dealer': dealer}})
+    messages.append({'type': 'start.play', 'value': {'contract': '1C', 'lead': 1}})
     return messages
 
 def add_players(hand_list) :
