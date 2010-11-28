@@ -169,7 +169,7 @@ body {
 }
 
 #our_tricks {
-    color: #5555E8;
+    color: #2727C2;
 }
 
 #their_tricks {
@@ -178,7 +178,7 @@ body {
 
 #bidding_area {
     border-collapse: collapse;
-    background-color: darkGreen;
+    background-color: #448344;
     display: inline-block;
 }
 

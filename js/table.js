@@ -134,7 +134,8 @@ function process_lead(v) {
     }
     var card_div_id = "#card_" + card;
     var lead_div_id = "#" + player + "_lead";
-    $(lead_div_id).append($(card_div_id).detach().removeClass("highlighted").css("z-index", lead_count));
+    $(lead_div_id).append($(card_div_id).detach().removeClass("highlighted")
+			  .css({"z-index": lead_count, "left": 0}));
     var np;
     if (next == null) {
 	np = next_player(player);
