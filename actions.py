@@ -82,7 +82,7 @@ def create_new_deck(user) :
 def create_new_deck_messages(user) :
     messages, vuln, dealer = create_new_deck(user)
     messages.append({'type': 'start.bidding', 'value' : {'vuln': vuln, 'dealer': dealer}})
-    messages.append({'type': 'start.play', 'value': {'contract': '1C', 'lead': 1}})
+    # messages.append({'type': 'start.play', 'value': {'contract': '1C', 'lead': 1}})
     return messages
 
 def add_players(hand_list) :

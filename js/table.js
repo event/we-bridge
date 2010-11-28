@@ -18,7 +18,7 @@ update_handlers["end.play"] = end_play;
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
-    $(document.documentElement).keypress(updator)
+    $(document.documentElement).keypress(updator);
 }
 
 function updator(event) {
@@ -125,7 +125,6 @@ function process_lead(v) {
    	}
     }
 
-
     var player = v.player;
     var card = v.card;
     var next = v.next;
@@ -135,7 +134,7 @@ function process_lead(v) {
     }
     var card_div_id = "#card_" + card;
     var lead_div_id = "#" + player + "_lead";
-    $(lead_div_id).append($(card_div_id).detach());
+    $(lead_div_id).append($(card_div_id).detach().removeClass("highlighted").css("z-index", lead_count));
     var np;
     if (next == null) {
 	np = next_player(player);
@@ -160,7 +159,7 @@ function process_lead(v) {
 }
 
 function allow_cards(selector, player) {
-    $(selector).bind("click", player, highlight_for_lead)
+    return $(selector).bind("click", player, highlight_for_lead)
 	.bind("dblclick", player, do_lead).addClass("clickable");
 }
 
@@ -235,7 +234,8 @@ function kick_play(v) {
 function highlight_for_lead(event) {
     var splitted_id = event.target.id.split("_");
     var number = splitted_id[1];
-    $("#card_" + number).css("top", "-10%").bind("click", event.data, do_lead);    
+    allow_cards(".highlighted", event.data).removeClass("highlighted");
+    $("#card_" + number).addClass("highlighted").bind("click", event.data, do_lead);    
 }
 
 function do_bid(event) {

@@ -11,7 +11,7 @@ body {
     cellpadding:3;
     width:100%;
     height: 99%;
-    background-color:green;
+    background-color:#099B09;
     text-align: center;
 }
 
@@ -80,9 +80,19 @@ body {
     left: 40px;
 }
 
+#lead_area{
+    margin: 0 auto;
+    width: 20%;
+}
+
 .lead {
     position: relative;
 }
+
+.highlighted{
+    top: -10%;
+}
+
 .clickable {
     cursor:pointer;
 }
@@ -97,7 +107,7 @@ body {
 
 .bidbox_pass {
     background-color: green;
-    border: 2px solid grey;
+    border: 1px solid grey;
     background-color: #00FF28;
     padding: 0px;
 }
@@ -123,7 +133,7 @@ body {
     border: 2px solid grey;
     text-align: center;
     display: inline-block;
-    background-color: #B09060;
+    background-color: #A3A098;
 }
 
 .bidbox_bid {
