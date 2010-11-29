@@ -12,6 +12,7 @@ var update_handlers = new Array();
 update_handlers["move"] = process_lead;
 update_handlers["bid"] = process_bid;
 update_handlers["hand"] = process_hand;
+update_handlers["user"] = user_update;
 update_handlers["start.bidding"] = kick_bidding;
 update_handlers["start.play"] = kick_play;
 update_handlers["end.play"] = end_play;
@@ -297,4 +298,10 @@ function end_play(v) {
     $("#popup_contract").html(contract_html + " by " + decl);
     $(".popup").bPopup();
 	
+}
+
+function user_update(v) {
+    var pos = v.position;
+    var name = v.name;
+    $("#" + pos + "_user").text(name);
 }
