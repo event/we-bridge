@@ -83,6 +83,7 @@ body {
 #lead_area{
     margin: 0 auto;
     width: 20%;
+    height: 50%;
 }
 
 .lead {
@@ -145,12 +146,16 @@ body {
     background-color: gray;
 }
 
+#contract_tricks {
+    float: left;
+    margin-top: 10%;
+}
+
 #contract {
     font-weight: bold;
     font-size: 150%;
     margin-left: 25px;
 }
-
 
 #contract img {
     width:20px;
@@ -174,6 +179,17 @@ body {
 
 #their_tricks {
     color: #E85555;
+}
+
+#last_trick {
+    margin: auto auto 20% 30%;
+    width: 20%;
+    height: 50%;
+}
+
+#last_area {
+    width: 100%;
+    height: 100%;
 }
 
 #bidding_area {

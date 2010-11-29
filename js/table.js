@@ -121,7 +121,9 @@ function disallow_lower_bids(r, s) {
 function process_lead(v) {
     if (lead_count % 4 == 0) {
 	for (var i = 0; i < 4; i += 1) {
-	    $("#" + player_positions[i] + "_lead").html("&nbsp;");
+	    $("#" + player_positions[i] + "_last span").remove();
+	    $("#" + player_positions[i] + "_last")
+		.append($("#" + player_positions[i] + "_lead span").detach());
    	}
     }
 
