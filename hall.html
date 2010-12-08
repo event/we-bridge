@@ -9,15 +9,13 @@
   </head>
   <body onload="on_body_load()">
     <h1>Webridge main hall</h1>
-
-    <table id="table_list">
-      <tr class="table">
-	<th class="player">N</th><th class="player">S</th><th class="player">E</th><th class="player">W</th>
-      </tr>
-    </table>
-
-    <address>
-      <a href="mailto:event.riga@gmail.com">Leo</a>
-    </address>
+    <div id="hall_holder">
+      <table id="table_list">
+	<tr class="table">
+	  <th class="player">N</th><th class="player">S</th><th class="player">E</th><th class="player">W</th>
+	</tr>
+      </table>
+      <button onclick="add_new_table()">Take N @ New Table</button>
+    </div>
   </body>
 </html>

@@ -15,6 +15,8 @@
 # along with Webridge.  If not, see <http://www.gnu.org/licenses/>.
 
 from google.appengine.ext import db
+from google.appengine.api import users
+from django.utils  import simplejson as json
 import bridge
 
 class Deal(db.Model) :
@@ -95,11 +97,54 @@ class Protocol(db.Model) :
             self.bidding.append(bid)
         return res
 
-    # FIXME: these below are all wrong. Should do full checks and exec in transaction        
-    def add_card(self, card) :
-        self.cardplay.append(card)
+class UserProfile(db.Model) :
+    user = db.UserProperty()
+    loggedin = db.BooleanProperty()
+    messages = db.StringListProperty()
+
+    def enqueue(self, m) :
+        if isinstance(m, list) : 
+            self.messages += map(json.dumps, m)
+        else :
+            self.messages.append(json.dumps(m))
         self.put()
 
-    def add_last_card(self, card, result) :
-        self.result = result
-        self.add_card(card)
+    def empty_queue(self) :
+        res = self.messages
+        self.messages = []
+        self.put()
+        return '[' + ','.join(res) + ']'
+
+    @staticmethod
+    def get_by_user(user) :
+        return UserProfile.gql("WHERE user = :1", user).get()
+        
+
+    @staticmethod
+    def get_or_create(user) :
+        res = UserProfile.gql("WHERE user = :1", user).get()
+        if res is None :
+            res = UserProfile()
+            res.user = user
+            res.put()
+        return res
+            
+        
+
+class Table(db.Model) :
+    N = db.UserProperty()
+    E = db.UserProperty()
+    S = db.UserProperty()
+    W = db.UserProperty()
+    kibitzers = db.ListProperty(users.User)
+    
+    def sit(self, place, user):
+        val = self.__getattribute__(place)
+        if val is None:
+            self.__setattr__(place, user)
+            return True
+        else :
+            return False
+
+    def full(self):
+        return all(map(lambda x: x is not None, [self.N, self.E, self.S, self.W]))

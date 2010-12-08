@@ -16,7 +16,8 @@
 
 import logging
 import Queue
-import threading
+import inspect
+
 
 from google.appengine.api import users
 from google.appengine.ext import webapp
@@ -36,29 +37,18 @@ def checklogin(f) :
         else :
             self.redirect(users.create_login_url(self.request.uri))
         
-    return decorated 
+    def decorated_w_user(self):
+        user = users.get_current_user()
+        if user is not None :
+            f(self, user)
+        else :
+            self.redirect(users.create_login_url(self.request.uri))
+        
+    if len(inspect.getargspec(f).args) > 1 :
+        return decorated_w_user
+    else :
+        return decorated 
 
-
-class TableIdGen :
-    lock = threading.Lock()
-    i = 0;
-    def next(self) :
-        self.lock.acquire();
-        res = self.i
-        self.i += 1
-        self.lock.release()
-        return res
-
-table_idgen = TableIdGen()
-
-
-def create_test_hall_updates() :
-    return [{'type': 'table.add', 'value':table_idgen.next()}, {'type': 'table.add', 'value':table_idgen.next()}
-            , {'type': 'table.remove', 'value': 0}
-            , {'type': 'player.sit', 'value': {'name': 'jimmy', 'table': 0, 'position': 'N'}}
-            , {'type': 'player.sit', 'value': {'name': 'johny', 'table': 0, 'position': 'S'}}
-            , {'type': 'player.leave', 'value': {'table': 0, 'position': 'S'}}
-            ]
 
 user_queue = Queue.Queue()
 
@@ -71,44 +61,82 @@ def empty_queue() :
         pass
     return res
 
+def arguments(request) :
+    return request.query_string.split('/')
+
 class Redirector(webapp.RequestHandler) :
+    @checklogin
     def get(self) :
-        self.redirect('index.html')
+        self.redirect('hall.html')
 
 class UpdateHandler(webapp.RequestHandler):
     @checklogin
-    def get(self):
-        data = empty_queue()
-        res = json.dumps(data)
+    def get(self, user):
+        res = repo.UserProfile.get_or_create(user).empty_queue()
         logging.info(res)
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(res)
 
 class ActionHandler(webapp.RequestHandler):
     @checklogin
-    def post(self):
-        arglist = self.request.query_string.split('/')
+    def post(self, user):
+        arglist = arguments(self.request)
         action = arglist[0]
         try :
             f = actions.action_processors[action]
         except KeyError:
             self.response.set_status(404)
         else :
-            map(user_queue.put_nowait, f(users.get_current_user(), *arglist[1:]))
+            map(user_queue.put_nowait, f(user, *arglist[1:]))
 
-class StaticHandler(webapp.RequestHandler) :
+class TableHandler(webapp.RequestHandler) :
     @checklogin
-    def get(self):
-        page = self.request.path[1:]
-        if page.startswith('table.html') :
-            map(user_queue.put_nowait, actions.create_new_deck_messages(users.get_current_user()))
-        elif page.startswith('hall.html') :
-            map(user_queue.put_nowait, create_test_hall_updates())
+    def get(self, user):
+        args = arguments(self.request)
+        if args[0] == 'new' :
+            t = repo.Table()
+            t.N = user
+            ident = t.put().id()
+            self.redirect('table.html?%s/N' % ident)
         else :
-            self.response.set_status(404)
-            return
-            
-        self.response.out.write(open(page, 'rb').read())
+            tid = int(args[0]) 
+            table = repo.Table.get_by_id(tid)
+            if len(args) > 1 :
+                place = args[1]
+                if table.sit(place, user) :
+                    if table.full() :
+                        actions.create_new_deck_messages(table)
+                    table.put()    
+                    self.response.out.write(open('table.html', 'rb').read())
+                else :
+                    self.redirect('hall.html')
+            else :
+                self.redirect('hall.html')
+                # table.kibitzers.append(user)
+                # show_table_state(user)
+                    
+
+def nick_or_empty(user):
+    if user is None :
+        return None
+    else :
+        return user.nickname()
+
+def show_all_tables() :
+    res = []
+    # obvious cache candidate
+    for t in repo.Table.all():
+        res.append({'type': 'table.add', 'value': 
+                    {'id': t.key().id(), 'N': nick_or_empty(t.N), 'E': nick_or_empty(t.E)
+                     , 'S': nick_or_empty(t.S), 'W': nick_or_empty(t.W), 'kibcount': len(t.kibitzers)}})
+    return res
+
+class HallHandler(webapp.RequestHandler) :
+    @checklogin
+    def get(self, user):
+        prof = repo.UserProfile.get_or_create(user)
+        prof.enqueue(show_all_tables())
+        self.response.out.write(open('hall.html', 'rb').read())
 
 def protocol2map(curuser, p) :
     lead = bridge.num_to_suit_rank(p.moves[0])
@@ -124,7 +152,7 @@ def protocol2map(curuser, p) :
 
 class ProtocolHandler(webapp.RequestHandler) :
     @checklogin
-    def get(self):
+    def get(self, user):
         page = self.request.path[1:]
         dealid = int(self.request.query_string)
         deal = repo.Deal.get_by_id(dealid)
@@ -136,7 +164,7 @@ class ProtocolHandler(webapp.RequestHandler) :
         
         values = {'protocol_id': dealid, 'vuln_EW': deal.vulnerability & bridge.VULN_EW
                   , 'vuln_NS': deal.vulnerability & bridge.VULN_NS, 'dealer': bridge.SIDES[deal.dealer]
-                  , 'records': map(lambda x: protocol2map(users.get_current_user(), x), protoiter)}
+                  , 'records': map(lambda x: protocol2map(user, x), protoiter)}
         values.update(h_val)
         self.response.out.write(template.render(page, values))
 
@@ -145,8 +173,8 @@ class ProtocolHandler(webapp.RequestHandler) :
 
 def main():
     application = webapp.WSGIApplication([('/', Redirector),
-                                          ('/hall.html', StaticHandler),
-                                          ('/table.html', StaticHandler),
+                                          ('/hall.html', HallHandler),
+                                          ('/table.html', TableHandler),
                                           ('/protocol.html', ProtocolHandler),
                                           ('/update.json', UpdateHandler),
                                           ('/action.json', ActionHandler)],

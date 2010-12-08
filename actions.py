@@ -34,6 +34,9 @@ def do_lead(user, player, scard) :
     correct_move = bridge.check_move(hand, card, protocol.moves)
     result = []
     if correct_move :
+        # some kind of mutual exclusion have to be implemented here. While actions in bridge game 
+        #    are strictly sequential it is generally an error 
+        #    to have any action started until previous is finished
         protocol.add_move(card)
         mes = {'player': player, 'card': card}
         if protocol.round_ended() :

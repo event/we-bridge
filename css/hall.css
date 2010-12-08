@@ -1,14 +1,29 @@
+html {
+    height:100%;
+}
+
 body {
+    height: 85%;
+    width:99%;
+}
+
+#hall_holder {
     width:100%;
-    background-color:green;
+    height: 99%;
+    background-color:#099B09;
 }
 
 #table_list {
     width:90%;
-    padding-left:4px;
+    margin:4px;
     align:left;
     font-weight:bold;
     background-color:gray;
+    text-align: center; 
+}
+
+button {
+    margin-left: 4px;
 }
 
 .table {
@@ -20,5 +35,5 @@ body {
     width:20%;
     height: 40px;
     border: 2px solid black;
-    text-align: center; 
 }
+
