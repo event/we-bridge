@@ -17,9 +17,10 @@
 import logging
 import Queue
 import inspect
+import random
+import string
 
-
-from google.appengine.api import users
+from google.appengine.api import users, channel
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util, template
 from django.utils  import simplejson as json
@@ -40,7 +41,10 @@ def checklogin(f) :
     def decorated_w_user(self):
         user = users.get_current_user()
         if user is not None :
-            f(self, user)
+            prof = repo.UserProfile.get_or_create(user)
+            prof.loggedin = True
+            prof.put()
+            f(self, prof)
         else :
             self.redirect(users.create_login_url(self.request.uri))
         
@@ -49,17 +53,6 @@ def checklogin(f) :
     else :
         return decorated 
 
-
-user_queue = Queue.Queue()
-
-def empty_queue() :
-    res = []
-    try :
-#        while True :
-        res.append(user_queue.get_nowait())
-    except Queue.Empty :
-        pass
-    return res
 
 def arguments(request) :
     return request.query_string.split('/')
@@ -71,15 +64,15 @@ class Redirector(webapp.RequestHandler) :
 
 class UpdateHandler(webapp.RequestHandler):
     @checklogin
-    def get(self, user):
-        res = repo.UserProfile.get_or_create(user).empty_queue()
+    def get(self, prof):
+        res = prof.empty_queue()
         logging.info(res)
         self.response.headers['Content-Type'] = 'application/json'
         self.response.out.write(res)
 
 class ActionHandler(webapp.RequestHandler):
     @checklogin
-    def post(self, user):
+    def post(self, prof):
         arglist = arguments(self.request)
         action = arglist[0]
         try :
@@ -87,12 +80,13 @@ class ActionHandler(webapp.RequestHandler):
         except KeyError:
             self.response.set_status(404)
         else :
-            map(user_queue.put_nowait, f(user, *arglist[1:]))
+            map(user_queue.put_nowait, f(prof, *arglist[1:]))
 
 class TableHandler(webapp.RequestHandler) :
     @checklogin
-    def get(self, user):
+    def get(self, prof):
         args = arguments(self.request)
+        user = prof.user  
         if args[0] == 'new' :
             t = repo.Table()
             t.N = user
@@ -104,8 +98,12 @@ class TableHandler(webapp.RequestHandler) :
             if len(args) > 1 :
                 place = args[1]
                 if table.sit(place, user) :
+                    #TODO: this user have to have other users' names, others have to have this' 
+                    # messages += [{'type': 'user', 'value': {'position': p, 'name': 'test@example.com'}} 
+                    #               for p in player_names]
+
                     if table.full() :
-                        actions.create_new_deck_messages(table)
+                        actions.start_new_deal(table)
                     table.put()    
                     self.response.out.write(open('table.html', 'rb').read())
                 else :
@@ -133,10 +131,24 @@ def show_all_tables() :
 
 class HallHandler(webapp.RequestHandler) :
     @checklogin
-    def get(self, user):
-        prof = repo.UserProfile.get_or_create(user)
+    def get(self, prof):
         prof.enqueue(show_all_tables())
         self.response.out.write(open('hall.html', 'rb').read())
+
+class ChannelHandler(webapp.RequestHandler) :
+    @checklogin
+    def get(self, prof):
+        if prof.chanid is None :
+            chanid = prof.user.nickname() \
+                + ''.join([random.choice(string.letters + string.digits) for i in xrange(10)])
+            prof.chanid = chanid
+        else : 
+            chanid = prof.chanid
+        token = channel.create_channel(chanid)
+        prof.enqueue(prof.messages)
+        prof.messages = []
+        prof.put()
+        self.response.out.write(json.dumps(token))
 
 def protocol2map(curuser, p) :
     lead = bridge.num_to_suit_rank(p.moves[0])
@@ -152,7 +164,7 @@ def protocol2map(curuser, p) :
 
 class ProtocolHandler(webapp.RequestHandler) :
     @checklogin
-    def get(self, user):
+    def get(self, prof):
         page = self.request.path[1:]
         dealid = int(self.request.query_string)
         deal = repo.Deal.get_by_id(dealid)
@@ -164,7 +176,7 @@ class ProtocolHandler(webapp.RequestHandler) :
         
         values = {'protocol_id': dealid, 'vuln_EW': deal.vulnerability & bridge.VULN_EW
                   , 'vuln_NS': deal.vulnerability & bridge.VULN_NS, 'dealer': bridge.SIDES[deal.dealer]
-                  , 'records': map(lambda x: protocol2map(user, x), protoiter)}
+                  , 'records': map(lambda x: protocol2map(prof.user, x), protoiter)}
         values.update(h_val)
         self.response.out.write(template.render(page, values))
 
@@ -177,6 +189,7 @@ def main():
                                           ('/table.html', TableHandler),
                                           ('/protocol.html', ProtocolHandler),
                                           ('/update.json', UpdateHandler),
+                                          ('/channel.json', ChannelHandler),
                                           ('/action.json', ActionHandler)],
                                          debug=True)
     util.run_wsgi_app(application)

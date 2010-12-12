@@ -9,26 +9,7 @@ update_handlers["player.leave"] = remove_player;
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
-    $(document.documentElement).keypress(updator);
-}
-
-function updator(event) {
-    if (event.charCode == 32) {
-	get_json();
-    }
-}
-
-function get_json() {
-    $.getJSON("update.json", function(data){$.each(data, process_update);});
-}
-
-function process_update(i, data) {
-    handler = update_handlers[data.type];
-    if (handler == undefined) {
-	window.alert("action " + data.type + " is not yet supported!");
-    } else {
-	handler(data.value);
-    }
+    start_updator(update_handlers);
 }
 
 function empty_if_none(player, id, pos) {

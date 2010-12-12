@@ -25,7 +25,8 @@ sides2names = {'own' : 'S', 'left' : 'W', 'part' : 'N', 'right' : 'E'}
 deal_id = None
 dealplay_id = None
 
-def do_lead(user, player, scard) :
+def do_lead(prof, player, scard) :
+    user = prof.user
     protocol = repo.Protocol.get_by_id(dealplay_id)
     deal = protocol.deal
     side = sides2names[player]
@@ -73,6 +74,7 @@ def do_lead(user, player, scard) :
 def to_dict(hand) :
     return {'type': 'hand', 'value': {'cards': hand}}
 
+# OBSOLETE
 def create_new_deck(user) :
     global deal_id
     global dealplay_id
@@ -82,6 +84,7 @@ def create_new_deck(user) :
     dealplay_id = repo.Protocol.create(deal, user, user, user, user)
     return add_players(map(to_dict, deck)), vuln, dealer
 
+# OBSOLETE
 def create_new_deck_messages(user) :
     messages, vuln, dealer = create_new_deck(user)
     messages.append({'type': 'start.bidding', 'value' : {'vuln': vuln, 'dealer': dealer}})
@@ -89,12 +92,35 @@ def create_new_deck_messages(user) :
                   for p in player_names]
     return messages
 
+def create_new_deck(table) :
+    deck, vuln, dealer = bridge.get_deck()
+    deal = repo.Deal.create(deck, vuln, dealer) 
+    table.protocol = repo.Protocol.create(deal, N=table.N, E=table.E, S=table.S, W=table.W)
+    return add_own(map(to_dict, deck)), vuln, dealer
+
+def send_hand(user, hand_mes, bid_starter) :
+    prof = repo.UserProfile.get_or_create(user)
+    prof.enqueue([hand_mes, bid_starter])
+
+def start_new_deal(table) :
+    messages, vuln, dealer = create_new_deck(table)
+    pairs = zip([table.N, table.E, table.S, table.W], messages)
+    bid_starter = {'type': 'start.bidding', 'value' : {'vuln': vuln, 'dealer': dealer}}
+    for p in pairs :
+        send_hand(*p, bid_starter=bid_starter)
+
+def add_own(hand_list) :
+    for h in hand_list :
+        h['value']['player'] = 'own'
+    return hand_list
+
 def add_players(hand_list) :
     for i in xrange(4) :
         hand_list[i]['value']['player'] = player_names[i]
     return hand_list
 
-def do_bid(user, player, bid) :
+def do_bid(prof, player, bid) :
+    user = prof.user
     if not is_allowed_user_player(user, player) :
         return []
     

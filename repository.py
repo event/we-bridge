@@ -14,8 +14,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Webridge.  If not, see <http://www.gnu.org/licenses/>.
 
+import logging
+
 from google.appengine.ext import db
-from google.appengine.api import users
+from google.appengine.api import users, channel
 from django.utils  import simplejson as json
 import bridge
 
@@ -58,8 +60,8 @@ class Protocol(db.Model) :
     playStarted = db.DateTimeProperty(auto_now_add=True)
     
     @staticmethod
-    def create(dealmodel, N, S, E, W) :
-        return Protocol(deal = dealmodel, N = N, E = E, S = S, W = W).put().id()
+    def create(dealmodel, N, E, S, W) :
+        return Protocol(deal = dealmodel, N = N, E = E, S = S, W = W).put()
     
     @staticmethod
     def get_by_deal(deal) :
@@ -98,27 +100,24 @@ class Protocol(db.Model) :
         return res
 
 class UserProfile(db.Model) :
+    chanid = db.StringProperty()
     user = db.UserProperty()
     loggedin = db.BooleanProperty()
     messages = db.StringListProperty()
 
+    # TODO: generalize
     def enqueue(self, m) :
-        if isinstance(m, list) : 
-            self.messages += map(json.dumps, m)
-        else :
+        logging.info(self.chanid)
+        if self.chanid is None :
             self.messages.append(json.dumps(m))
-        self.put()
-
+        else :
+            channel.send_message(self.chanid, json.dumps(m))
+    #OBSOLETE
     def empty_queue(self) :
         res = self.messages
         self.messages = []
         self.put()
         return '[' + ','.join(res) + ']'
-
-    @staticmethod
-    def get_by_user(user) :
-        return UserProfile.gql("WHERE user = :1", user).get()
-        
 
     @staticmethod
     def get_or_create(user) :
@@ -137,10 +136,11 @@ class Table(db.Model) :
     S = db.UserProperty()
     W = db.UserProperty()
     kibitzers = db.ListProperty(users.User)
-    
+    protocol = db.ReferenceProperty(Protocol)
+
     def sit(self, place, user):
         val = self.__getattribute__(place)
-        if val is None:
+        if val is None or val == user:
             self.__setattr__(place, user)
             return True
         else :
