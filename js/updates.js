@@ -26,9 +26,7 @@ function process_update(d, handlers) {
 
 function process_single_upd(data, handlers) {
     handler = handlers[data.type];
-    if (handler == undefined) {
-	window.alert("action " + data.type + " is not yet supported!");
-    } else {
+    if (handler != null) {
 	handler(data.value);
     }
 }

@@ -62,14 +62,6 @@ class Redirector(webapp.RequestHandler) :
     def get(self) :
         self.redirect('hall.html')
 
-class UpdateHandler(webapp.RequestHandler):
-    @checklogin
-    def get(self, prof):
-        res = prof.empty_queue()
-        logging.info(res)
-        self.response.headers['Content-Type'] = 'application/json'
-        self.response.out.write(res)
-
 class ActionHandler(webapp.RequestHandler):
     @checklogin
     def post(self, prof):
@@ -130,9 +122,9 @@ class TableHandler(webapp.RequestHandler) :
                 # show_table_state(user)
                     
 
-def nick_or_empty(user):
+def nick_or_empty(user, tid, side):
     if user is None :
-        return None
+        return "<a href=table.html?%s/%s>take a sit</a>" % (tid, side)
     else :
         return user.nickname()
 
@@ -140,16 +132,16 @@ def show_all_tables() :
     res = []
     # obvious cache candidate
     for t in repo.Table.all():
-        res.append({'type': 'table.add', 'value': 
-                    {'id': t.key().id(), 'N': nick_or_empty(t.N), 'E': nick_or_empty(t.E)
-                     , 'S': nick_or_empty(t.S), 'W': nick_or_empty(t.W), 'kibcount': len(t.kibitzers)}})
+        tid = t.key().id()
+        res.append({'id': tid, 'N': nick_or_empty(t.N, tid, 'N'), 'E': nick_or_empty(t.E, tid, 'E')
+                    , 'S': nick_or_empty(t.S, tid, 'S'), 'W': nick_or_empty(t.W, tid, 'W')
+                    , 'kibcount': len(t.kibitzers)})
     return res
 
 class HallHandler(webapp.RequestHandler) :
     @checklogin
     def get(self, prof):
-        prof.enqueue(show_all_tables())
-        self.response.out.write(open('hall.html', 'rb').read())
+        self.response.out.write(template.render('hall.html', {'tables': show_all_tables()}))
 
 class ChannelHandler(webapp.RequestHandler) :
     @checklogin
@@ -204,7 +196,6 @@ def main():
                                           ('/hall.html', HallHandler),
                                           ('/table.html', TableHandler),
                                           ('/protocol.html', ProtocolHandler),
-                                          ('/update.json', UpdateHandler),
                                           ('/channel.json', ChannelHandler),
                                           ('/action.json', ActionHandler)],
                                          debug=True)

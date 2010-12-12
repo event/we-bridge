@@ -124,10 +124,8 @@ class UserProfile(db.Model) :
         return res
             
     def enqueue(self, m) :
-        if self.chanid is None :
-            self.messages.append(json.dumps(m))
-        else :
-            channel.send_message(self.chanid, json.dumps(m))
+        logging.info(m)
+        channel.send_message(self.chanid, json.dumps(m))
         
 
 class Table(db.Model) :
