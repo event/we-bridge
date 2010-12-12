@@ -19,26 +19,7 @@ update_handlers["end.play"] = end_play;
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
-    $(document.documentElement).keypress(updator);
-}
-
-function updator(event) {
-    if (event.charCode == 32) {
-	get_json();
-    }
-}
-
-function get_json() {
-    $.getJSON("update.json", function(data){$.each(data, process_update);});
-}
-
-function process_update(i, data) {
-    handler = update_handlers[data.type];
-    if (handler == undefined) {
-	window.alert("action " + data.type + " is not yet supported!");
-    } else {
-	handler(data.value);
-    }
+    start_updator(update_handlers);
 }
 
 
@@ -49,7 +30,7 @@ function process_hand(v) {
 }
 
 function card_sort(c1, c2) {
-    if (Math.floor(c1/13) + Math.floor(c2/13) == 1) {
+    if (Math.floor(c1/13) + Math.floor(c2/13) == 1) { /* show clubs before diamonds */
 	return c1 - c2;
     } else {
 	return c2 - c1;

@@ -80,7 +80,15 @@ class ActionHandler(webapp.RequestHandler):
         except KeyError:
             self.response.set_status(404)
         else :
-            map(user_queue.put_nowait, f(prof, *arglist[1:]))
+            f(prof, *arglist[1:])
+
+def uname_messages(umap, baseplace) :
+    result = []
+    for p, u in umap.iteritems() :
+        result.append({'type': 'user', 'value': {'position': bridge.relation(p, baseplace)\
+                                                     , 'name': u.nickname()}})
+    return result
+                      
 
 class TableHandler(webapp.RequestHandler) :
     @checklogin
@@ -91,6 +99,8 @@ class TableHandler(webapp.RequestHandler) :
             t = repo.Table()
             t.N = user
             ident = t.put().id()
+            mes = {'type': 'table.add', 'value': {'id': ident}}
+            repo.UserProfile.broadcast(mes)
             self.redirect('table.html?%s/N' % ident)
         else :
             tid = int(args[0]) 
@@ -98,9 +108,15 @@ class TableHandler(webapp.RequestHandler) :
             if len(args) > 1 :
                 place = args[1]
                 if table.sit(place, user) :
-                    #TODO: this user have to have other users' names, others have to have this' 
-                    # messages += [{'type': 'user', 'value': {'position': p, 'name': 'test@example.com'}} 
-                    #               for p in player_names]
+                    mes = {'type': 'player.sit', 'value': {'id': tid, 'position': place, 'name': user.nickname()}}
+                    repo.UserProfile.broadcast(mes)
+                    umap = table.usermap()
+                    prof.enqueue(uname_messages(umap, place))
+                    del umap[place]
+                    for p, u in umap.iteritems() :
+                        m  = {'type': 'user', 'value': {'position': bridge.relation(place, p)\
+                                                            , 'name': user.nickname()}}
+                        repo.UserProfile.uenqueue(u, m)
 
                     if table.full() :
                         actions.start_new_deal(table)

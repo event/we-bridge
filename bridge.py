@@ -30,6 +30,9 @@ DEALER_W = 3
 
 DEALERS = [DEALER_N, DEALER_E, DEALER_S, DEALER_W]
 SIDES = ['N', 'E', 'S', 'W']
+
+REL_SIDES = ['own', 'left', 'part', 'right']
+
 # bids are strings like '1C', '1D', '1H', '1S', '1Z'..'7S', '7Z'. 
 # 'Z' is chosen for NT to have bids comparable as strings
 BID_PASS = 'pass'
@@ -50,6 +53,9 @@ CARDS_IN_HAND = 13
 
 SUITS = ['clubs', 'diamonds', 'hearts', 'spades']
 RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+
+def relation(place, base) :
+    return REL_SIDES[SIDES.index(place) - SIDES.index(base)]
 
 def get_trick_taker_offset(last_round, trump) :
     suits = map(lambda x: x / CARDS_IN_SUIT, last_round)

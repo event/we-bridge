@@ -19,8 +19,7 @@ import logging
 import bridge
 import repository as repo
 
-player_names = ['part', 'right', 'own', 'left']
-sides2names = {'own' : 'S', 'left' : 'W', 'part' : 'N', 'right' : 'E'}
+sides2names = zip(bridge.REL_SIDES, bridge.SIDES)
 
 deal_id = None
 dealplay_id = None
@@ -35,7 +34,7 @@ def do_lead(prof, player, scard) :
     correct_move = bridge.check_move(hand, card, protocol.moves)
     result = []
     if correct_move :
-        # some kind of mutual exclusion have to be implemented here. While actions in bridge game 
+        # some kind of locking have to be implemented here. While actions in bridge game 
         #    are strictly sequential it is generally an error 
         #    to have any action started until previous is finished
         protocol.add_move(card)
@@ -43,12 +42,13 @@ def do_lead(prof, player, scard) :
         if protocol.round_ended() :
             last_round = protocol.moves[-4:]
             taker = bridge.get_trick_taker_offset(last_round, protocol.contract[1])
-            next = player_names[(player_names.index(player) + 1 +  taker) % 4]
+            next = bridge.REL_SIDES[(bridge.REL_SIDES.index(player) + 1 +  taker) % 4]
             mes['next'] = next
             mes['allowed'] = 'any' 
         else : 
             fst_card_in_round = protocol.moves[-(len(protocol.moves) % 4)]
-            next_hand = set(deal.hand_by_side(sides2names[player_names[(player_names.index(player) + 1) % 4]]))
+            next_hand = set(deal.hand_by_side(sides2names[
+                        bridge.REL_SIDES[(bridge.REL_SIDES.index(player) + 1) % 4]]))
             next_hand.difference_update(protocol.moves)
             if bridge.has_same_suit(list(next_hand), fst_card_in_round)  :
                 mes['allowed'] = fst_card_in_round / 13
@@ -89,7 +89,7 @@ def create_new_deck_messages(user) :
     messages, vuln, dealer = create_new_deck(user)
     messages.append({'type': 'start.bidding', 'value' : {'vuln': vuln, 'dealer': dealer}})
     messages += [{'type': 'user', 'value': {'position': p, 'name': 'test@example.com'}} 
-                  for p in player_names]
+                  for p in bridge.REL_SIDES]
     return messages
 
 def create_new_deck(table) :
@@ -98,16 +98,12 @@ def create_new_deck(table) :
     table.protocol = repo.Protocol.create(deal, N=table.N, E=table.E, S=table.S, W=table.W)
     return add_own(map(to_dict, deck)), vuln, dealer
 
-def send_hand(user, hand_mes, bid_starter) :
-    prof = repo.UserProfile.get_or_create(user)
-    prof.enqueue([hand_mes, bid_starter])
-
 def start_new_deal(table) :
     messages, vuln, dealer = create_new_deck(table)
     pairs = zip([table.N, table.E, table.S, table.W], messages)
     bid_starter = {'type': 'start.bidding', 'value' : {'vuln': vuln, 'dealer': dealer}}
     for p in pairs :
-        send_hand(*p, bid_starter=bid_starter)
+        repo.UserProfile.uenqueue(p[0], [p[1], bid_starter])
 
 def add_own(hand_list) :
     for h in hand_list :
@@ -116,7 +112,7 @@ def add_own(hand_list) :
 
 def add_players(hand_list) :
     for i in xrange(4) :
-        hand_list[i]['value']['player'] = player_names[i]
+        hand_list[i]['value']['player'] = bridge.REL_SIDES[i]
     return hand_list
 
 def do_bid(prof, player, bid) :

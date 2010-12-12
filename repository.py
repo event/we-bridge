@@ -105,19 +105,14 @@ class UserProfile(db.Model) :
     loggedin = db.BooleanProperty()
     messages = db.StringListProperty()
 
-    # TODO: generalize
-    def enqueue(self, m) :
-        logging.info(self.chanid)
-        if self.chanid is None :
-            self.messages.append(json.dumps(m))
-        else :
-            channel.send_message(self.chanid, json.dumps(m))
-    #OBSOLETE
-    def empty_queue(self) :
-        res = self.messages
-        self.messages = []
-        self.put()
-        return '[' + ','.join(res) + ']'
+    @staticmethod
+    def broadcast(m) :
+         [u.enqueue(m) for u in UserProfile.gql("WHERE loggedin = True")]
+           
+
+    @staticmethod
+    def uenqueue(user, m) :
+        UserProfile.get_or_create(user).enqueue(m)
 
     @staticmethod
     def get_or_create(user) :
@@ -128,6 +123,11 @@ class UserProfile(db.Model) :
             res.put()
         return res
             
+    def enqueue(self, m) :
+        if self.chanid is None :
+            self.messages.append(json.dumps(m))
+        else :
+            channel.send_message(self.chanid, json.dumps(m))
         
 
 class Table(db.Model) :
@@ -148,3 +148,12 @@ class Table(db.Model) :
 
     def full(self):
         return all(map(lambda x: x is not None, [self.N, self.E, self.S, self.W]))
+
+    def send_to_all(self, m) :
+        for u in [self.N, self.E, self.S, self.W] :
+            if u is not None :
+                UserProfile.uenqueue(u, m)
+
+    def usermap(self) :
+        return dict(filter(lambda x: x[1] is not None, 
+                           zip(['N', 'E', 'S', 'W'], [self.N, self.E, self.S, self.W])))

@@ -22,31 +22,33 @@ function empty_if_none(player, id, pos) {
 
 function add_table(v) {
     var id = v.id;
+    var kibcount = v.kibcount;
+    if (kibcount == null) {
+	kibcount = 0
+    }
     $("#table_list").append("<tr id='table_" + id + "' class='table'>" 
 			    + "<td class='player'>" + empty_if_none(v.N, id, "N") + "</td>" 
 			    + "<td class='player'>" + empty_if_none(v.S, id, "S") + "</td>" 
 			    + "<td class='player'>" + empty_if_none(v.E, id, "E") + "</td>" 
 			    + "<td class='player'>" + empty_if_none(v.W, id, "W") + "</td>" 
-			    + "<td class='player'>" + v.kibcount + "</td></tr>");
+			    + "<td class='player'>" + kibcount + "</td></tr>");
 }
 
 function remove_table(v) {
     $("#table_" + data.value).remove();
 }
 
-function add_player() {
-    var table_num = v.table + 1;
+function add_player(v) {
+    var id = v.id;
     var name = v.name;
     var pos = v.position;
-    $("#table_list tr:eq(" + table_num + ") td:eq(" + $.inArray(pos, positions) + ")").html(name);
+    $("#table_" + id + " td:eq(" + $.inArray(pos, positions) + ")").html(name);
 }
 
-function remove_player() {
-    var table_num = v.table + 1;
+function remove_player(v) {
+    var id = v.id;
     var pos = v.position;	
-    var table_id = $("#table_list tr:eq(" + table_num + ")").data("table_id");
-    $("#table_list tr:eq(" + table_num + ") td:eq(" + $.inArray(pos, positions) + ")")
-	.html(empty_sit.replace("{id}", table_id + "/" + pos));
+    $("#table_" + id + " td:eq(" + $.inArray(pos, positions) + ")").html(empty_if_none(null, id, pos));
 }
 
 function add_new_table() {
