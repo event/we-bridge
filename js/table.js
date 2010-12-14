@@ -6,7 +6,8 @@ var update_cnt = 1000;
 var pass_dbl_rdbl = ["pass", "dbl", "rdbl"];
 
 var lead_count;
-var current_bidder;
+var my_side;
+var tid;
 
 var update_handlers = new Array();
 update_handlers["move"] = process_lead;
@@ -19,9 +20,22 @@ update_handlers["end.play"] = end_play;
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
+    parse_params();
     start_updator(update_handlers);
 }
 
+function parse_params() {
+    params = location.search.split("/");
+    tid = params[0].substr(1);
+    if (params.length > 1) {
+	my_side = $.inArray(params[1], sides);
+    }
+}
+
+function ajaxErrorHandler(event, xhr, opts, error) {
+    // retry should be here for some requests
+    window.alert("request failed");
+}
 
 function process_hand(v) {
     var player = v.player;
@@ -53,36 +67,37 @@ function load_hand(player, cards) {
 }
 
 function process_bid(v) {
-	var side = v.side;
-	var bid = v.bid;
-	var dbl_rdbl_allowed = v.dbl_mode;
-	prohibit_bid("#bid_dbl.clickable");
-	prohibit_bid("#bid_rdbl.clickable");
-	if (dbl_rdbl_allowed == "dbl") {
-	    allow_bid("#bid_dbl:not(.clickable)");
-	} else if (dbl_rdbl_allowed == "rdbl") {
-	    allow_bid("#bid_rdbl:not(.clickable)");
-	}
-	var bid_html;
-	var idx = $.inArray(bid, pass_dbl_rdbl);
-	if (idx == -1) {
-	    var r = bid[0];
-	    var s = bid[1];
-	    if (s != 'Z') {
-		var img = suit_image_template.replace("{suit}", s.toLowerCase()).replace("{alt_suit}", s);
-		bid_html = r + img;
-	    } else {
-		bid_html = r + "NT";
-	    }
-
-	    disallow_lower_bids(parseInt(r), s);
+    var side = v.side;
+    var bid = v.bid;
+    var dbl_rdbl_allowed = v.dbl_mode;
+    var bid_html;
+    var idx = $.inArray(bid, pass_dbl_rdbl);
+    if (idx == -1) {
+	var r = bid[0];
+	var s = bid[1];
+	if (s != 'Z') {
+	    var img = suit_image_template.replace("{suit}", s.toLowerCase()).replace("{alt_suit}", s);
+	    bid_html = r + img;
 	} else {
-	    bid_html = bid;
+	    bid_html = r + "NT";
 	}
-	$("#bidding_area tr:last td:eq(" + side + ")").html(bid_html);
-	if (side == 3) {
-	    $("#bidding_area").append("<tr class='bidding_row'><td></td><td></td><td></td><td></td></tr>")
+	
+	disallow_lower_bids(parseInt(r), s);
+    } else {
+	bid_html = bid;
+    }
+    $("#bidding_area tr:last td:eq(" + side + ")").html(bid_html);
+    if (side == 3) {
+	$("#bidding_area").append("<tr class='bidding_row'><td></td><td></td><td></td><td></td></tr>");
+    }
+    if ((side + 1) % 4 == my_side) {
+	if (dbl_rdbl_allowed == "dbl") {
+	    allow_bid("#bid_dbl");
+	} else if (dbl_rdbl_allowed == "rdbl") {
+	    allow_bid("#bid_rdbl");
 	}
+	$(".bidbox_bid:not(.prohibited_bid)").bind("click", do_bid).addClass("clickable");
+    }
 }
 
 function prohibit_bid(bid_selector) {
@@ -95,9 +110,9 @@ function allow_bid(bid_selector) {
 
 function disallow_lower_bids(r, s) {
     var bid_id = "bid_" + r + s;
-    var allowed_bids = $(".clickable.bidbox_bid");
+    var allowed_bids = $(".bidbox_bid:not(.prohibited_bid)");
     var filtered = allowed_bids.filter(function(index){return this.id <= bid_id});
-    filtered.unbind("click").removeClass("clickable").addClass("prohibited_bid");
+    filtered.addClass("prohibited_bid");
 }
 
 function process_lead(v) {
@@ -166,21 +181,14 @@ function do_lead(event) {
 }
 
 
-function ajaxErrorHandler(event, xhr, opts, error) {
-    // retry should be here for some requests
-    window.alert("request failed");
-}
-
 function img_by_suit(suit) {
     var c = suit.charAt(0);
     return suit_image_template.replace("{suit}", c.toLowerCase()).replace("{alt_suit}", c.toUpperCase());
 }
 
 function kick_bidding(v) {
-    $(".bidbox_bid,.bidbox_pass").bind("click", do_bid).addClass("clickable");
     prohibit_bid("#bid_dbl");
     prohibit_bid("#bid_rdbl");
-    current_bidder = v.dealer;
     if (v.vuln & 1) {
 	$(".vuln_NS").addClass("vulnerable");
     }
@@ -191,7 +199,9 @@ function kick_bidding(v) {
 
     side = sides[v.dealer];
     $("#dealer_" + side).addClass("dealer");
-	
+    if (my_side == v.dealer) {
+    	$(".bidbox_bid").bind("click", do_bid).addClass("clickable");
+    }
 }
 
 function kick_play(v) {
@@ -226,9 +236,9 @@ function highlight_for_lead(event) {
 function do_bid(event) {
     var splitted_id = event.currentTarget.id.split("_");
     var bid = splitted_id[1];
-    
-    var url = "action.json?bid/" + player_positions[current_bidder] + "/" + bid;
-    current_bidder = (current_bidder + 1) % 4;
+    $(".bidbox_bid:not(.prohibited_bid)").unbind("click").removeClass("clickable");
+    prohibit_bid(".bidbox_dbl,.bidbox_rdbl");
+    var url = "action.json?bid/" + tid + "/" + my_side + "/" + bid;
     $.post(url);
 }
 

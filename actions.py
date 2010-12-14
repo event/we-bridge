@@ -19,16 +19,18 @@ import logging
 import bridge
 import repository as repo
 
-sides2names = zip(bridge.REL_SIDES, bridge.SIDES)
+def checkturn(f) :
+    '''Checks whenever user is allowed to act for corresponding side.
+    In most cases user is allowed to act for 'own' only. Also check whether it is user's turn'''
+    return f
 
-deal_id = None
-dealplay_id = None
-
-def do_lead(prof, player, scard) :
+@checkturn
+def do_lead(prof, tid, player, scard) :
     user = prof.user
-    protocol = repo.Protocol.get_by_id(dealplay_id)
+    table = repo.Table.get_by_id(int(tid))
+    protocol = table.protocol
     deal = protocol.deal
-    side = sides2names[player]
+    side = table.side(user)
     hand = deal.hand_by_side(side)
     card = int(scard)
     correct_move = bridge.check_move(hand, card, protocol.moves)
@@ -38,59 +40,47 @@ def do_lead(prof, player, scard) :
         #    are strictly sequential it is generally an error 
         #    to have any action started until previous is finished
         protocol.add_move(card)
-        mes = {'player': player, 'card': card}
         if protocol.round_ended() :
             last_round = protocol.moves[-4:]
             taker = bridge.get_trick_taker_offset(last_round, protocol.contract[1])
-            next = bridge.REL_SIDES[(bridge.REL_SIDES.index(player) + 1 +  taker) % 4]
-            mes['next'] = next
-            mes['allowed'] = 'any' 
+            next = bridge.SIDES[(bridge.SIDES.index(side) + 1 +  taker) % 4]
+            allowed = 'any' 
         else : 
             fst_card_in_round = protocol.moves[-(len(protocol.moves) % 4)]
-            next_hand = set(deal.hand_by_side(sides2names[
-                        bridge.REL_SIDES[(bridge.REL_SIDES.index(player) + 1) % 4]]))
+            next = bridge.SIDES[(bridge.SIDES.index(side) + 1) % 4]
+            next_hand = set(deal.hand_by_side(next))
             next_hand.difference_update(protocol.moves)
             if bridge.has_same_suit(list(next_hand), fst_card_in_round)  :
-                mes['allowed'] = fst_card_in_round / 13
+                allowed = fst_card_in_round / 13
             else : 
-                mes['allowed'] = 'any' 
-        logging.info('sending %s', mes)
-        result.append({'type': 'move', 'value': mes})
+                allowed = 'any' 
+        umap = table.usermap()
+        next_user = umap.pop(next)
+        mes = {'card': card}
+        for p, u in umap.iteritems() :
+            mes['player'] = bridge.relation(side, p)
+            repo.UserProfile.uenqueue(u, mes)
+        mes['player'] = bridge.relation(side, next)
+        mes['allowed'] = allowed
+        repo.UserProfile.uenqueue(next_user, mes)
+
         if protocol.finished() :
             cntrct = protocol.contract[:-1]
             protocol.result, protocol.tricks = bridge.deal_result(cntrct \
                                                              , protocol.deal.vulnerability, protocol.moves)
-            result.append({'type': 'end.play', 'value': 
-                           {'contract': cntrct.replace('d', 'x').replace('r','xx')\
-                                , 'declearer': protocol.contract[-1]\
-                                , 'points': protocol.result\
-                                , 'tricks': protocol.tricks\
-                                , 'protocol_url': 'protocol.html?%s' % deal.key().id()}})
-            result += create_new_deck_messages(user)
+            table.broadcast({'type': 'end.play', 'value': 
+                             {'contract': cntrct.replace('d', 'x').replace('r','xx')\
+                                  , 'declearer': protocol.contract[-1]\
+                                  , 'points': protocol.result\
+                                  , 'tricks': protocol.tricks\
+                                  , 'protocol_url': 'protocol.html?%s' % deal.key().id()}})
+    
+            create_new_deal(table)
 
         protocol.put()
-    return result
 
 def to_dict(hand) :
     return {'type': 'hand', 'value': {'cards': hand}}
-
-# OBSOLETE
-def create_new_deck(user) :
-    global deal_id
-    global dealplay_id
-    deck, vuln, dealer = bridge.get_deck()
-    deal = repo.Deal.create(deck, vuln, dealer) 
-    deal_id = deal.key().id()
-    dealplay_id = repo.Protocol.create(deal, user, user, user, user)
-    return add_players(map(to_dict, deck)), vuln, dealer
-
-# OBSOLETE
-def create_new_deck_messages(user) :
-    messages, vuln, dealer = create_new_deck(user)
-    messages.append({'type': 'start.bidding', 'value' : {'vuln': vuln, 'dealer': dealer}})
-    messages += [{'type': 'user', 'value': {'position': p, 'name': 'test@example.com'}} 
-                  for p in bridge.REL_SIDES]
-    return messages
 
 def create_new_deck(table) :
     deck, vuln, dealer = bridge.get_deck()
@@ -110,36 +100,33 @@ def add_own(hand_list) :
         h['value']['player'] = 'own'
     return hand_list
 
-def add_players(hand_list) :
-    for i in xrange(4) :
-        hand_list[i]['value']['player'] = bridge.REL_SIDES[i]
-    return hand_list
-
-def do_bid(prof, player, bid) :
+@checkturn
+def do_bid(prof, tid, player, bid) :
     user = prof.user
-    if not is_allowed_user_player(user, player) :
-        return []
-    
-    protocol = repo.Protocol.get_by_id(dealplay_id)
+    table = repo.Table.get_by_id(int(tid))
+    protocol = table.protocol
     if protocol.contract is not None :
+        logging.error("Bid after end: %s by %s as %s @#%s", bid, user, player, tid)
         return []
+
     old_cnt = len(protocol.bidding)
     if not protocol.add_bid(bid) :
+        logging.error("Bid is lower then allowed: %s by %s as %s @#%s", bid, user, player, tid)
         return []
 
     bid_cnt = len(protocol.bidding)
     cur_side = (old_cnt + protocol.deal.dealer) % 4
-    if bid_cnt > 3 and reduce(lambda x, y: x and y == bridge.BID_PASS \
-                                  , protocol.bidding[-3:], True) :
+    if bid_cnt > 3 and all([b == bridge.BID_PASS for b in protocol.bidding[-3:]]) :
         contract, rel_declearer = bridge.get_contract_and_declearer(protocol.bidding)
         declearer = (rel_declearer + protocol.deal.dealer) % 4
         protocol.contract = contract + bridge.SIDES[declearer]
         protocol.put()
         logging.info('contract %s by %s', contract, bridge.SIDES[declearer])
-        return [{'type': 'bid', 'value': {'side': cur_side, 'bid': bid, 'dbl_mode':'none'}}\
+        table.broadcast([{'type': 'bid', 'value': {'side': cur_side, 'bid': bid, 'dbl_mode':'none'}}\
                 , {'type': 'start.play', 'value'
                    : {'contract': contract.replace('d', 'x').replace('r','xx') 
-                      , 'lead': (declearer + 1) % 4}}]
+                      , 'lead': (declearer + 1) % 4}}])
+        return
     protocol.put()
 
     if bid == bridge.BID_DOUBLE or bid_cnt > 2 and protocol.bidding[-3] == bridge.BID_DOUBLE \
@@ -151,13 +138,8 @@ def do_bid(prof, player, bid) :
     else : 
         dbl_mode = 'none'
 
-    return [{'type': 'bid', 'value': {'side': cur_side, 'bid': bid, 'dbl_mode':dbl_mode}}]
+    table.broadcast({'type': 'bid', 'value': {'side': cur_side, 'bid': bid, 'dbl_mode':dbl_mode}})
 
-
-def is_allowed_user_player(user, player) :
-    '''Checks whenever user is allowed to bid for corresponding side.
-    In most cases user is allowed to bid for 'own' only. Also check whether it is user's turn'''
-    return True
 
 action_processors = {'move': do_lead, 'bid': do_bid}
 

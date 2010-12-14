@@ -136,6 +136,9 @@ class Table(db.Model) :
     kibitzers = db.ListProperty(users.User)
     protocol = db.ReferenceProperty(Protocol)
 
+    def side(self, user) :
+        return bridge.SIDES[[self.N, self.E, self.S, self.W].index(user)]
+
     def sit(self, place, user):
         val = self.__getattribute__(place)
         if val is None or val == user:
@@ -147,7 +150,7 @@ class Table(db.Model) :
     def full(self):
         return all(map(lambda x: x is not None, [self.N, self.E, self.S, self.W]))
 
-    def send_to_all(self, m) :
+    def broadcast(self, m) :
         for u in [self.N, self.E, self.S, self.W] :
             if u is not None :
                 UserProfile.uenqueue(u, m)
