@@ -66,11 +66,11 @@ def do_lead(prof, tid, player, scard) :
         for p, u in umap.iteritems() :
             mes['player'] = bridge.relation(side, p)
             mes['trick'] = trick_side(next, p) if rndend else None
-            repo.UserProfile.uenqueue(u, mes)
+            repo.UserProfile.uenqueue(u, {'type': 'move', 'value': mes})
         mes['player'] = bridge.relation(side, next)
         mes['allowed'] = allowed
         mes['trick'] = '+' if rndend else None
-        repo.UserProfile.uenqueue(next_user, mes)
+        repo.UserProfile.uenqueue(next_user, {'type': 'move', 'value': mes})
 
         if protocol.finished() :
             cntrct = protocol.contract[:-1]

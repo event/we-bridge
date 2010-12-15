@@ -9,7 +9,7 @@ var my_side;
 var tid;
 
 var update_handlers = new Array();
-update_handlers["move"] = process_lead;
+update_handlers["move"] = process_move;
 update_handlers["bid"] = process_bid;
 update_handlers["hand"] = process_hand;
 update_handlers["user"] = user_update;
@@ -50,18 +50,21 @@ function card_sort(c1, c2) {
     }
 }
 
+function create_card(player, card) {
+    var s = document.createElement("span");
+    $(s).addClass("card card_" + player + " suit_" + Math.floor(card/13));
+    $(s).attr("id", "card_" + card);
+    var bg = "url(images/cards.png) " + (card * -71) +  "px 0";
+    return $(s).css("background", bg);
+}
+
 function load_hand(player, cards) {
     var pos = $.inArray(player, player_positions);
     cards.sort(card_sort);
     var h = $("#" + player + "_hand");
     $.each(cards, 
 	   function(idx, value) {
-	       var s = document.createElement("span");
-	       $(s).addClass("card card_" + player + " suit_" + Math.floor(value/13));
-	       $(s).attr("id", "card_" + value)
-	       var bg = "url(images/cards.png) " + (value * -71) +  "px 0";
-	       $(s).css({"background": bg, "z-index": idx + 1, "left": idx * 6 + "%"});
-	       h.append(s);
+	       h.append(create_card(player, value).css({"z-index": idx + 1, "left": idx * 6 + "%"}));
 	   });
 }
 
@@ -115,7 +118,7 @@ function disallow_lower_bids(r, s) {
     filtered.addClass("prohibited_bid");
 }
 
-function process_lead(v) {
+function process_move(v) {
     if (lead_count % 4 == 0) {
 	for (var i = 0; i < 4; i += 1) {
 	    $("#" + player_positions[i] + "_last span").remove();
@@ -130,8 +133,8 @@ function process_lead(v) {
     var trick = v.trick;
     var card_div_id = "#card_" + card;
     var lead_div_id = "#" + player + "_lead";
-    $(lead_div_id).append($(card_div_id).detach().removeClass("highlighted")
-			  .css({"z-index": lead_count, "left": 0}));
+    
+    $(lead_div_id).append(create_card(player, card).css({"z-index": lead_count, "left": 0}));
     lead_count += 1;
     if (trick != null) {
 	if (trick == "-") {
@@ -143,7 +146,7 @@ function process_lead(v) {
     if (allowed == null) {
 	return;
     }
-    $(".card").unbind("click").removeClass("clickable");
+    prohibit_cards(".card");
     if (allowed == "any") {
 	allow_cards(".card_own", "own");
     } else {
@@ -152,9 +155,13 @@ function process_lead(v) {
     }
 }
 
+function prohibit_cards(selector) {
+    return $(selector).unbind("click dblclick").removeClass("clickable");
+}
+
 function allow_cards(selector, player) {
-    return $(selector).bind("click", player, highlight_for_lead)
-	.bind("dblclick", player, do_lead).addClass("clickable");
+    return $(selector).bind("click", player, highlight_for_move)
+	.bind("dblclick", player, do_move).addClass("clickable");
 }
 
 function next_player(player) {
@@ -166,12 +173,14 @@ function next_player(player) {
     }
 }
 
-function do_lead(event) {
+function do_move(event) {
     var player = event.data;
     var splitted_id = event.target.id.split("_");
     var number = splitted_id[1];
     var url = "action.json?move/" + tid + "/" + player + "/" + number;
     $.post(url);
+    prohibit_cards(".card_own");
+    $(event.target).remove();
 }
 
 
@@ -194,6 +203,7 @@ function kick_bidding(v) {
     $("#dealer_" + side).addClass("dealer");
     if (my_side == v.dealer) {
     	$(".bidbox_bid").bind("click", do_bid).addClass("clickable");
+
     }
 }
 
@@ -221,11 +231,11 @@ function kick_play(v) {
     $("#contract").html(cntrct_html + contract.substr(2, 2));
 }
 
-function highlight_for_lead(event) {
+function highlight_for_move(event) {
     var splitted_id = event.target.id.split("_");
     var number = splitted_id[1];
     allow_cards(".highlighted", event.data).removeClass("highlighted");
-    $("#card_" + number).addClass("highlighted").bind("click", event.data, do_lead);    
+    $("#card_" + number).addClass("highlighted").bind("click", event.data, do_move);    
 }
 
 function do_bid(event) {

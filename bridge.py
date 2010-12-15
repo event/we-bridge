@@ -114,7 +114,7 @@ def check_move(hand, card, all_moves):
     h.difference_update(all_moves)
     hand = list(h)
     if not card in hand :
-        logger.warn("played with card not in hand")
+        logging.warn("played with card not in hand")
         return False
     
     if len(all_moves) % 4 == 0 :
