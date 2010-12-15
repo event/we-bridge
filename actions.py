@@ -24,6 +24,11 @@ def checkturn(f) :
     In most cases user is allowed to act for 'own' only. Also check whether it is user's turn'''
     return f
 
+def trick_side(taker, other) :
+    taker_i = bridge.SIDES.index(taker)
+    other_i = bridge.SIDES.index(other)
+    return '+' if taker_i % 2 == other_i % 2 else '-'
+
 @checkturn
 def do_lead(prof, tid, player, scard) :
     user = prof.user
@@ -40,10 +45,11 @@ def do_lead(prof, tid, player, scard) :
         #    are strictly sequential it is generally an error 
         #    to have any action started until previous is finished
         protocol.add_move(card)
-        if protocol.round_ended() :
+        rndend = protocol.round_ended()
+        if rndend :
             last_round = protocol.moves[-4:]
             taker = bridge.get_trick_taker_offset(last_round, protocol.contract[1])
-            next = bridge.SIDES[(bridge.SIDES.index(side) + 1 +  taker) % 4]
+            next = bridge.SIDES[(bridge.SIDES.index(side) + 1 + taker) % 4]
             allowed = 'any' 
         else : 
             fst_card_in_round = protocol.moves[-(len(protocol.moves) % 4)]
@@ -59,9 +65,11 @@ def do_lead(prof, tid, player, scard) :
         mes = {'card': card}
         for p, u in umap.iteritems() :
             mes['player'] = bridge.relation(side, p)
+            mes['trick'] = trick_side(next, p) if rndend else None
             repo.UserProfile.uenqueue(u, mes)
         mes['player'] = bridge.relation(side, next)
         mes['allowed'] = allowed
+        mes['trick'] = '+' if rndend else None
         repo.UserProfile.uenqueue(next_user, mes)
 
         if protocol.finished() :
@@ -106,12 +114,12 @@ def do_bid(prof, tid, player, bid) :
     table = repo.Table.get_by_id(int(tid))
     protocol = table.protocol
     if protocol.contract is not None :
-        logging.error("Bid after end: %s by %s as %s @#%s", bid, user, player, tid)
+        logging.warn("Bid after end: %s by %s as %s @#%s", bid, user, player, tid)
         return []
 
     old_cnt = len(protocol.bidding)
     if not protocol.add_bid(bid) :
-        logging.error("Bid is lower then allowed: %s by %s as %s @#%s", bid, user, player, tid)
+        logging.warn("Bid is lower then allowed: %s by %s as %s @#%s", bid, user, player, tid)
         return []
 
     bid_cnt = len(protocol.bidding)
