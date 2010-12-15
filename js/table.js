@@ -203,7 +203,7 @@ function kick_bidding(v) {
     $("#dealer_" + side).addClass("dealer");
     if (my_side == v.dealer) {
     	$(".bidbox_bid").bind("click", do_bid).addClass("clickable");
-
+	allow_bid(".bidbox_pass");
     }
 }
 
