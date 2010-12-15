@@ -106,14 +106,15 @@ class TableHandler(webapp.RequestHandler) :
                     prof.enqueue(uname_messages(umap, place))
                     del umap[place]
                     for p, u in umap.iteritems() :
-                        m  = {'type': 'user', 'value': {'position': bridge.relation(place, p)\
-                                                            , 'name': user.nickname()}}
+                        rel = bridge.relation(place, p)
+                        m  = {'type': 'user', 'value': {'position': rel, 'name': user.nickname()}}
                         repo.UserProfile.uenqueue(u, m)
 
                     if table.full() :
                         actions.start_new_deal(table)
                     table.put()    
-                    self.response.out.write(open('table.html', 'rb').read())
+                    relations = dict([(bridge.relation(place, p), p) for p in bridge.SIDES])
+                    self.response.out.write(template.render('table.html', relations))
                 else :
                     self.redirect('hall.html')
             else :

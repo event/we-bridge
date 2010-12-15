@@ -83,7 +83,7 @@ def do_lead(prof, tid, player, scard) :
                                   , 'tricks': protocol.tricks\
                                   , 'protocol_url': 'protocol.html?%s' % deal.key().id()}})
     
-            create_new_deal(table)
+            start_new_deal(table)
 
         protocol.put()
 

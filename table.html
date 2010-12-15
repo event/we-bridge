@@ -4,7 +4,7 @@
   <head>
     <title>Webridge</title>
     <link rel="stylesheet" type="text/css" href="css/table.css"/>
-    <script src="/_ah/channel/jsapi"></script>
+    <script type="text/javascript" src="/_ah/channel/jsapi"></script>
     <script type="text/javascript" src="js/jquery.js"></script>
     <script type="text/javascript" src="js/jquery.bpopup.js"></script>
     <script type="text/javascript" src="js/updates.js"></script>
@@ -18,14 +18,14 @@
       <col class="board_column center_col"/>
       <col class="board_column right_col"/>
       <tr><td><table id="vuln_dealer">
- 	    <tr><td class="vuln_NS vuln_EW"></td>
-	      <td id="dealer_N" class="vuln_NS">N</td>
-	      <td class="vuln_NS vuln_EW"></td></tr>
-	    <tr><td id="dealer_W" class="vuln_EW">W</td><td></td>
-	      <td id="dealer_E" class="vuln_EW">E</td></tr>
-	    <tr><td class="vuln_NS vuln_EW"></td>
-	      <td id="dealer_S" class="vuln_NS">S</td>
-	      <td class="vuln_NS vuln_EW"></td></tr>
+ 	    <tr><td class="vuln_we vuln_they"></td>
+	      <td id="dealer_{{part}}" class="vuln_we">{{part}}</td>
+	      <td class="vuln_we vuln_they"></td></tr>
+	    <tr><td id="dealer_{{left}}" class="vuln_they">{{left}}</td><td></td>
+	      <td id="dealer_{{right}}" class="vuln_they">{{right}}</td></tr>
+	    <tr><td class="vuln_we vuln_they"></td>
+	      <td id="dealer_{{own}}" class="vuln_we">{{own}}</td>
+	      <td class="vuln_we vuln_they"></td></tr>
 	  </table>
 	</td><td id="part_hand_cell">
 	  <div id="part_hand" class="hand_container">

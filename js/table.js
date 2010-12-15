@@ -191,12 +191,13 @@ function img_by_suit(suit) {
 
 function kick_bidding(v) {
     prohibit_bid(".bidbox_pass,.bidbox_dbl,.bidbox_rdbl");
-    if (v.vuln & 1) {
-	$(".vuln_NS").addClass("vulnerable");
+    var vuln_side = (my_side % 2) + 1
+    if (v.vuln & vuln_side) {
+	$(".vuln_we").addClass("vulnerable");
     }
 
-    if (v.vuln & 2) {
-	$(".vuln_EW").addClass("vulnerable");
+    if (v.vuln & vuln_side) {
+	$(".vuln_they").addClass("vulnerable");
     }
 
     side = sides[v.dealer];
@@ -257,7 +258,7 @@ function trick_inc(i, s) {
 
 
 function end_play(v) {
-    $(".vuln_NS,.vuln_EW").removeClass("vulnerable");
+    $(".vuln_we,.vuln_they").removeClass("vulnerable");
     $("#dealer_N,#dealer_E,#dealer_S,#dealer_W").removeClass("dealer");
     $("#bidding_area").removeClass("hidden");
     $("#bidbox").css("display", "inline-block");
