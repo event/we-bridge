@@ -30,12 +30,12 @@ def trick_side(taker, other) :
     return '+' if taker_i % 2 == other_i % 2 else '-'
 
 @checkturn
-def do_lead(prof, tid, player, scard) :
+def do_move(prof, tid, player, scard) :
     user = prof.user
     table = repo.Table.get_by_id(int(tid))
     protocol = table.protocol
     deal = protocol.deal
-    side = table.side(user)
+    side = table.side(user, player)
     hand = deal.hand_by_side(side)
     card = int(scard)
     correct_move = bridge.check_move(hand, card, protocol.moves)
@@ -45,6 +45,7 @@ def do_lead(prof, tid, player, scard) :
         #    are strictly sequential it is generally an error 
         #    to have any action started until previous is finished
         protocol.add_move(card)
+        dummy = bridge.SIDES[(bridge.SIDES.index(protocol.contract[-1]) + 2) % 4]
         rndend = protocol.round_ended()
         if rndend :
             last_round = protocol.moves[-4:]
@@ -60,17 +61,29 @@ def do_lead(prof, tid, player, scard) :
                 allowed = fst_card_in_round / 13
             else : 
                 allowed = 'any' 
+            if len(protocol.moves) == 1 :
+                dummy_hand = protocol.deal.hand_by_side(dummy)
+                umap = table.usermap()
+                del umap[dummy]
+                del umap[protocol.contract[-1]]
+                mes = {'type': 'hand', 'value': {'cards': dummy_hand}}
+                for p, u in umap.iteritems() :
+                    mes['value']['player'] = bridge.relation(dummy, p)
+                    repo.UserProfile.uenqueue(u, mes)
+
         umap = table.usermap()
+        if next == dummy :
+            next = protocol.contract[-1]
         next_user = umap.pop(next)
-        mes = {'card': card}
+        mes = {'type': 'move', 'value': {'card': card}}
         for p, u in umap.iteritems() :
-            mes['player'] = bridge.relation(side, p)
-            mes['trick'] = trick_side(next, p) if rndend else None
-            repo.UserProfile.uenqueue(u, {'type': 'move', 'value': mes})
-        mes['player'] = bridge.relation(side, next)
-        mes['allowed'] = allowed
-        mes['trick'] = '+' if rndend else None
-        repo.UserProfile.uenqueue(next_user, {'type': 'move', 'value': mes})
+            mes['value']['player'] = bridge.relation(side, p)
+            mes['value']['trick'] = trick_side(next, p) if rndend else None
+            repo.UserProfile.uenqueue(u, mes)
+        mes['value']['player'] = bridge.relation(side, next)
+        mes['value']['allowed'] = allowed
+        mes['value']['trick'] = '+' if rndend else None
+        repo.UserProfile.uenqueue(next_user, mes)
 
         if protocol.finished() :
             cntrct = protocol.contract[:-1]
@@ -134,6 +147,13 @@ def do_bid(prof, tid, player, bid) :
                 , {'type': 'start.play', 'value'
                    : {'contract': contract.replace('d', 'x').replace('r','xx') 
                       , 'lead': (declearer + 1) % 4}}])
+        deal = protocol.deal
+        dummy = (declearer + 2) % 4
+        dummy_hand = deal.hand_by_side(bridge.SIDES[dummy])
+        mes = {'type': 'hand', 'value': {'cards': dummy_hand, 'player': 'part'}}
+        repo.UserProfile.uenqueue(table.user_by_side(bridge.SIDES[declearer]), mes )
+        mes['value']['cards'] = deal.hand_by_side(bridge.SIDES[declearer])
+        repo.UserProfile.uenqueue(table.user_by_side(bridge.SIDES[dummy]), mes )
         return
     protocol.put()
 
@@ -149,5 +169,5 @@ def do_bid(prof, tid, player, bid) :
     table.broadcast({'type': 'bid', 'value': {'side': cur_side, 'bid': bid, 'dbl_mode':dbl_mode}})
 
 
-action_processors = {'move': do_lead, 'bid': do_bid}
+action_processors = {'move': do_move, 'bid': do_bid}
 

@@ -146,12 +146,13 @@ function process_move(v) {
     if (allowed == null) {
 	return;
     }
+    np = next_player(player)
     prohibit_cards(".card");
     if (allowed == "any") {
-	allow_cards(".card_own", "own");
+	allow_cards(".card_" + np, np);
     } else {
-	var np_suit_class = ".card_own.suit_" + allowed;
-	allow_cards(np_suit_class, "own");
+	var np_suit_class = ".card_" + np + ".suit_" + allowed;
+	allow_cards(np_suit_class, np);
     }
 }
 

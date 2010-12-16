@@ -113,7 +113,7 @@ class TableHandler(webapp.RequestHandler) :
                     if table.full() :
                         actions.start_new_deal(table)
                     table.put()    
-                    relations = dict([(bridge.relation(place, p), p) for p in bridge.SIDES])
+                    relations = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
                     self.response.out.write(template.render('table.html', relations))
                 else :
                     self.redirect('hall.html')

@@ -136,8 +136,11 @@ class Table(db.Model) :
     kibitzers = db.ListProperty(users.User)
     protocol = db.ReferenceProperty(Protocol)
 
-    def side(self, user) :
-        return bridge.SIDES[[self.N, self.E, self.S, self.W].index(user)]
+    def user_by_side(self, side) :
+        return self.__getattribute__(side)
+
+    def side(self, user, player='own') :
+        return bridge.SIDES[([self.N, self.E, self.S, self.W].index(user) + bridge.REL_SIDES.index(player)) % 4]
 
     def sit(self, place, user):
         val = self.__getattribute__(place)
@@ -155,6 +158,7 @@ class Table(db.Model) :
             if u is not None :
                 UserProfile.uenqueue(u, m)
 
+    # MAYBE store it in memory in place of each time recalculation
     def usermap(self) :
         return dict(filter(lambda x: x[1] is not None, 
                            zip(['N', 'E', 'S', 'W'], [self.N, self.E, self.S, self.W])))
