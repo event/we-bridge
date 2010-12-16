@@ -146,7 +146,12 @@ function process_move(v) {
     if (allowed == null) {
 	return;
     }
-    np = next_player(player)
+    var np;
+    if (v.next != null) {
+	np = v.next;
+    } else {
+	np = next_player(player);
+    }
     prohibit_cards(".card");
     if (allowed == "any") {
 	allow_cards(".card_" + np, np);

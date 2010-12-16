@@ -73,16 +73,22 @@ def do_move(prof, tid, player, scard) :
 
         umap = table.usermap()
         if next == dummy :
+            rel_move = 'part'
             next = protocol.contract[-1]
+        else :
+            rel_move = 'own'
         next_user = umap.pop(next)
         mes = {'type': 'move', 'value': {'card': card}}
         for p, u in umap.iteritems() :
             mes['value']['player'] = bridge.relation(side, p)
-            mes['value']['trick'] = trick_side(next, p) if rndend else None
+            if rndend :
+                mes['value']['trick'] = trick_side(next, p)
             repo.UserProfile.uenqueue(u, mes)
         mes['value']['player'] = bridge.relation(side, next)
         mes['value']['allowed'] = allowed
-        mes['value']['trick'] = '+' if rndend else None
+        if rndend :
+            mes['value']['trick'] = '+' 
+            mes['value']['next'] = rel_move
         repo.UserProfile.uenqueue(next_user, mes)
 
         if protocol.finished() :
