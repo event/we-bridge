@@ -65,16 +65,16 @@ class Protocol(db.Model) :
     
     @staticmethod
     def get_by_deal(deal) :
-        return Protocol.all().filter('deal =', deal).order("playStarted")
+        return Protocol.all().filter('deal =', deal).order('playStarted')
 
     def round_ended(self) :
         return len(self.moves) % 4 == 0
 
-    def add_move(self, move) :
-        self.moves.append(move)
-
     def finished(self) :
         return len(self.moves) == 52
+
+    def dummy(self) :
+        return bridge.SIDES[(bridge.SIDES.index(self.contract[-1]) + 2) % 4]
 
     def add_bid(self, bid) :
         bidding = self.bidding
@@ -107,7 +107,12 @@ class UserProfile(db.Model) :
 
     @staticmethod
     def broadcast(m) :
-         [u.enqueue(m) for u in UserProfile.gql("WHERE loggedin = True")]
+        for p in UserProfile.all().filter('loggedin =', True) :
+            try :
+                p.enqueue(m)
+            except channel.InvalidChannelClientIdError :
+                logging.warn('broadcast to %s failed', p.user.nickname())
+                p.loggedin = False
            
 
     @staticmethod
@@ -116,7 +121,7 @@ class UserProfile(db.Model) :
 
     @staticmethod
     def get_or_create(user) :
-        res = UserProfile.gql("WHERE user = :1", user).get()
+        res = UserProfile.gql('WHERE user = :1', user).get()
         if res is None :
             res = UserProfile()
             res.user = user
@@ -124,7 +129,7 @@ class UserProfile(db.Model) :
         return res
             
     def enqueue(self, m) :
-        logging.info(m)
+        logging.info('%s: %s' % (self.user.nickname(), m))
         channel.send_message(self.chanid, json.dumps(m))
         
 
@@ -143,12 +148,7 @@ class Table(db.Model) :
         return bridge.SIDES[([self.N, self.E, self.S, self.W].index(user) + bridge.REL_SIDES.index(player)) % 4]
 
     def sit(self, place, user):
-        val = self.__getattribute__(place)
-        if val is None or val == user:
-            self.__setattr__(place, user)
-            return True
-        else :
-            return False
+        self.__setattr__(place, user)
 
     def full(self):
         return all(map(lambda x: x is not None, [self.N, self.E, self.S, self.W]))

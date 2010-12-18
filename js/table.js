@@ -13,6 +13,7 @@ update_handlers["move"] = process_move;
 update_handlers["bid"] = process_bid;
 update_handlers["hand"] = process_hand;
 update_handlers["user"] = user_update;
+update_handlers["tricks"] = show_tricks;
 update_handlers["start.bidding"] = kick_bidding;
 update_handlers["start.play"] = kick_play;
 update_handlers["end.play"] = end_play;
@@ -144,6 +145,7 @@ function process_move(v) {
 	}
     }
     if (allowed == null) {
+	prohibit_cards(".card");
 	return;
     }
     var np;
@@ -185,7 +187,7 @@ function do_move(event) {
     var number = splitted_id[1];
     var url = "action.json?move/" + tid + "/" + player + "/" + number;
     $.post(url);
-    prohibit_cards(".card_own");
+    prohibit_cards(".card");
     $(event.target).remove();
 }
 
@@ -197,12 +199,13 @@ function img_by_suit(suit) {
 
 function kick_bidding(v) {
     prohibit_bid(".bidbox_pass,.bidbox_dbl,.bidbox_rdbl");
-    var vuln_side = (my_side % 2) + 1
+    var vuln_side =  (my_side % 2) + 1;
+    var vuln_their_side = vuln_side ^ 3; 
     if (v.vuln & vuln_side) {
 	$(".vuln_we").addClass("vulnerable");
     }
 
-    if (v.vuln & vuln_side) {
+    if (v.vuln & vuln_their_side) {
 	$(".vuln_they").addClass("vulnerable");
     }
 
@@ -262,6 +265,14 @@ function trick_inc(i, s) {
     }
 }
 
+function show_tricks(v) {
+    if (v.their > 0) {
+	$("#their_tricks").text(v.their);
+    }
+    if (v.our > 0) {
+	$("#our_tricks").text(v.our);
+    }
+}
 
 function end_play(v) {
     $(".vuln_we,.vuln_they").removeClass("vulnerable");

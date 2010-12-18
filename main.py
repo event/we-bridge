@@ -15,10 +15,10 @@
 # along with Webridge.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import Queue
 import inspect
 import random
 import string
+import math
 
 from google.appengine.api import users, channel
 from google.appengine.ext import webapp
@@ -27,6 +27,7 @@ from django.utils  import simplejson as json
 
 import bridge
 import actions
+from actions import m 
 import repository as repo
 
 IMAGE_TEMPLATE = '<img src="images/%s.png" alt="%s"/>'
@@ -53,7 +54,6 @@ def checklogin(f) :
     else :
         return decorated 
 
-
 def arguments(request) :
     return request.query_string.split('/')
 
@@ -77,11 +77,95 @@ class ActionHandler(webapp.RequestHandler):
 def uname_messages(umap, baseplace) :
     result = []
     for p, u in umap.iteritems() :
-        result.append({'type': 'user', 'value': {'position': bridge.relation(p, baseplace)\
-                                                     , 'name': u.nickname()}})
+        result.append(m('user', position = bridge.relation(p, baseplace), name = u.nickname()))
     return result
-                      
 
+def current_table_state(user, place, table, allow_moves=True) :
+    tid = table.key().id()
+    umap = table.usermap()
+    
+    messages = [m('user', position = bridge.relation(p, place), name = u.nickname()) 
+                for p, u in umap.iteritems()]
+    p = table.protocol
+    if p is None :
+        return messages
+    deal = p.deal
+    moves = p.moves
+    hand = actions.hand_left(deal.hand_by_side(place), moves)
+    messages += [m('hand', cards = hand, player = 'own')
+                , m('start.bidding', vuln = deal.vulnerability, dealer = deal.dealer)]
+    side = deal.dealer
+    for b in p.bidding :
+        messages.append(m('bid', side = side, bid = b))
+        side = (side + 1) % 4
+
+    c = p.contract
+    if c is None :
+        return messages
+    
+    messages.append(m('start.play', contract = c[:-1].replace('d', 'x').replace('r','xx') 
+                      , lead = (bridge.SIDES.index(c[-1]) + 1) % 4))
+    
+    decl_side = c[-1]
+    trump = c[1]
+    full_rounds_played = len(moves) / 4
+    rounds_total = int(math.ceil(float(len(moves)) / 4))
+    decl_tricks, taker = bridge.decl_tricks_and_next_move_offset(moves[:(rounds_total - 2) * 4], trump)
+    cards_to_show = moves[(rounds_total - 2) * 4:]
+    lasttrick, lasttaker = bridge.decl_tricks_and_next_move_offset(cards_to_show, trump)
+    if taker % 2 == 1 :
+        decl_tricks += lasttrick
+    else :
+        decl_tricks += 2 - (rounds_total - full_rounds_played) - lasttrick
+    defen_tricks = full_rounds_played - decl_tricks
+    place_idx = bridge.SIDES.index(place)
+    decl_idx = bridge.SIDES.index(decl_side)
+    if place_idx % 2 == decl_idx % 2 :
+        our_t = decl_tricks
+        their_t = defen_tricks
+    else :
+        our_t = defen_tricks
+        their_t = decl_tricks
+    messages.append(m('tricks', our = our_t, their = their_t))
+    rel_idx = (decl_idx + 1) - place_idx
+    if len(cards_to_show) > 3 :
+        lastrnd = cards_to_show[:4]
+        lt_base = taker + rel_idx
+        messages += [m('move', card = lastrnd[i], player = bridge.REL_SIDES[(lt_base + i)%4]) for i in xrange(4)]
+        move_offs = bridge.decl_tricks_and_next_move_offset(lastrnd, trump)[1] + taker
+        currnd = cards_to_show[4:]
+    else :
+        currnd = cards_to_show
+        move_offs = taker
+    
+    s = (rel_idx + move_offs) % 4 
+    for card in currnd :
+        messages.append(m('move', card = card, player = bridge.REL_SIDES[s]))
+        s = (s + 1) % 4
+    dummy_side = p.dummy() 
+    if place == dummy_side :
+        messages.append(m('hand', cards = actions.hand_left(deal.hand_by_side(decl_side), moves)
+                          , player = 'part'))
+        return messages
+    else :
+        messages.insert(1, m('hand', cards = actions.hand_left(deal.hand_by_side(dummy_side), moves)
+                             , player = bridge.relation(dummy_side, place)))
+    s = (rel_idx + taker + lasttaker) % 4
+    if s == 2 and place == decl_side :
+        messages[-1]['value']['next'] = 'part'
+        hand = actions.hand_left(deal.hand_by_side(dummy_side), moves)
+        s = 0
+    else :
+        messages[-1]['value']['next'] = 'own'
+
+    if allow_moves and s == 0: 
+        if rounds_total != full_rounds_played and bridge.has_same_suit(hand, currnd[0]):
+            messages[-1]['value']['allowed'] = currnd[0] / 13 
+        else :
+            messages[-1]['value']['allowed'] = 'any'
+            
+    return messages
+                      
 class TableHandler(webapp.RequestHandler) :
     @checklogin
     def get(self, prof):
@@ -91,7 +175,7 @@ class TableHandler(webapp.RequestHandler) :
             t = repo.Table()
             t.N = user
             ident = t.put().id()
-            mes = {'type': 'table.add', 'value': {'id': ident}}
+            mes = m('table.add', tid=ident)
             repo.UserProfile.broadcast(mes)
             self.redirect('table.html?%s/N' % ident)
         else :
@@ -99,20 +183,26 @@ class TableHandler(webapp.RequestHandler) :
             table = repo.Table.get_by_id(tid)
             if len(args) > 1 :
                 place = args[1]
-                if table.sit(place, user) :
-                    mes = {'type': 'player.sit', 'value': {'id': tid, 'position': place, 'name': user.nickname()}}
+                current = table.user_by_side(place)
+                if current is None :
+                    table.sit(place, user)
+                    mes = m('player.sit', tid = tid, position = place, name = user.nickname())
                     repo.UserProfile.broadcast(mes)
                     umap = table.usermap()
                     prof.enqueue(uname_messages(umap, place))
                     del umap[place]
                     for p, u in umap.iteritems() :
                         rel = bridge.relation(place, p)
-                        m  = {'type': 'user', 'value': {'position': rel, 'name': user.nickname()}}
-                        repo.UserProfile.uenqueue(u, m)
+                        mes  = m('user', position = rel, name = user.nickname())
+                        repo.UserProfile.uenqueue(u, mes)
 
                     if table.full() :
                         actions.start_new_deal(table)
                     table.put()    
+                    relations = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
+                    self.response.out.write(template.render('table.html', relations))
+                elif current == user :
+                    prof.enqueue(current_table_state(user, place, table))
                     relations = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
                     self.response.out.write(template.render('table.html', relations))
                 else :
@@ -134,7 +224,7 @@ def show_all_tables() :
     # obvious cache candidate
     for t in repo.Table.all():
         tid = t.key().id()
-        res.append({'id': tid, 'N': nick_or_empty(t.N, tid, 'N'), 'E': nick_or_empty(t.E, tid, 'E')
+        res.append({'tid': tid, 'N': nick_or_empty(t.N, tid, 'N'), 'E': nick_or_empty(t.E, tid, 'E')
                     , 'S': nick_or_empty(t.S, tid, 'S'), 'W': nick_or_empty(t.W, tid, 'W')
                     , 'kibcount': len(t.kibitzers)})
     return res

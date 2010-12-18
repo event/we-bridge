@@ -21,7 +21,7 @@ function empty_if_none(player, id, pos) {
 }
 
 function add_table(v) {
-    var id = v.id;
+    var id = v.tid;
     var kibcount = v.kibcount;
     if (kibcount == null) {
 	kibcount = 0
@@ -39,14 +39,14 @@ function remove_table(v) {
 }
 
 function add_player(v) {
-    var id = v.id;
+    var id = v.tid;
     var name = v.name;
     var pos = v.position;
     $("#table_" + id + " td:eq(" + $.inArray(pos, positions) + ")").html(name);
 }
 
 function remove_player(v) {
-    var id = v.id;
+    var id = v.tid;
     var pos = v.position;	
     $("#table_" + id + " td:eq(" + $.inArray(pos, positions) + ")").html(empty_if_none(null, id, pos));
 }

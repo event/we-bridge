@@ -55,17 +55,22 @@ SUITS = ['clubs', 'diamonds', 'hearts', 'spades']
 RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
 def relation(place, base) :
-    return REL_SIDES[SIDES.index(place) - SIDES.index(base)]
+    return REL_SIDES[relation_idx(place, base)]
 
-def get_trick_taker_offset(last_round, trump) :
+def relation_idx(place, base) :
+    return SIDES.index(place) - SIDES.index(base)
+
+def get_next_move_offset(last_round, trump) :
+    if len(last_round) < 4 :
+        return len(last_round)
     suits = map(lambda x: x / CARDS_IN_SUIT, last_round)
     t = S2STRAIN[trump]
     lead_suit = suits[0]
     if t == STRAIN_NT or t not in suits :
         t = lead_suit
 
-    to_suit = filter(lambda x: x / CARDS_IN_SUIT == t, last_round)
-    return last_round.index(max(to_suit))
+    in_suit = filter(lambda x: x / CARDS_IN_SUIT == t, last_round)
+    return last_round.index(max(in_suit))
 
 def get_contract_and_declearer(bidding) :
     bidding = bidding[:-3]
@@ -236,21 +241,23 @@ def tricks_to_result(contract, vuln, decl_tricks) :
             over_price = base
         return pts + (d * over_price)
         
-                
-                
-def declearer_tricks(moves, trump) :
+def decl_tricks_and_next_move_offset(moves, trump) :
     rounds = [moves[i: i+4] for i in xrange(0,len(moves),4)]
     decl_tricks = 0
     decl_move = False
     old_o = 0
     for r in rounds :
-        o = get_trick_taker_offset(r, trump)
+        o = get_next_move_offset(r, trump)
         o = (o + old_o) % 4
-        if o == 1 or o == 3 :
+        if (o % 2) == 1 :
             decl_tricks += 1
         old_o = o
-    return decl_tricks
+    if len(rounds[-1]) < 4 :
+        decl_tricks -= 1
+    return decl_tricks, old_o
         
+def declearer_tricks(moves, trump) :
+    return decl_tricks_and_next_move_offset(moves, trump)[0]
 
 def deal_result(contract, vuln, moves) :
     tricks = declearer_tricks(moves, contract[1])
