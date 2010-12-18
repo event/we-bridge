@@ -90,11 +90,19 @@ def do_move(prof, tid, player, scard) :
             rel_move = 'own'
         next_user = umap.pop(next)
         mes = m('move', card = card)
+        def rndend_update() :
+            return 
+
+        if rndend :
+            f = lambda next, side, p: {'player': bridge.relation(side, p), 'trick': trick_side(next, p)}
+        else :
+            f = lambda next, side, p: {'player': bridge.relation(side, p)}
+
         for p, u in umap.iteritems() :
-            mes['value']['player'] = bridge.relation(side, p)
-            if rndend :
-                mes['value']['trick'] = trick_side(next, p)
+            mes['value'].update(f(next, side, p))
             repo.UserProfile.uenqueue(u, mes)
+        mes['value'].update(f(next, side, 'S'))
+        table.kib_broadcast(mes)    
         mes['value']['player'] = bridge.relation(side, next)
         mes['value']['allowed'] = allowed
         if rndend :

@@ -134,7 +134,8 @@ function process_move(v) {
     var trick = v.trick;
     var card_div_id = "#card_" + card;
     var lead_div_id = "#" + player + "_lead";
-    
+
+    $(card_div_id).remove();
     $(lead_div_id).append(create_card(player, card).css({"z-index": lead_count, "left": 0}));
     lead_count += 1;
     if (trick != null) {

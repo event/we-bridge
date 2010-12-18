@@ -157,6 +157,11 @@ class Table(db.Model) :
         for u in [self.N, self.E, self.S, self.W] :
             if u is not None :
                 UserProfile.uenqueue(u, m)
+        self.kib_broadcast(m)
+
+    def kib_broadcast(self, m) :
+        for u in self.kibitzers :
+            UserProfile.uenqueue(u, m)
 
     # MAYBE store it in memory in place of each time recalculation
     def usermap(self) :

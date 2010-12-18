@@ -147,9 +147,7 @@ def current_table_state(user, place, table, allow_moves=True) :
         messages.append(m('hand', cards = actions.hand_left(deal.hand_by_side(decl_side), moves)
                           , player = 'part'))
         return messages
-    else :
-        messages.insert(1, m('hand', cards = actions.hand_left(deal.hand_by_side(dummy_side), moves)
-                             , player = bridge.relation(dummy_side, place)))
+
     s = (rel_idx + taker + lasttaker) % 4
     if s == 2 and place == decl_side :
         messages[-1]['value']['next'] = 'part'
@@ -164,6 +162,8 @@ def current_table_state(user, place, table, allow_moves=True) :
         else :
             messages[-1]['value']['allowed'] = 'any'
             
+    messages.append(m('hand', cards = actions.hand_left(deal.hand_by_side(dummy_side), moves)
+                             , player = bridge.relation(dummy_side, place)))
     return messages
                       
 class TableHandler(webapp.RequestHandler) :
@@ -191,11 +191,14 @@ class TableHandler(webapp.RequestHandler) :
                     umap = table.usermap()
                     prof.enqueue(uname_messages(umap, place))
                     del umap[place]
+                    nick = user.nickname()
                     for p, u in umap.iteritems() :
                         rel = bridge.relation(place, p)
-                        mes  = m('user', position = rel, name = user.nickname())
+                        mes  = m('user', position = rel, name = nick)
                         repo.UserProfile.uenqueue(u, mes)
 
+                    table.kib_broadcast(m('user', position =  brige.relation(place, 'S'), name = nick))
+                        
                     if table.full() :
                         actions.start_new_deal(table)
                     table.put()    
@@ -205,12 +208,15 @@ class TableHandler(webapp.RequestHandler) :
                     prof.enqueue(current_table_state(user, place, table))
                     relations = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
                     self.response.out.write(template.render('table.html', relations))
-                else :
+                else : # user tried to pick someones place
                     self.redirect('hall.html')
             else :
-                self.redirect('hall.html')
-                # table.kibitzers.append(user)
-                # show_table_state(user)
+                place = 'S'
+                table.kibitzers.append(user)
+                table.put()
+                prof.enqueue(current_table_state(user, place, table))
+                relations = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
+                self.response.out.write(template.render('table.html', relations))
                     
 
 def nick_or_empty(user, tid, side):
