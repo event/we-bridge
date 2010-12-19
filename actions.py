@@ -165,14 +165,28 @@ def do_bid(prof, tid, player, bid) :
     cur_side = (old_cnt + protocol.deal.dealer) % 4
     if bid_cnt > 3 and all([b == bridge.BID_PASS for b in protocol.bidding[-3:]]) :
         contract, rel_declearer = bridge.get_contract_and_declearer(protocol.bidding)
+        deal = protocol.deal
+        if contract == bridge.BID_PASS :
+            protocol.contract = contract
+            protocol.result = 0
+            protocol.tricks = 0
+            protocol.put()
+            table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none')
+                         , m('end.play', contract = contract\
+                                  , declearer = 'N/A'\
+                                  , points = protocol.result\
+                                  , tricks = protocol.tricks\
+                                  , protocol_url = 'protocol.html?%s' % deal.key().id())])
+            return
+
         declearer = (rel_declearer + protocol.deal.dealer) % 4
-        protocol.contract = contract + bridge.SIDES[declearer]
+        contract = contract + bridge.SIDES[declearer]
+        protocol.contract = contract
         protocol.put()
         logging.info('contract %s by %s', contract, bridge.SIDES[declearer])
         table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none')
                          , m('start.play', contract = contract.replace('d', 'x').replace('r','xx') 
                              , lead = (declearer + 1) % 4)])
-        deal = protocol.deal
         dummy = (declearer + 2) % 4
         dummy_hand = deal.hand_by_side(bridge.SIDES[dummy])
         mes = m('hand', cards = dummy_hand, player = 'part')
@@ -196,14 +210,21 @@ def do_bid(prof, tid, player, bid) :
 def leave_table(prof, tid) :
     table = repo.Table.get_by_id(int(tid))
     user = prof.user
-    place = table.side(user)
-    table.sit(place, None)
+    if user in table.kibitzers :
+        table.kibitzers.remove(user)
+        place = None
+    else : 
+        place = table.side(user)
+        if place is None :
+            logging.warn('%s tried to leave a table while not sitting at it', user)
+            return 'hall.html'
+        table.sit(place, None)
+        umap = table.usermap()
+        for p, u in umap.iteritems() :
+            rel = bridge.relation(place, p)
+            mes  = m('user.leave', position = rel)
+            repo.UserProfile.uenqueue(u, mes)
     table.put()
-    umap = table.usermap()
-    for p, u in umap.iteritems() :
-        rel = bridge.relation(place, p)
-        mes  = m('user.leave', position = rel)
-        repo.UserProfile.uenqueue(u, mes)
     mes = m('player.leave', tid = tid, position = place)
     repo.UserProfile.broadcast(mes)
 

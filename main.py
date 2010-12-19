@@ -29,6 +29,7 @@ import bridge
 import actions
 from actions import m 
 import repository as repo
+import time
 
 IMAGE_TEMPLATE = '<img src="images/%s.png" alt="%s"/>'
 
@@ -44,7 +45,7 @@ def checklogin(f) :
         if user is not None :
             prof = repo.UserProfile.get_or_create(user)
             prof.loggedin = True
-            prof.put()
+            prof.put() # updates last access time for inactive user tracking
             f(self, prof)
         else :
             self.redirect(users.create_login_url(self.request.uri))
@@ -109,7 +110,7 @@ def current_table_state(user, place, table, allow_moves=True) :
     if c is None :
         return messages
     
-    messages.append(m('start.play', contract = c[:-1].replace('d', 'x').replace('r','xx') 
+    messages.append(m('start.play', contract = c.replace('d', 'x').replace('r','xx') 
                       , lead = (bridge.SIDES.index(c[-1]) + 1) % 4))
     
     decl_side = c[-1]
@@ -203,7 +204,7 @@ class TableHandler(webapp.RequestHandler) :
                         mes  = m('user.sit', position = rel, name = nick)
                         repo.UserProfile.uenqueue(u, mes)
 
-                    table.kib_broadcast(m('user.sit', position =  brige.relation(place, 'S'), name = nick))
+                    table.kib_broadcast(m('user.sit', position =  bridge.relation(place, 'S'), name = nick))
                         
                     if table.full() :
                         actions.start_new_deal(table)
@@ -225,6 +226,7 @@ class TableHandler(webapp.RequestHandler) :
                 table.kibitzers.append(user)
                 table.put()
                 prof.enqueue(current_table_state(user, place, table))
+                repo.UserProfile.broadcast(m('player.sit', tid = tid))
                 values = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
                 values['username'] = prof.user.nickname()
                 values['tid'] = tid
@@ -263,12 +265,15 @@ class ChannelHandler(webapp.RequestHandler) :
         else : 
             chanid = prof.chanid
         token = channel.create_channel(chanid)
-        prof.enqueue(prof.messages)
-        prof.messages = []
         prof.put()
         self.response.out.write(json.dumps(token))
 
 def protocol2map(curuser, p) :
+    if p.contract == 'pass' :
+        return {'N': p.N.nickname(), 'E': p.E.nickname(), 'S': p.S.nickname(), 'W': p.W.nickname(), 
+                'contract': p.contract, 'result': 0
+                , 'highlight': curuser in [p.N, p.E, p.S, p.W] }
+        
     lead = bridge.num_to_suit_rank(p.moves[0])
     lead_s = lead[0][0]
     lead =  IMAGE_TEMPLATE % (lead_s, lead_s.upper()) + lead[1]
@@ -299,15 +304,32 @@ class ProtocolHandler(webapp.RequestHandler) :
         self.response.out.write(template.render(page, values))
 
 
+class CronHandler(webapp.RequestHandler) :
+    TIME_LIMIT_SECS = 30 * 60
+    def get(self) :
+        def logoff(p): 
+            p.loggedin = False
+
+        if self.request.headers['X-AppEngine-Cron'] != 'true' :
+            self.response.set_status(404)
+            return
+        args = arguments(self.request)
+        cmd = args[0]
+        if cmd == 'logoff' :
+            old = time.strftime('%F %T', time.gmtime(time.time() - self.TIME_LIMIT_SECS))
+            profiles = repo.UserProfile.all().filter('lastact < ', old).fetch(100)
+            map(logoff, profiles)
+            db.put(profiles)
 
 
 def main():
-    application = webapp.WSGIApplication([('/', Redirector),
-                                          ('/hall.html', HallHandler),
-                                          ('/table.html', TableHandler),
-                                          ('/protocol.html', ProtocolHandler),
-                                          ('/channel.json', ChannelHandler),
-                                          ('/action.json', ActionHandler)],
+    application = webapp.WSGIApplication([('/', Redirector)
+                                          , ('/cron.html', CronHandler)
+                                          , ('/hall.html', HallHandler)
+                                          , ('/table.html', TableHandler)
+                                          , ('/protocol.html', ProtocolHandler)
+                                          , ('/channel.json', ChannelHandler)
+                                          , ('/action.json', ActionHandler)],
                                          debug=True)
     util.run_wsgi_app(application)
 

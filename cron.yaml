@@ -1,0 +1,4 @@
+cron:
+- description: logoff inactive users
+  url: /cron.html?logoff
+  schedule: every 1 hour

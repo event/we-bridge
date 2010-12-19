@@ -21,7 +21,11 @@
     <div id="hall_holder">
       <table id="table_list">
 	<tr class="table">
-	  <th class="player">N</th><th class="player">S</th><th class="player">E</th><th class="player">W</th>
+	  <th class="player">N</th>
+	  <th class="player">S</th>
+	  <th class="player">E</th>
+	  <th class="player">W</th>
+	  <th class="player">Kibitz</th>
 	</tr>
 	{% for table in tables %}
 	<tr id="table_{{table.tid}}" class="table">
@@ -29,7 +33,7 @@
 	  <td class="player">{{table.S}}</td>
 	  <td class="player">{{table.E}}</td>
 	  <td class="player">{{table.W}}</td>
-	  <td class="player">{{table.kibcount}}</td>
+	  <td class="player"><a href="table.html?{{table.tid}}">{{table.kibcount}}</a></td>
 	</tr>
 	{% endfor %}
       </table>

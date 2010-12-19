@@ -103,16 +103,12 @@ class UserProfile(db.Model) :
     chanid = db.StringProperty()
     user = db.UserProperty()
     loggedin = db.BooleanProperty()
-    messages = db.StringListProperty()
+    lastact = db.DateTimeProperty(auto_now = True)
 
     @staticmethod
     def broadcast(m) :
         for p in UserProfile.all().filter('loggedin =', True) :
-            try :
-                p.enqueue(m)
-            except channel.InvalidChannelClientIdError :
-                logging.warn('broadcast to %s failed', p.user.nickname())
-                p.loggedin = False
+            p.enqueue(m)
            
 
     @staticmethod
@@ -130,8 +126,13 @@ class UserProfile(db.Model) :
             
     def enqueue(self, m) :
         logging.info('%s: %s' % (self.user.nickname(), m))
-        channel.send_message(self.chanid, json.dumps(m))
-        
+        try :
+            channel.send_message(self.chanid, json.dumps(m))
+        except channel.InvalidChannelClientIdError :
+            logging.warn('broadcast to %s failed', self.user.nickname())
+            self.loggedin = False
+            self.put()
+
 
 class Table(db.Model) :
     N = db.UserProperty()
@@ -145,7 +146,11 @@ class Table(db.Model) :
         return self.__getattribute__(side)
 
     def side(self, user, player='own') :
-        return bridge.SIDES[([self.N, self.E, self.S, self.W].index(user) + bridge.REL_SIDES.index(player)) % 4]
+        try :
+            return bridge.SIDES[([self.N, self.E, self.S, self.W].index(user)
+                                 + bridge.REL_SIDES.index(player)) % 4]
+        except ValueError : 
+            return None
 
     def sit(self, place, user):
         self.__setattr__(place, user)

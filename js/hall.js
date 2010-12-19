@@ -31,7 +31,8 @@ function add_table(v) {
 			    + "<td class='player'>" + empty_if_none(v.S, id, "S") + "</td>" 
 			    + "<td class='player'>" + empty_if_none(v.E, id, "E") + "</td>" 
 			    + "<td class='player'>" + empty_if_none(v.W, id, "W") + "</td>" 
-			    + "<td class='player'>" + kibcount + "</td></tr>");
+			    + "<td class='player'><a href='table.html?" + id + "'>" 
+			                  + kibcount + "</a></td></tr>");
 }
 
 function remove_table(v) {
@@ -42,13 +43,21 @@ function add_player(v) {
     var id = v.tid;
     var name = v.name;
     var pos = v.position;
-    $("#table_" + id + " td:eq(" + $.inArray(pos, positions) + ")").html(name);
+    if (pos == null) {
+	$("#table_" + id + " td:eq(4) a").text(function(i,cnt){return parseInt(cnt) + 1});
+    } else {
+	$("#table_" + id + " td:eq(" + $.inArray(pos, positions) + ")").html(name);
+    }
 }
 
 function remove_player(v) {
     var id = v.tid;
     var pos = v.position;	
-    $("#table_" + id + " td:eq(" + $.inArray(pos, positions) + ")").html(empty_if_none(null, id, pos));
+    if (pos == null) {
+	$("#table_" + id + " td:eq(4) a").text(function(i,cnt){return parseInt(cnt) - 1});
+    } else {
+	$("#table_" + id + " td:eq(" + $.inArray(pos, positions) + ")").html(empty_if_none(null, id, pos));
+    }
 }
 
 function add_new_table() {

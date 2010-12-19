@@ -161,6 +161,11 @@ body {
     margin-left: 25px;
 }
 
+#contract_by {
+    font-size: 80%;
+    vertical-align: sub;
+}
+
 #contract img {
     width:20px;
     height:20px;

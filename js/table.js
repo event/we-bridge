@@ -7,6 +7,7 @@ var pass_dbl_rdbl = ["pass", "dbl", "rdbl"];
 var lead_count;
 var my_side;
 var tid;
+var pos_interval;
 
 var update_handlers = new Array();
 update_handlers["move"] = process_move;
@@ -225,7 +226,6 @@ function kick_play(v) {
     lead_count = 0;
     $("#bidbox").css("display", "none").after($("#bidding_area").detach());
     $("#bidbox_cell").css("text-align", "center");
-
     $("#lead_area").removeClass("hidden");
     if (lead_maker == my_side) {
 	allow_cards(".card_own", "own");
@@ -240,7 +240,8 @@ function kick_play(v) {
     } else {
 	cntrct_html = contract[0] + "NT";
     }
-    $("#contract").html(cntrct_html + contract.substr(2, 2));
+    $("#contract").html(cntrct_html);
+    $("#contract_by").text(" by " + contract.substr(contract.length - 1))
 }
 
 function highlight_for_move(event) {
@@ -300,13 +301,17 @@ function end_play(v) {
 	sign = "+";
     }
     var contract_html;
-    var r = contract[0];
-    var s = contract[1];
-    if (s != 'Z') {
-	var img = suit_image_template.replace("{suit}", s.toLowerCase()).replace("{alt_suit}", s);
-	contract_html = r + img;
+    if (contract == "pass"){
+	contract_html = "pass";
     } else {
-	contract_html = r + "NT";
+	var r = contract[0];
+	var s = contract[1];
+	if (s != "Z") {
+	    var img = suit_image_template.replace("{suit}", s.toLowerCase()).replace("{alt_suit}", s);
+	    contract_html = r + img;
+	} else {
+	    contract_html = r + "NT";
+	}
     }
     contract_html += contract.substr(2, 2);
     $("#popup_res").html("<a href='" + url + "' target='_blank'>" +  tricks 
@@ -319,10 +324,10 @@ function end_play(v) {
 function user_sit(v) {
     var pos = v.position;
     var name = v.name;
-    $("#" + pos + "_user").text(name);
+    $("." + pos + "_user").text(name);
 }
 
 function user_leave(v) {
     var pos = v.position;
-    $("#" + pos + "_user").text("");
+    $("." + pos + "_user").text("");
 }
