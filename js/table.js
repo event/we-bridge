@@ -12,7 +12,8 @@ var update_handlers = new Array();
 update_handlers["move"] = process_move;
 update_handlers["bid"] = process_bid;
 update_handlers["hand"] = process_hand;
-update_handlers["user"] = user_update;
+update_handlers["user.sit"] = user_sit;
+update_handlers["user.leave"] = user_leave;
 update_handlers["tricks"] = show_tricks;
 update_handlers["start.bidding"] = kick_bidding;
 update_handlers["start.play"] = kick_play;
@@ -315,8 +316,13 @@ function end_play(v) {
 	
 }
 
-function user_update(v) {
+function user_sit(v) {
     var pos = v.position;
     var name = v.name;
     $("#" + pos + "_user").text(name);
+}
+
+function user_leave(v) {
+    var pos = v.position;
+    $("#" + pos + "_user").text("");
 }

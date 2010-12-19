@@ -12,7 +12,10 @@
   </head>
   <body onload="on_body_load()">
     <h1>Webridge</h1>
-
+    <span id="user_header">
+      <a href="action.json?leave/{{tid}}">Leave table</a>
+      <a href="#">{{username}}</a>
+      <a href="action.json?logoff">Log out</a></span>
     <table id="board">
       <col class="board_column left_col"/>
       <col class="board_column center_col"/>

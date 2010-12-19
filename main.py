@@ -63,6 +63,9 @@ class Redirector(webapp.RequestHandler) :
         self.redirect('hall.html')
 
 class ActionHandler(webapp.RequestHandler):
+    def get(self) :
+        return self.post()
+
     @checklogin
     def post(self, prof):
         arglist = arguments(self.request)
@@ -72,19 +75,22 @@ class ActionHandler(webapp.RequestHandler):
         except KeyError:
             self.response.set_status(404)
         else :
-            f(prof, *arglist[1:])
+            redir = f(prof, *arglist[1:])
+            logging.info('redirect to %s' % redir)
+            if redir is not None :
+                self.redirect(redir)
 
 def uname_messages(umap, baseplace) :
     result = []
     for p, u in umap.iteritems() :
-        result.append(m('user', position = bridge.relation(p, baseplace), name = u.nickname()))
+        result.append(m('user.sit', position = bridge.relation(p, baseplace), name = u.nickname()))
     return result
 
 def current_table_state(user, place, table, allow_moves=True) :
     tid = table.key().id()
     umap = table.usermap()
     
-    messages = [m('user', position = bridge.relation(p, place), name = u.nickname()) 
+    messages = [m('user.sit', position = bridge.relation(p, place), name = u.nickname()) 
                 for p, u in umap.iteritems()]
     p = table.protocol
     if p is None :
@@ -194,20 +200,24 @@ class TableHandler(webapp.RequestHandler) :
                     nick = user.nickname()
                     for p, u in umap.iteritems() :
                         rel = bridge.relation(place, p)
-                        mes  = m('user', position = rel, name = nick)
+                        mes  = m('user.sit', position = rel, name = nick)
                         repo.UserProfile.uenqueue(u, mes)
 
-                    table.kib_broadcast(m('user', position =  brige.relation(place, 'S'), name = nick))
+                    table.kib_broadcast(m('user.sit', position =  brige.relation(place, 'S'), name = nick))
                         
                     if table.full() :
                         actions.start_new_deal(table)
                     table.put()    
-                    relations = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
-                    self.response.out.write(template.render('table.html', relations))
+                    values = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
+                    values['username'] = prof.user.nickname()
+                    values['tid'] = tid
+                    self.response.out.write(template.render('table.html', values))
                 elif current == user :
                     prof.enqueue(current_table_state(user, place, table))
-                    relations = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
-                    self.response.out.write(template.render('table.html', relations))
+                    values = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
+                    values['username'] = prof.user.nickname()
+                    values['tid'] = tid
+                    self.response.out.write(template.render('table.html', values))
                 else : # user tried to pick someones place
                     self.redirect('hall.html')
             else :
@@ -215,8 +225,10 @@ class TableHandler(webapp.RequestHandler) :
                 table.kibitzers.append(user)
                 table.put()
                 prof.enqueue(current_table_state(user, place, table))
-                relations = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
-                self.response.out.write(template.render('table.html', relations))
+                values = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
+                values['username'] = prof.user.nickname()
+                values['tid'] = tid
+                self.response.out.write(template.render('table.html', values))
                     
 
 def nick_or_empty(user, tid, side):
@@ -238,7 +250,8 @@ def show_all_tables() :
 class HallHandler(webapp.RequestHandler) :
     @checklogin
     def get(self, prof):
-        self.response.out.write(template.render('hall.html', {'tables': show_all_tables()}))
+        self.response.out.write(template.render(
+                'hall.html', {'tables': show_all_tables(), 'username': prof.user.nickname()}))
 
 class ChannelHandler(webapp.RequestHandler) :
     @checklogin

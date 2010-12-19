@@ -16,6 +16,8 @@
 
 import logging
 
+from google.appengine.api import users
+
 import bridge
 import repository as repo
 
@@ -191,6 +193,26 @@ def do_bid(prof, tid, player, bid) :
 
     table.broadcast(m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode))
 
+def leave_table(prof, tid) :
+    table = repo.Table.get_by_id(int(tid))
+    user = prof.user
+    place = table.side(user)
+    table.sit(place, None)
+    table.put()
+    umap = table.usermap()
+    for p, u in umap.iteritems() :
+        rel = bridge.relation(place, p)
+        mes  = m('user.leave', position = rel)
+        repo.UserProfile.uenqueue(u, mes)
+    mes = m('player.leave', tid = tid, position = place)
+    repo.UserProfile.broadcast(mes)
 
-action_processors = {'move': do_move, 'bid': do_bid}
+    return 'hall.html'
+
+def logoff(prof) :
+    prof.loggedin = False
+    prof.put()
+    return users.create_logout_url(users.create_login_url('hall.html'))
+
+action_processors = {'move': do_move, 'bid': do_bid, 'leave': leave_table, 'logoff': logoff}
 

@@ -37,3 +37,6 @@ button {
     border: 2px solid black;
 }
 
+#user_header {
+    float: right;
+}
