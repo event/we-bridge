@@ -77,8 +77,8 @@ class ActionHandler(webapp.RequestHandler):
             self.response.set_status(404)
         else :
             redir = f(prof, *arglist[1:])
-            logging.info('redirect to %s' % redir)
             if redir is not None :
+                logging.info('redirect to %s' % redir)
                 self.redirect(redir)
 
 def uname_messages(umap, baseplace) :
@@ -109,21 +109,31 @@ def current_table_state(user, place, table, allow_moves=True) :
     c = p.contract
     if c is None :
         return messages
-    
+
+    decl_side = c[-1]
+    dummy_side = p.dummy() 
     messages.append(m('start.play', contract = c.replace('d', 'x').replace('r','xx') 
                       , lead = (bridge.SIDES.index(c[-1]) + 1) % 4))
-    
-    decl_side = c[-1]
+
+    if place == dummy_side :
+        messages.append(m('hand', cards = actions.hand_left(deal.hand_by_side(decl_side), moves)
+                          , player = 'part'))
+    elif len(moves) > 0 or  decl_side == place:
+        messages.append(m('hand', cards = actions.hand_left(deal.hand_by_side(dummy_side), moves)
+                          , player = bridge.relation(dummy_side, place)))
+    if len(moves) == 0 :
+        return messages
     trump = c[1]
     full_rounds_played = len(moves) / 4
     rounds_total = int(math.ceil(float(len(moves)) / 4))
     decl_tricks, taker = bridge.decl_tricks_and_next_move_offset(moves[:(rounds_total - 2) * 4], trump)
     cards_to_show = moves[(rounds_total - 2) * 4:]
     lasttrick, lasttaker = bridge.decl_tricks_and_next_move_offset(cards_to_show, trump)
-    if taker % 2 == 1 :
-        decl_tricks += lasttrick
-    else :
-        decl_tricks += 2 - (rounds_total - full_rounds_played) - lasttrick
+    if len(cards_to_show) > 3 :
+        if taker % 2 == 1 :
+            decl_tricks += lasttrick
+        else :
+            decl_tricks += 2 - (rounds_total - full_rounds_played) - lasttrick
     defen_tricks = full_rounds_played - decl_tricks
     place_idx = bridge.SIDES.index(place)
     decl_idx = bridge.SIDES.index(decl_side)
@@ -149,11 +159,6 @@ def current_table_state(user, place, table, allow_moves=True) :
     for card in currnd :
         messages.append(m('move', card = card, player = bridge.REL_SIDES[s]))
         s = (s + 1) % 4
-    dummy_side = p.dummy() 
-    if place == dummy_side :
-        messages.append(m('hand', cards = actions.hand_left(deal.hand_by_side(decl_side), moves)
-                          , player = 'part'))
-        return messages
 
     s = (rel_idx + taker + lasttaker) % 4
     if s == 2 and place == decl_side :
@@ -169,8 +174,6 @@ def current_table_state(user, place, table, allow_moves=True) :
         else :
             messages[-1]['value']['allowed'] = 'any'
             
-    messages.append(m('hand', cards = actions.hand_left(deal.hand_by_side(dummy_side), moves)
-                             , player = bridge.relation(dummy_side, place)))
     return messages
                       
 class TableHandler(webapp.RequestHandler) :
@@ -225,7 +228,7 @@ class TableHandler(webapp.RequestHandler) :
                 place = 'S'
                 table.kibitzers.append(user)
                 table.put()
-                prof.enqueue(current_table_state(user, place, table))
+                prof.enqueue(current_table_state(user, place, table, False))
                 repo.UserProfile.broadcast(m('player.sit', tid = tid))
                 values = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
                 values['username'] = prof.user.nickname()

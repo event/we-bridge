@@ -15,16 +15,13 @@
 # along with Webridge.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import inspect
 
 from google.appengine.api import users
+from google.appengine.ext import db
 
 import bridge
 import repository as repo
-
-def checkturn(f) :
-    '''Checks whenever user is allowed to act for corresponding side.
-    In most cases user is allowed to act for 'own' only. Also check whether it is user's turn'''
-    return f
 
 def m(t, **kwargs) :
     return {'type': t, 'value': kwargs}
@@ -55,76 +52,85 @@ def next_player_and_allowed_suit(round_end, moves, contract, side, deal) :
             allowed = 'any' 
     return next, allowed
 
-@checkturn
+def move_allowed(protocol, side, player, card, hand) :
+    contract = protocol.contract
+    if contract  is None :
+        return False
+    decl = contract[-1]
+    valid_card = bridge.valid_card(hand, card, protocol.moves)
+    res = (player == 'own' or (decl == side and player == 'part')) and valid_card 
+    return res
+
 def do_move(prof, tid, player, scard) :
     user = prof.user
     table = repo.Table.get_by_id(int(tid))
     protocol = table.protocol
     deal = protocol.deal
     side = table.side(user, player)
-    hand = deal.hand_by_side(side)
     card = int(scard)
-    correct_move = bridge.check_move(hand, card, protocol.moves)
+    hand = deal.hand_by_side(side)
+    if side is None or not move_allowed(protocol, table.side(user), player, card, hand) \
+            or side != table.whosmove :
+        logging.warn('bad move: %s %s %s %s %s %s %s %s', protocol.key(), card
+                     , protocol.contract, user, player, table.key(), table.whosmove, side)
+        return
     result = []
-    if correct_move :
-        # some kind of locking have to be implemented here. While actions in bridge game 
-        #    are strictly sequential it is generally an error 
-        #    to have any action started until previous is finished
-        protocol.moves.append(card)
-        dummy = protocol.dummy()
-        rndend = protocol.round_ended()
-        next, allowed = next_player_and_allowed_suit(rndend, protocol.moves, protocol.contract, side, deal)
-        if len(protocol.moves) == 1 :
-            dummy_hand = protocol.deal.hand_by_side(dummy)
-            umap = table.usermap()
-            del umap[dummy]
-            del umap[protocol.contract[-1]]
-            mes = m('hand', cards = dummy_hand)
-            for p, u in umap.iteritems() :
-                mes['value']['player'] = bridge.relation(dummy, p)
-                repo.UserProfile.uenqueue(u, mes)
-
+    # some kind of locking have to be implemented here. While actions in bridge game 
+    #    are strictly sequential it is generally an error 
+    #    to have any action started until previous is finished
+    protocol.moves.append(card)
+    dummy = protocol.dummy()
+    rndend = protocol.round_ended()
+    next, allowed = next_player_and_allowed_suit(rndend, protocol.moves, protocol.contract, side, deal)
+    if len(protocol.moves) == 1 :
+        dummy_hand = protocol.deal.hand_by_side(dummy)
         umap = table.usermap()
-        if next == dummy :
-            rel_move = 'part'
-            next = protocol.contract[-1]
-        else :
-            rel_move = 'own'
-        next_user = umap.pop(next)
-        mes = m('move', card = card)
-        def rndend_update() :
-            return 
-
-        if rndend :
-            f = lambda next, side, p: {'player': bridge.relation(side, p), 'trick': trick_side(next, p)}
-        else :
-            f = lambda next, side, p: {'player': bridge.relation(side, p)}
-
+        del umap[dummy]
+        del umap[protocol.contract[-1]]
+        mes = m('hand', cards = dummy_hand)
         for p, u in umap.iteritems() :
-            mes['value'].update(f(next, side, p))
+            mes['value']['player'] = bridge.relation(dummy, p)
             repo.UserProfile.uenqueue(u, mes)
-        mes['value'].update(f(next, side, 'S'))
-        table.kib_broadcast(mes)    
-        mes['value']['player'] = bridge.relation(side, next)
-        mes['value']['allowed'] = allowed
-        if rndend :
-            mes['value']['trick'] = '+' 
-            mes['value']['next'] = rel_move
-        repo.UserProfile.uenqueue(next_user, mes)
 
-        if protocol.finished() :
-            cntrct = protocol.contract[:-1]
-            protocol.result, protocol.tricks = bridge.deal_result(cntrct \
+    umap = table.usermap()
+    table.whosmove = next
+    if next == dummy :
+        rel_move = 'part'
+        next = protocol.contract[-1]
+    else :
+        rel_move = 'own'
+    next_user = umap.pop(next)
+    mes = m('move', card = card)
+
+    if rndend :
+        f = lambda next, side, p: {'player': bridge.relation(side, p), 'trick': trick_side(next, p)}
+    else :
+        f = lambda next, side, p: {'player': bridge.relation(side, p)}
+        
+    for p, u in umap.iteritems() :
+        mes['value'].update(f(next, side, p))
+        repo.UserProfile.uenqueue(u, mes)
+    mes['value'].update(f(next, side, 'S'))
+    table.kib_broadcast(mes)    
+    mes['value']['player'] = bridge.relation(side, next)
+    mes['value']['allowed'] = allowed
+    if rndend :
+        mes['value']['trick'] = '+' 
+        mes['value']['next'] = rel_move
+    repo.UserProfile.uenqueue(next_user, mes)
+
+    if protocol.finished() :
+        cntrct = protocol.contract[:-1]
+        protocol.result, protocol.tricks = bridge.deal_result(cntrct \
                                                              , protocol.deal.vulnerability, protocol.moves)
-            table.broadcast(m('end.play', contract = cntrct.replace('d', 'x').replace('r','xx')\
-                                  , declearer = protocol.contract[-1]\
-                                  , points = protocol.result\
-                                  , tricks = protocol.tricks\
-                                  , protocol_url = 'protocol.html?%s' % deal.key().id()))
+        table.broadcast(m('end.play', contract = cntrct.replace('d', 'x').replace('r','xx')\
+                              , declearer = protocol.contract[-1]\
+                              , points = protocol.result\
+                              , tricks = protocol.tricks\
+                              , protocol_url = 'protocol.html?%s' % deal.key().id()))
     
-            start_new_deal(table)
-
-        protocol.put()
+        start_new_deal(table)
+    db.put([table, protocol])
 
 def to_dict(hand) :
     return m('hand', cards = hand)
@@ -133,6 +139,7 @@ def create_new_deck(table) :
     deck, vuln, dealer = bridge.get_deck()
     deal = repo.Deal.create(deck, vuln, dealer) 
     table.protocol = repo.Protocol.create(deal, N=table.N, E=table.E, S=table.S, W=table.W)
+    table.whosmove = bridge.SIDES[dealer]
     return add_own(map(to_dict, deck)), vuln, dealer
 
 def start_new_deal(table) :
@@ -147,22 +154,42 @@ def add_own(hand_list) :
         h['value']['player'] = 'own'
     return hand_list
 
-@checkturn
+def bid_allowed(bidding, bid, contract) :
+    if contract is not None :
+        return False
+
+    bid_cnt = len(bidding)
+    if bid == bridge.BID_PASS :
+        res = True
+    elif bid == bridge.BID_DOUBLE :
+        res = bid_cnt > 0 and bridge.is_value_bid(bidding[-1]) \
+            or bid_cnt > 2 and bridge.is_value_bid(bidding[-3]) \
+            and bidding[-2] == bidding[-1] == bridge.BID_PASS
+    elif bid == bridge.BID_REDOUBLE :
+        res = bid_cnt > 0 and bidding[-1] == bridge.BID_DOUBLE \
+            or bid_cnt > 2 and bidding[-3] == bridge.BID_DOUBLE \
+            and bidding[-2] == bidding[-1] == bridge.BID_PASS
+    else :
+        i = 1;
+        while i <= bid_cnt and not bridge.is_value_bid(bidding[-i]) :
+            i += 1
+        res = i > bid_cnt or bidding[-i] < bid
+    return res
+
+
 def do_bid(prof, tid, player, bid) :
     user = prof.user
     table = repo.Table.get_by_id(int(tid))
     protocol = table.protocol
-    if protocol.contract is not None :
-        logging.warn("Bid after end: %s by %s as %s @#%s", bid, user, player, tid)
-        return []
+    cur_side = table.side_idx(user)
+    if cur_side is None or not bid_allowed(protocol.bidding, bid, protocol.contract) \
+            or bridge.SIDES[cur_side] != table.whosmove :
+        logging.warn('bad bid: %s %s %s %s %s %s %s %s', protocol.key(), bid
+                     , protocol.contract, user, player, table.key(), table.whosmove, cur_side)
+        return 
 
-    old_cnt = len(protocol.bidding)
-    if not protocol.add_bid(bid) :
-        logging.warn("Bid is lower then allowed: %s by %s as %s @#%s", bid, user, player, tid)
-        return []
-
+    protocol.bidding.append(bid)
     bid_cnt = len(protocol.bidding)
-    cur_side = (old_cnt + protocol.deal.dealer) % 4
     if bid_cnt > 3 and all([b == bridge.BID_PASS for b in protocol.bidding[-3:]]) :
         contract, rel_declearer = bridge.get_contract_and_declearer(protocol.bidding)
         deal = protocol.deal
@@ -172,21 +199,23 @@ def do_bid(prof, tid, player, bid) :
             protocol.tricks = 0
             protocol.put()
             table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none')
-                         , m('end.play', contract = contract\
-                                  , declearer = 'N/A'\
-                                  , points = protocol.result\
-                                  , tricks = protocol.tricks\
-                                  , protocol_url = 'protocol.html?%s' % deal.key().id())])
+                             , m('end.play', contract = contract
+                                 , declearer = 'N/A'
+                                 , points = protocol.result
+                                 , tricks = protocol.tricks
+                                 , protocol_url = 'protocol.html?%s' % deal.key().id())])
             return
 
         declearer = (rel_declearer + protocol.deal.dealer) % 4
+        leadmaker = (declearer + 1) % 4
         contract = contract + bridge.SIDES[declearer]
         protocol.contract = contract
-        protocol.put()
+        table.whosmove = bridge.SIDES[leadmaker]
+        db.put([protocol, table])
         logging.info('contract %s by %s', contract, bridge.SIDES[declearer])
         table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none')
                          , m('start.play', contract = contract.replace('d', 'x').replace('r','xx') 
-                             , lead = (declearer + 1) % 4)])
+                             , lead = leadmaker)])
         dummy = (declearer + 2) % 4
         dummy_hand = deal.hand_by_side(bridge.SIDES[dummy])
         mes = m('hand', cards = dummy_hand, player = 'part')
@@ -194,7 +223,8 @@ def do_bid(prof, tid, player, bid) :
         mes['value']['cards'] = deal.hand_by_side(bridge.SIDES[declearer])
         repo.UserProfile.uenqueue(table.user_by_side(bridge.SIDES[dummy]), mes )
         return
-    protocol.put()
+    table.nextmove()
+    db.put([protocol, table])
 
     if bid == bridge.BID_DOUBLE or bid_cnt > 2 and protocol.bidding[-3] == bridge.BID_DOUBLE \
             and protocol.bidding[-2] == bid == bridge.BID_PASS :

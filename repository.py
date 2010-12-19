@@ -76,29 +76,6 @@ class Protocol(db.Model) :
     def dummy(self) :
         return bridge.SIDES[(bridge.SIDES.index(self.contract[-1]) + 2) % 4]
 
-    def add_bid(self, bid) :
-        bidding = self.bidding
-        bid_cnt = len(bidding)
-        if bid == bridge.BID_PASS :
-            res = True
-        elif bid == bridge.BID_DOUBLE :
-            res = bid_cnt > 0 and bridge.is_value_bid(bidding[-1]) \
-                or bid_cnt > 2 and bridge.is_value_bid(bidding[-3]) \
-                and bidding[-2] == bidding[-1] == bridge.BID_PASS
-        elif bid == bridge.BID_REDOUBLE :
-            res = bid_cnt > 0 and bidding[-1] == bridge.BID_DOUBLE \
-                or bid_cnt > 2 and bidding[-3] == bridge.BID_DOUBLE \
-                and bidding[-2] == bidding[-1] == bridge.BID_PASS
-        else :
-            i = 1;
-            while i <= bid_cnt and not bridge.is_value_bid(bidding[-i]) :
-                i += 1
-            res = i > bid_cnt or bidding[-i] < bid
-
-        if res :
-            self.bidding.append(bid)
-        return res
-
 class UserProfile(db.Model) :
     chanid = db.StringProperty()
     user = db.UserProperty()
@@ -141,14 +118,24 @@ class Table(db.Model) :
     W = db.UserProperty()
     kibitzers = db.ListProperty(users.User)
     protocol = db.ReferenceProperty(Protocol)
+    whosmove = db.StringProperty()
 
+    def nextmove(self) :
+        self.whosmove = bridge.SIDES[(bridge.SIDES.index(self.whosmove) + 1) % 4]
+    
     def user_by_side(self, side) :
         return self.__getattribute__(side)
 
     def side(self, user, player='own') :
         try :
-            return bridge.SIDES[([self.N, self.E, self.S, self.W].index(user)
-                                 + bridge.REL_SIDES.index(player)) % 4]
+            return bridge.SIDES[self.side_idx(user, player)]
+        except TypeError :
+            return None
+
+    def side_idx(self, user, player='own') :
+        try :
+            return ([self.N, self.E, self.S, self.W].index(user)
+                    + bridge.REL_SIDES.index(player)) % 4
         except ValueError : 
             return None
 

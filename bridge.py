@@ -114,7 +114,7 @@ def has_same_suit(hand, card) :
 def same_suit(card1, card2) :
     return card1 / 13 == card2 / 13
 
-def check_move(hand, card, all_moves):
+def valid_card(hand, card, all_moves):
     h = set(hand)
     h.difference_update(all_moves)
     hand = list(h)
@@ -252,7 +252,7 @@ def decl_tricks_and_next_move_offset(moves, trump) :
         if (o % 2) == 1 :
             decl_tricks += 1
         old_o = o
-    if len(rounds[-1]) < 4 :
+    if len(rounds) > 0 and len(rounds[-1]) < 4 :
         decl_tricks -= 1
     return decl_tricks, old_o
         
