@@ -181,8 +181,8 @@ class TableHandler(webapp.RequestHandler) :
             t = repo.Table()
             t.N = user
             ident = t.put().id()
-            mes = m('table.add', tid=ident)
-            repo.UserProfile.broadcast(mes)
+            repo.UserProfile.broadcast([m('table.add', tid=ident)
+                                        , m('player.sit', tid = ident, position = 'N', name = user.nickname())])
             self.redirect('table.html?%s/N' % ident)
         else :
             tid = int(args[0]) 
