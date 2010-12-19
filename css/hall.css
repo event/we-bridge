@@ -21,6 +21,7 @@ body {
     font-weight:bold;
     background-color:gray;
     text-align: center; 
+    border-collapse: collapse;
 }
 
 button {
@@ -32,10 +33,14 @@ button {
 }
 
 .player {
-    color: blue;
+    color: black;
     width:20%;
     height: 40px;
     border: 2px solid black;
+}
+
+.player a {
+    color: blue;
 }
 
 #user_header {
