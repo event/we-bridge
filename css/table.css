@@ -236,3 +236,8 @@ div.popup {
     padding-right: 3%;
     padding-bottom: 1%;
 }
+
+.indicator {
+    font-weight: bold;
+    color: red;
+}

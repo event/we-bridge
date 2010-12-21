@@ -162,7 +162,7 @@ def current_table_state(user, place, table, allow_moves=True) :
         hand = actions.hand_left(deal.hand_by_side(dummy_side), moves)
         s = decl_side
     else :
-        messages[-1]['value']['next'] = place
+        messages[-1]['value']['next'] = s
 
     if allow_moves and s == place: 
         if rounds_total != full_rounds_played and bridge.has_same_suit(hand, currnd[0]):
@@ -291,7 +291,7 @@ class ProtocolHandler(webapp.RequestHandler) :
         page = self.request.path[1:]
         dealid = int(self.request.query_string)
         deal = repo.Deal.get_by_id(dealid)
-        hands = map(bridge.split_by_suits, [deal.n_hand, deal.e_hand, deal.s_hand, deal.w_hand])
+        hands = map(bridge.split_by_suits, [deal.N, deal.E, deal.S, deal.W])
         h_val = dict(zip(bridge.SIDES
                          , [dict(zip(['clubs',  'diamonds', 'hearts', 'spades'], h)) for h in hands]))
 
