@@ -52,24 +52,24 @@ def next_player_and_allowed_suit(round_end, moves, contract, side, deal) :
             allowed = 'any' 
     return next, allowed
 
-def move_allowed(protocol, side, player, card, hand) :
+def move_allowed(protocol, own_side, player_side, card, hand) :
     contract = protocol.contract
     if contract  is None :
         return False
     decl = contract[-1]
     valid_card = bridge.valid_card(hand, card, protocol.moves)
-    res = (player == 'own' or (decl == side and player == 'part')) and valid_card 
+    res = (player_side == own_side 
+           or (decl == own_side and player_side == bridge.partner_side(own_side))) and valid_card 
     return res
 
-def do_move(prof, tid, player, scard) :
+def do_move(prof, tid, side, scard) :
     user = prof.user
     table = repo.Table.get_by_id(int(tid))
     protocol = table.protocol
     deal = protocol.deal
-    side = table.side(user, player)
     card = int(scard)
     hand = deal.hand_by_side(side)
-    if side is None or not move_allowed(protocol, table.side(user), player, card, hand) \
+    if side is None or not move_allowed(protocol, table.side(user), side, card, hand) \
             or side != table.whosmove :
         logging.warn('bad move: %s %s %s %s %s %s %s %s', protocol.key(), card
                      , protocol.contract, user, player, table.key(), table.whosmove, side)
@@ -87,38 +87,28 @@ def do_move(prof, tid, player, scard) :
         umap = table.usermap()
         del umap[dummy]
         del umap[protocol.contract[-1]]
-        mes = m('hand', cards = dummy_hand)
-        for p, u in umap.iteritems() :
-            mes['value']['player'] = bridge.relation(dummy, p)
+        mes = m('hand', cards = dummy_hand, side = dummy)
+        for u in umap.itervalues() :
             repo.UserProfile.uenqueue(u, mes)
 
     umap = table.usermap()
     table.whosmove = next
     if next == dummy :
-        rel_move = 'part'
+        real_move = next
         next = protocol.contract[-1]
     else :
-        rel_move = 'own'
+        real_move = next
     next_user = umap.pop(next)
-    mes = m('move', card = card)
-
     if rndend :
-        f = lambda next, side, p: {'player': bridge.relation(side, p), 'trick': trick_side(next, p)}
+        if next in ['N', 'S'] :
+            t = 'NS' 
+        else :
+            t = 'EW' 
     else :
-        f = lambda next, side, p: {'player': bridge.relation(side, p)}
-        
-    for p, u in umap.iteritems() :
-        mes['value'].update(f(next, side, p))
-        repo.UserProfile.uenqueue(u, mes)
-    mes['value'].update(f(next, side, 'S'))
-    table.kib_broadcast(mes)    
-    mes['value']['player'] = bridge.relation(side, next)
-    mes['value']['allowed'] = allowed
-    if rndend :
-        mes['value']['trick'] = '+' 
-        mes['value']['next'] = rel_move
-    repo.UserProfile.uenqueue(next_user, mes)
-
+        t = None
+    mes = m('move', card = card, next = real_move, side = side, trick = t) 
+    mover_mes = m('move', card = card, next = real_move, side = side, trick = t, allowed = allowed)
+    table.broadcast(mes, **{next: mover_mes})
     if protocol.finished() :
         cntrct = protocol.contract[:-1]
         protocol.result, protocol.tricks = bridge.deal_result(cntrct \
@@ -132,15 +122,12 @@ def do_move(prof, tid, player, scard) :
         start_new_deal(table)
     db.put([table, protocol])
 
-def to_dict(hand) :
-    return m('hand', cards = hand)
-
 def create_new_deck(table) :
     deck, vuln, dealer = bridge.get_deck()
     deal = repo.Deal.create(deck, vuln, dealer) 
     table.protocol = repo.Protocol.create(deal, N=table.N, E=table.E, S=table.S, W=table.W)
     table.whosmove = bridge.SIDES[dealer]
-    return add_own(map(to_dict, deck)), vuln, dealer
+    return [m('hand', cards = c, side = s) for s, c in deck], vuln, dealer
 
 def start_new_deal(table) :
     messages, vuln, dealer = create_new_deck(table)
@@ -148,11 +135,6 @@ def start_new_deal(table) :
     bid_starter = m('start.bidding', vuln = vuln, dealer = dealer)
     for p in pairs :
         repo.UserProfile.uenqueue(p[0], [p[1], bid_starter])
-
-def add_own(hand_list) :
-    for h in hand_list :
-        h['value']['player'] = 'own'
-    return hand_list
 
 def bid_allowed(bidding, bid, contract) :
     if contract is not None :
@@ -217,11 +199,13 @@ def do_bid(prof, tid, player, bid) :
                          , m('start.play', contract = contract.replace('d', 'x').replace('r','xx') 
                              , lead = leadmaker)])
         dummy = (declearer + 2) % 4
-        dummy_hand = deal.hand_by_side(bridge.SIDES[dummy])
-        mes = m('hand', cards = dummy_hand, player = 'part')
-        repo.UserProfile.uenqueue(table.user_by_side(bridge.SIDES[declearer]), mes )
-        mes['value']['cards'] = deal.hand_by_side(bridge.SIDES[declearer])
-        repo.UserProfile.uenqueue(table.user_by_side(bridge.SIDES[dummy]), mes )
+        dummy_side = bridge.SIDES[dummy]
+        decl_side = bridge.SIDES[declearer]
+        dummy_hand = deal.hand_by_side(dummy_side)
+        mes = m('hand', cards = dummy_hand, side = dummy_side)
+        repo.UserProfile.uenqueue(table.user_by_side(decl_side), mes )
+        mes = m('hand', cards = deal.hand_by_side(decl_side), side = decl_side)
+        repo.UserProfile.uenqueue(table.user_by_side(dummy_side), mes )
         return
     table.nextmove()
     db.put([protocol, table])
@@ -249,11 +233,7 @@ def leave_table(prof, tid) :
             logging.warn('%s tried to leave a table while not sitting at it', user)
             return 'hall.html'
         table.sit(place, None)
-        umap = table.usermap()
-        for p, u in umap.iteritems() :
-            rel = bridge.relation(place, p)
-            mes  = m('user.leave', position = rel)
-            repo.UserProfile.uenqueue(u, mes)
+        table.broadcast(m('user.leave', position = place))
     table.put()
     mes = m('player.leave', tid = tid, position = place)
     repo.UserProfile.broadcast(mes)

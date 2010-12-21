@@ -81,17 +81,11 @@ class ActionHandler(webapp.RequestHandler):
                 logging.info('redirect to %s' % redir)
                 self.redirect(redir)
 
-def uname_messages(umap, baseplace) :
-    result = []
-    for p, u in umap.iteritems() :
-        result.append(m('user.sit', position = bridge.relation(p, baseplace), name = u.nickname()))
-    return result
-
 def current_table_state(user, place, table, allow_moves=True) :
     tid = table.key().id()
     umap = table.usermap()
     
-    messages = [m('user.sit', position = bridge.relation(p, place), name = u.nickname()) 
+    messages = [m('user.sit', position = p, name = u.nickname()) 
                 for p, u in umap.iteritems()]
     p = table.protocol
     if p is None :
@@ -99,7 +93,7 @@ def current_table_state(user, place, table, allow_moves=True) :
     deal = p.deal
     moves = p.moves
     hand = actions.hand_left(deal.hand_by_side(place), moves)
-    messages += [m('hand', cards = hand, player = 'own')
+    messages += [m('hand', cards = hand, side = place)
                 , m('start.bidding', vuln = deal.vulnerability, dealer = deal.dealer)]
     side = deal.dealer
     for b in p.bidding :
@@ -117,10 +111,10 @@ def current_table_state(user, place, table, allow_moves=True) :
 
     if place == dummy_side :
         messages.append(m('hand', cards = actions.hand_left(deal.hand_by_side(decl_side), moves)
-                          , player = 'part'))
+                          , side = bridge.partner_side(place)))
     elif len(moves) > 0 or  decl_side == place:
         messages.append(m('hand', cards = actions.hand_left(deal.hand_by_side(dummy_side), moves)
-                          , player = bridge.relation(dummy_side, place)))
+                          , side = dummy_side))
     if len(moves) == 0 :
         return messages
     trump = c[1]
@@ -137,38 +131,40 @@ def current_table_state(user, place, table, allow_moves=True) :
     defen_tricks = full_rounds_played - decl_tricks
     place_idx = bridge.SIDES.index(place)
     decl_idx = bridge.SIDES.index(decl_side)
-    if place_idx % 2 == decl_idx % 2 :
-        our_t = decl_tricks
-        their_t = defen_tricks
+    if decl_idx % 2 == 0 :
+        ns_t = decl_tricks
+        ew_t = defen_tricks
     else :
-        our_t = defen_tricks
-        their_t = decl_tricks
-    messages.append(m('tricks', our = our_t, their = their_t))
-    rel_idx = (decl_idx + 1) - place_idx
+        ns_t = defen_tricks
+        ew_t = decl_tricks
+    messages.append(m('tricks', NS = ns_t, EW = ew_t))
+    rel_idx = (decl_idx + 1)
     if len(cards_to_show) > 3 :
         lastrnd = cards_to_show[:4]
         lt_base = taker + rel_idx
-        messages += [m('move', card = lastrnd[i], player = bridge.REL_SIDES[(lt_base + i)%4]) for i in xrange(4)]
+        messages += [m('move', card = lastrnd[i], side = bridge.SIDES[(lt_base + i)%4]) for i in xrange(4)]
         move_offs = bridge.decl_tricks_and_next_move_offset(lastrnd, trump)[1] + taker
         currnd = cards_to_show[4:]
     else :
         currnd = cards_to_show
         move_offs = taker
-    
     s = (rel_idx + move_offs) % 4 
+    logging.info(s)
     for card in currnd :
-        messages.append(m('move', card = card, player = bridge.REL_SIDES[s]))
+        messages.append(m('move', card = card, side = bridge.SIDES[s]))
         s = (s + 1) % 4
+    logging.info(s)
 
-    s = (rel_idx + taker + lasttaker) % 4
-    if s == 2 and place == decl_side :
-        messages[-1]['value']['next'] = 'part'
+    s = bridge.SIDES[(rel_idx + taker + lasttaker) % 4]
+    logging.info(s)
+    if s == dummy_side and place == decl_side :
+        messages[-1]['value']['next'] = dummy_side
         hand = actions.hand_left(deal.hand_by_side(dummy_side), moves)
-        s = 0
+        s = decl_side
     else :
-        messages[-1]['value']['next'] = 'own'
+        messages[-1]['value']['next'] = place
 
-    if allow_moves and s == 0: 
+    if allow_moves and s == place: 
         if rounds_total != full_rounds_played and bridge.has_same_suit(hand, currnd[0]):
             messages[-1]['value']['allowed'] = currnd[0] / 13 
         else :
@@ -176,6 +172,20 @@ def current_table_state(user, place, table, allow_moves=True) :
             
     return messages
                       
+def htmltable(user, place, tid) :
+    values = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
+    values['username'] = user.nickname()
+    values['tid'] = tid
+    if place in ['N', 'S'] :
+        values['we'] = 'NS'
+        values['they'] = 'EW'
+    else :
+        values['we'] = 'EW'
+        values['they'] = 'NS'
+        
+    return template.render('table.html', values)
+
+
 class TableHandler(webapp.RequestHandler) :
     @checklogin
     def get(self, prof):
@@ -196,32 +206,21 @@ class TableHandler(webapp.RequestHandler) :
                 current = table.user_by_side(place)
                 if current is None :
                     table.sit(place, user)
-                    mes = m('player.sit', tid = tid, position = place, name = user.nickname())
+                    nick = user.nickname()
+                    mes = m('player.sit', tid = tid, position = place, name = nick)
                     repo.UserProfile.broadcast(mes)
                     umap = table.usermap()
-                    prof.enqueue(uname_messages(umap, place))
+                    table.broadcast(m('user.sit', position = place, name = nick))
                     del umap[place]
-                    nick = user.nickname()
-                    for p, u in umap.iteritems() :
-                        rel = bridge.relation(place, p)
-                        mes  = m('user.sit', position = rel, name = nick)
-                        repo.UserProfile.uenqueue(u, mes)
-
-                    table.kib_broadcast(m('user.sit', position =  bridge.relation(place, 'S'), name = nick))
+                    prof.enqueue([m('user.sit', position = p, name = u.nickname()) for p,u in umap.iteritems()])
                         
                     if table.full() :
                         actions.start_new_deal(table)
                     table.put()    
-                    values = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
-                    values['username'] = prof.user.nickname()
-                    values['tid'] = tid
-                    self.response.out.write(template.render('table.html', values))
+                    self.response.out.write(htmltable(user, place, tid))
                 elif current == user :
                     prof.enqueue(current_table_state(user, place, table))
-                    values = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
-                    values['username'] = prof.user.nickname()
-                    values['tid'] = tid
-                    self.response.out.write(template.render('table.html', values))
+                    self.response.out.write(htmltable(user, place, tid))
                 else : # user tried to pick someones place
                     self.redirect('hall.html')
             else :
@@ -230,10 +229,8 @@ class TableHandler(webapp.RequestHandler) :
                 table.put()
                 prof.enqueue(current_table_state(user, place, table, False))
                 repo.UserProfile.broadcast(m('player.sit', tid = tid))
-                values = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
-                values['username'] = prof.user.nickname()
-                values['tid'] = tid
-                self.response.out.write(template.render('table.html', values))
+                self.response.out.write(htmltable(user, place, tid))
+
                     
 
 def nick_or_empty(user, tid, side):

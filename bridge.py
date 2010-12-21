@@ -60,6 +60,9 @@ def relation(place, base) :
 def relation_idx(place, base) :
     return SIDES.index(place) - SIDES.index(base)
 
+def partner_side(side) :
+    return SIDES[(SIDES.index(side) + 2) % 4]
+
 def get_next_move_offset(last_round, trump) :
     if len(last_round) < 4 :
         return len(last_round)
@@ -139,7 +142,7 @@ def get_deck() :
     res = range(52)
     random = rand.Random()
     random.shuffle(res)
-    return (res[0:13], res[13:26], res[26:39], res[39:52])\
+    return zip(SIDES, [res[i:i + CARDS_IN_HAND] for i in xrange(0, len(res), CARDS_IN_HAND)])\
         , random.choice(VULN_OPTIONS)\
         , random.choice(DEALERS)
 
@@ -255,7 +258,7 @@ def decl_tricks_and_next_move_offset(moves, trump) :
     if len(rounds) > 0 and len(rounds[-1]) < 4 :
         decl_tricks -= 1
     return decl_tricks, old_o
-        
+
 def declearer_tricks(moves, trump) :
     return decl_tricks_and_next_move_offset(moves, trump)[0]
 

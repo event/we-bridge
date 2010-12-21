@@ -9,6 +9,8 @@
     <script type="text/javascript" src="js/jquery.bpopup.js"></script>
     <script type="text/javascript" src="js/updates.js"></script>
     <script type="text/javascript" src="js/table.js"></script>
+    <meta http-equiv="vary" content="*"></meta>
+    <meta http-equiv="cache-control" content="no-store"></meta>
   </head>
   <body onload="on_body_load()">
     <h1>Webridge</h1>
@@ -21,58 +23,58 @@
       <col class="board_column center_col"/>
       <col class="board_column right_col"/>
       <tr><td><table id="vuln_dealer">
- 	    <tr><td class="vuln_we vuln_they"></td>
-	      <td id="dealer_{{part}}" class="vuln_we">{{part}}</td>
-	      <td class="vuln_we vuln_they"></td></tr>
-	    <tr><td id="dealer_{{left}}" class="vuln_they">{{left}}</td><td></td>
-	      <td id="dealer_{{right}}" class="vuln_they">{{right}}</td></tr>
-	    <tr><td class="vuln_we vuln_they"></td>
-	      <td id="dealer_{{own}}" class="vuln_we">{{own}}</td>
-	      <td class="vuln_we vuln_they"></td></tr>
+ 	    <tr><td class="vuln_{{we}} vuln_{{they}}"></td>
+	      <td id="dealer_{{part}}" class="vuln_{{we}}">{{part}}</td>
+	      <td class="vuln_{{we}} vuln_{{they}}"></td></tr>
+	    <tr><td id="dealer_{{left}}" class="vuln_{{they}}">{{left}}</td><td></td>
+	      <td id="dealer_{{right}}" class="vuln_{{they}}">{{right}}</td></tr>
+	    <tr><td class="vuln_{{we}} vuln_{{they}}"></td>
+	      <td id="dealer_{{own}}" class="vuln_{{we}}">{{own}}</td>
+	      <td class="vuln_{{we}} vuln_{{they}}"></td></tr>
 	  </table>
 	</td><td id="part_hand_cell">
-	  <div id="part_hand" class="hand_container">
+	  <div id="{{part}}_hand" class="hand_container">
 	  </div>
-	  <div class="user part_user {{part}}_user"></div>
+	  <div class="user {{part}}_user"></div>
 	</td>
 	<td><div id="contract_tricks">
 	    <span id="contract"></span><span id="contract_by"></span>
 	    <div id="trick_cntnr">
-	      <span id="our_tricks" class="tricks"></span>
-	      <span id="their_tricks" class="tricks"></span></div></div>
+	      <span id="{{we}}_tricks" class="tricks our_tricks"></span>
+	      <span id="{{they}}_tricks" class="tricks their_tricks"></span></div></div>
 	  <div id="last_trick">
 	    <table id="last_area">
-	      <tr><td></td><td><div class="lead" id="part_last"></div></td><td></td></tr>
-	      <tr><td><div class="lead" id="left_last"></div></td>
-		<td></td><td><div class="lead" id="right_last"></div></td></tr>
-	      <tr><td></td><td><div class="lead" id="own_last"></div></td><td></td></tr>
+	      <tr><td></td><td><div class="lead" id="{{part}}_last"></div></td><td></td></tr>
+	      <tr><td><div class="lead" id="{{left}}_last"></div></td>
+		<td></td><td><div class="lead" id="{{right}}_last"></div></td></tr>
+	      <tr><td></td><td><div class="lead" id="{{own}}_last"></div></td><td></td></tr>
 	    </table>
 	  </div>
       </td></tr>
       <tr><td id="left_hand_cell">
-	  <div id="left_hand" class="hand_container">
+	  <div id="{{left}}_hand" class="hand_container">
 	  </div>
-	  <div class="user left_user {{left}}_user"></div>
+	  <div class="user {{left}}_user"></div>
 	</td><td>
 	  <table id="bidding_area">	
 	    <tr id="bidding_header"><th>N</th><th>E</th><th>S</th><th>W</th></tr>
 	    <tr class="bidding_row"><td></td><td></td><td></td><td></td></tr>
 	  </table>
 	  <table id="lead_area" class="hidden">
-	    <tr><td></td><td><div class="lead" id="part_lead"></div></td><td></td></tr>
-	    <tr><td><div class="lead" id="left_lead"></div></td>
-	      <td></td><td><div class="lead" id="right_lead"></div></td></tr>
-	    <tr><td></td><td><div class="lead" id="own_lead"></div></td><td></td></tr>
+	    <tr><td></td><td><div class="lead" id="{{part}}_lead"></div></td><td></td></tr>
+	    <tr><td><div class="lead" id="{{left}}_lead"></div></td>
+	      <td></td><td><div class="lead" id="{{right}}_lead"></div></td></tr>
+	    <tr><td></td><td><div class="lead" id="{{own}}_lead"></div></td><td></td></tr>
 	  </table>
 	</td><td id="right_hand_cell">
-	  <div id="right_hand" class="hand_container">
+	  <div id="{{right}}_hand" class="hand_container right_hand">
 	  </div>
-	  <div class="user right_user {{right}}_user"></div>
+	  <div class="user {{right}}_user"></div>
        </td></tr>
       <tr><td></td><td id="own_hand_cell">
-	  <div id="own_hand" class="hand_container">
+	  <div id="{{own}}_hand" class="hand_container">
 	  </div>
-	  <div class="user own_user {{own}}_user"></div>
+	  <div class="user {{own}}_user"></div>
 	</td><td id="bidbox_cell"><table id="bidbox">
 	    <tr>
 	      <td colspan="3" class="bidbox_pass" id="bid_pass"><h3>Pass</h3></td>

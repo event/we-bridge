@@ -22,28 +22,25 @@ from django.utils  import simplejson as json
 import bridge
 
 class Deal(db.Model) :
-    n_hand = db.ListProperty(int)
-    s_hand = db.ListProperty(int)
-    e_hand = db.ListProperty(int)
-    w_hand = db.ListProperty(int)
+    N = db.ListProperty(int)
+    S = db.ListProperty(int)
+    E = db.ListProperty(int)
+    W = db.ListProperty(int)
     vulnerability = db.IntegerProperty(choices = bridge.VULN_OPTIONS)
     dealer = db.IntegerProperty(choices = bridge.DEALERS)
     createDate = db.DateTimeProperty(auto_now_add=True)
-    hand2side = {'N' : 'n_hand', 'S' : 's_hand', 'E' : 'e_hand', 'W' : 'w_hand'}
     @staticmethod
     def create(deal, vuln, dealer) :
         d = Deal()
-        d.n_hand = deal[0]
-        d.e_hand = deal[1]
-        d.s_hand = deal[2]
-        d.w_hand = deal[3]
+        for side, cards in deal :
+            d.__setattr__(side, cards)
         d.vulnerability = vuln
         d.dealer = dealer
         d.put()
         return d
 
     def hand_by_side(self, side) :
-        return self.__getattribute__(self.hand2side[side])
+        return self.__getattribute__(side)
     
 
 class Protocol(db.Model) :
@@ -145,8 +142,13 @@ class Table(db.Model) :
     def full(self):
         return all(map(lambda x: x is not None, [self.N, self.E, self.S, self.W]))
 
-    def broadcast(self, m) :
-        for u in [self.N, self.E, self.S, self.W] :
+    def broadcast(self, m, **kwargs) :
+        ulist = [self.N, self.E, self.S, self.W]
+        for u, m1 in kwargs.iteritems() :
+            user = self.user_by_side(u)
+            ulist.remove(user)
+            UserProfile.uenqueue(user, m1)
+        for u in ulist :
             if u is not None :
                 UserProfile.uenqueue(u, m)
         self.kib_broadcast(m)

@@ -52,8 +52,6 @@ body {
     height: 100px;
 }
 
-
-
 .hand_container td {
     border:5px solid green;
 }
@@ -76,7 +74,7 @@ body {
     vertical-align: bottom;
 }
 
-#right_hand {
+.right_hand {
     left: 40px;
 }
 
@@ -182,11 +180,11 @@ body {
     margin-right: 10px;
 }
 
-#our_tricks {
+.our_tricks {
     color: #2727C2;
 }
 
-#their_tricks {
+.their_tricks {
     color: #E85555;
 }
 

@@ -45,4 +45,6 @@ button {
 
 #user_header {
     float: right;
+    padding-right: 3%;
+    padding-bottom: 1%;
 }
