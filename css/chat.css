@@ -1,0 +1,131 @@
+#footpanel {
+    position: fixed;
+    bottom: 0; 
+    right: 0;
+    z-index: 9999; 
+    background: #e3e2e2;
+    border: 1px solid #c3c3c3;
+    border-bottom: none;
+    width: auto;
+    margin: 0 3%;
+}
+
+.room{
+    padding: 0; 
+    margin: 0;
+    float: right;
+    border-top: 1px solid #fff; /*--Gives the bevel feel on the panel--*/
+    position: relative;
+}
+
+.room ul {
+    height: auto;
+}
+
+.roomname{
+    padding: 5px 15px;
+    float: right;
+    height: 16px; 
+    width: auto;
+    text-decoration: none;
+    color: #333;
+    position: relative;
+}
+
+.roomname:hover{	
+    background-color: #fff; 
+}
+
+.roomname.active { 
+    background-color: #fff;
+    height: 17px;
+    margin-top: -2px; 
+    border: 1px solid #555;
+    border-top: none;
+    z-index: 200; 
+    position: relative;
+}
+
+.roompanel {
+    position: absolute;
+    right: 0; 
+    bottom: 29px;
+    display: none;	
+    width: 160px;
+    border: 1px solid #555;
+    background: #fff;
+    overflow: hidden;
+    padding-bottom: 2px;
+    z-index: 300;
+}
+
+.roompanel a { 
+    text-indent: 0;
+    width: auto;
+    height: auto;
+    padding: 0;
+    margin: 0;
+    outline: none;
+    float: none;
+    color: #00629a;
+    position: static;
+}
+
+.roompanel a:hover {	
+    text-decoration: underline; 
+} 
+
+.roompanel h3 {
+    background: #526ea6;
+    padding: 5px 10px;
+    color: #fff;
+    font-size: 1.1em;
+    cursor: pointer;
+    margin: 0;
+}
+
+.roompanel h3 span { 
+    font-size: 1.5em;
+    float: right;
+    line-height: 0.6em;	
+    font-weight: normal;
+}
+
+.roompanel ul{
+    overflow: auto;
+    padding: 0; 
+    margin: 0;
+    background: #fff;
+    width: 100%;
+    height: 100%;
+}
+
+.roompanel ul li{ 
+    float: none;
+    padding: 5px 0 0 2px;
+    overflow: visible;
+    clear: both;
+    background: #fff;
+    position: static;
+    font-size: small;
+    border-top: 1px solid #f0f0f0;
+    display: block;
+}
+.roompanel ul li.self_message{ 
+    font-weight: bold;
+}
+
+.roompanel textarea {
+    position: relative;
+    width: 96%;
+    left: 2px;
+    border: 1px solid #d3d3d3;
+    padding: 0;
+    margin: 0;
+}
+
+/* #friends .roompanel li a img { */
+/*     float: left; */
+/*     margin: 0 5px; */
+/* } */
+

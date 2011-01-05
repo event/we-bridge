@@ -79,9 +79,13 @@ class UserProfile(db.Model) :
     loggedin = db.BooleanProperty()
     lastact = db.DateTimeProperty(auto_now = True)
 
+    # MAYBE time consuming, optimize using background task
     @staticmethod
-    def broadcast(m) :
-        for p in UserProfile.all().filter('loggedin =', True) :
+    def broadcast(m, exclude = None) :          
+        users = UserProfile.all().filter('loggedin =', True)
+        if exclude is not None :
+            users = users.filter('user !=', exclude)
+        for p in users :
             p.enqueue(m)
            
 
@@ -99,7 +103,7 @@ class UserProfile(db.Model) :
         return res
             
     def enqueue(self, m) :
-        logging.info('%s: %s' % (self.user.nickname(), m))
+        logging.info('%s: %s', self.user.nickname(), m)
         try :
             channel.send_message(self.chanid, json.dumps(m))
         except channel.InvalidChannelClientIdError :

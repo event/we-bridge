@@ -4,12 +4,15 @@
   <head>
     <title>Webridge</title>
     <link rel="stylesheet" type="text/css" href="css/hall.css"/>
+    <link rel="stylesheet" type="text/css" href="css/chat.css"/>
     <script src="/_ah/channel/jsapi"></script>
     <script type="text/javascript" src="js/jquery.js"></script>
+    <script type="text/javascript" src="js/autoresize.jquery.js"></script>
+    <script type="text/javascript" src="js/chat.js"></script>
     <script type="text/javascript" src="js/updates.js"></script>
     <script type="text/javascript" src="js/hall.js"></script>
-    <meta HTTP-EQUIV="vary" CONTENT="*"></meta>
-    <meta HTTP-EQUIV="cache-control" CONTENT="no-store"></meta>
+    <meta http-equiv="vary" content="*"></meta>
+    <meta http-equiv="cache-control" content="no-store"></meta>
   </head>
   <body onload="on_body_load()">
     <h1>Webridge main hall</h1>
@@ -39,5 +42,25 @@
       </table>
       <button onclick="add_new_table()">Take N @ New Table</button>
     </div>
+      <div id="footpanel">
+<!--         <span class="room" id="friends"> 
+           <a href="#" class="roomname">Friends (<strong>18</strong>)</a> 
+           <div class="roompanel"> 
+             <h3>Friends Online<span>&mdash;</span></h3> 
+             <ul> 
+               <li><a href="#"><img src="shit_files/chat-thumb.gif" alt="" /> Nickoay</a></li> 
+	     </ul> 
+	   </div> 
+	 </span>--> 
+        <span class="room" id="global">
+          <a href="#" class="roomname">Global</a>
+          <div class="roompanel">
+            <h3>Global<span>&mdash;</span></h3>
+            <ul>
+            </ul>
+	    <textarea rows="1"></textarea>
+          </div>
+        </span>
+      </div>
   </body>
 </html>

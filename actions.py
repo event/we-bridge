@@ -245,5 +245,16 @@ def logoff(prof) :
     prof.put()
     return users.create_logout_url(users.create_login_url('hall.html'))
 
-action_processors = {'move': do_move, 'bid': do_bid, 'leave': leave_table, 'logoff': logoff}
+def chat_message(prof, target, *args) :
+    if target != 'global' :
+        return                  # only global is supported yet
+    text = '/'.join(args).replace('<', '&lt;').replace('>', '&gt;')
+    
+    repo.UserProfile.broadcast(
+        m('chat.message', wid = 'global', sender = prof.user.nickname(), message = text)
+        , prof.user)
+    prof.enqueue(m('chat.message', wid = 'global', sender = 'own', message = text))
+
+
+action_processors = {'move': do_move, 'bid': do_bid, 'leave': leave_table, 'logoff': logoff, 'chat': chat_message}
 

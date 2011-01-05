@@ -6,10 +6,14 @@ update_handlers["table.add"] = add_table;
 update_handlers["table.remove"] = remove_table;
 update_handlers["player.sit"] = add_player;
 update_handlers["player.leave"] = remove_player;
+update_handlers["chat.add"] = handle_chat_add;
+update_handlers["chat.message"] = handle_chat_message;
+
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
     start_updator(update_handlers);
+    init_chat();
 }
 
 function empty_if_none(player, id, pos) {
