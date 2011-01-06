@@ -5,9 +5,11 @@
     <title>Webridge</title>
     <link rel="stylesheet" type="text/css" href="css/table.css"/>
     <link rel="stylesheet" type="text/css" href="css/chat.css"/>
+    <link rel="stylesheet" type="text/css" href="css/jquery.bubblepopup.css"/>
     <script type="text/javascript" src="/_ah/channel/jsapi"></script>
     <script type="text/javascript" src="js/jquery.js"></script>
     <script type="text/javascript" src="js/jquery.bpopup.js"></script>
+    <script type="text/javascript" src="js/jquery.bubblepopup.js"></script>
     <script type="text/javascript" src="js/autoresize.jquery.js"></script>
     <script type="text/javascript" src="js/chat.js"></script>
     <script type="text/javascript" src="js/updates.js"></script>
@@ -78,7 +80,11 @@
 	  <div id="{{own}}_hand" class="hand_container">
 	  </div>
 	  <div class="user {{own}}_user"></div>
-	</td><td id="bidbox_cell"><table id="bidbox">
+	</td><td id="bidbox_cell">
+	  <input type="text" id="alert_text" maxlength="120" 
+		 value="Alert" onfocus="if (value == 'Alert'){value=''}" 
+		 onblur="if (value == ''){value='Alert'}"></input> <br/>
+	  <table id="bidbox">
 	    <tr>
 	      <td colspan="3" class="bidbox_pass" id="bid_pass"><h3>Pass</h3></td>
 	      <td colspan="2" class="bidbox_dbl" id="bid_dbl"><h3>X</h3></td>

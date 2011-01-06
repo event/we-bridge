@@ -26,6 +26,7 @@ function on_body_load() {
     parse_params();
     start_updator(update_handlers);
     init_chat();
+    $("#alert_text").width($("#bidbox").width());
 }
 
 function parse_params() {
@@ -84,6 +85,7 @@ function indicate_turn(side, my_turn) {
 function process_bid(v) {
     var side = v.side;
     var bid = v.bid;
+    var alert = v.alert;
     var dbl_rdbl_allowed = v.dbl_mode;
     var bid_html;
     var idx = $.inArray(bid, pass_dbl_rdbl);
@@ -101,7 +103,12 @@ function process_bid(v) {
     } else {
 	bid_html = bid;
     }
-    $("#bidding_area tr:last td:eq(" + side + ")").html(bid_html);
+    var bid_cell = $("#bidding_area tr:last td:eq(" + side + ")");
+    bid_cell.html(bid_html);
+    if (alert != null) {
+	bid_cell.CreateBubblePopup({innerHtml: decodeURIComponent(alert), themePath: "images/popup-themes"})
+	    .addClass("alert_bid");
+    }
     if (side == 3) {
 	$("#bidding_area").append("<tr class='bidding_row'><td></td><td></td><td></td><td></td></tr>");
     }
@@ -233,6 +240,7 @@ function kick_play(v) {
     var lead_maker = v.lead;
     lead_count = 0;
     $("#bidbox").css("display", "none").after($("#bidding_area").detach());
+    $("#alert_text").addClass("hidden");
     $("#bidbox_cell").css("text-align", "center");
     $("#lead_area").removeClass("hidden");
     indicate_turn(sides[lead_maker]);
@@ -266,6 +274,10 @@ function do_bid(event) {
     $(".bidbox_bid:not(.prohibited_bid)").unbind("click").removeClass("clickable");
     prohibit_bid(".bidbox_pass,.bidbox_dbl,.bidbox_rdbl");
     var url = "action.json?bid/" + tid + "/" + my_side + "/" + bid;
+    var alert = $("#alert_text").val();
+    if (alert != "" && alert != "Alert") {
+	url += "/" + alert;
+    }
     $.post(url);
 }
 
@@ -296,6 +308,7 @@ function end_play(v) {
     $("#contract,.tricks").html("");
     $("#bidding_area tr:gt(1)").remove();
     $("#bidding_area tr:gt(0) td").text("");
+    $("#alert_text").removeClass("hidden");
     $(".bidbox_bid,.bidbox_pass,.bidbox_dbl,.bidbox_rdbl")
 	.unbind("click").removeClass("prohibited_bid clickable");
     $(".lead").text("");

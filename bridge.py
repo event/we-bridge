@@ -75,7 +75,15 @@ def get_next_move_offset(last_round, trump) :
     in_suit = filter(lambda x: x / CARDS_IN_SUIT == t, last_round)
     return last_round.index(max(in_suit))
 
+def remove_alert(bid) :
+    p = bid.find(':')
+    if p < 0 :
+        return bid
+    else :
+        return bid[:p]
+
 def get_contract_and_declearer(bidding) :
+    bidding = map(remove_alert, bidding)
     bidding = bidding[:-3]
     lastbid = bidding[-1]
     i = len(bidding) - 1

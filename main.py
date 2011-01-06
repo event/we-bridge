@@ -96,8 +96,17 @@ def current_table_state(user, place, table, allow_moves=True) :
     messages += [m('hand', cards = hand, side = place)
                 , m('start.bidding', vuln = deal.vulnerability, dealer = deal.dealer)]
     side = deal.dealer
+    place_idx = bridge.SIDES.index(place)
+    part_idx = (place_idx + 2) % 4
     for b in p.bidding :
-        messages.append(m('bid', side = side, bid = b))
+        s = b.split(':')
+        if len(s) > 1 :
+            b = s[0]
+            alert = ''.join(s[1:])
+        if side != part_idx :
+            messages.append(m('bid', side = side, alert = alert, bid = b))
+        else:
+            messages.append(m('bid', side = side, bid = b))
         side = (side + 1) % 4
 
     c = p.contract
@@ -129,7 +138,6 @@ def current_table_state(user, place, table, allow_moves=True) :
         else :
             decl_tricks += 2 - (rounds_total - full_rounds_played) - lasttrick
     defen_tricks = full_rounds_played - decl_tricks
-    place_idx = bridge.SIDES.index(place)
     decl_idx = bridge.SIDES.index(decl_side)
     if decl_idx % 2 == 0 :
         ns_t = decl_tricks

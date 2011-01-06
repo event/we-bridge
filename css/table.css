@@ -1,5 +1,6 @@
 html {
     height: 96%;
+    font-family: sans-serif;
 }
 
 body {
@@ -140,6 +141,12 @@ body {
     background-color: #A3A098;
 }
 
+#alert_text {
+    background-color: LightSkyBlue;
+    color: Black;
+    float: right;
+}
+
 .bidbox_bid {
     padding: 2px;
     border: 1px solid grey;
@@ -216,6 +223,10 @@ body {
     padding-top: 7px;
 }
 
+.alert_bid {
+    background-color: LightSkyBlue;
+}
+
 div.popup {
     background-color: white; 
 }
@@ -242,3 +253,4 @@ div.popup {
     font-weight: bold;
     color: red;
 }
+

@@ -159,18 +159,22 @@ def bid_allowed(bidding, bid, contract) :
     return res
 
 
-def do_bid(prof, tid, player, bid) :
+def do_bid(prof, tid, player, bid, alert=None) :
     user = prof.user
     table = repo.Table.get_by_id(int(tid))
     protocol = table.protocol
     cur_side = table.side_idx(user)
-    if cur_side is None or not bid_allowed(protocol.bidding, bid, protocol.contract) \
-            or bridge.SIDES[cur_side] != table.whosmove :
+    if cur_side is None or not bid_allowed(map(bridge.remove_alert, protocol.bidding), 
+                                           bridge.remove_alert(bid), protocol.contract) \
+                                           or bridge.SIDES[cur_side] != table.whosmove :
         logging.warn('bad bid: %s %s %s %s %s %s %s %s', protocol.key(), bid
                      , protocol.contract, user, player, table.key(), table.whosmove, cur_side)
         return 
-
-    protocol.bidding.append(bid)
+    if alert is not None :
+        fullbid = bid + ':' + alert
+    else :
+        fullbid = bid
+    protocol.bidding.append(fullbid)
     bid_cnt = len(protocol.bidding)
     if bid_cnt > 3 and all([b == bridge.BID_PASS for b in protocol.bidding[-3:]]) :
         contract, rel_declearer = bridge.get_contract_and_declearer(protocol.bidding)
@@ -195,9 +199,15 @@ def do_bid(prof, tid, player, bid) :
         table.whosmove = bridge.SIDES[leadmaker]
         db.put([protocol, table])
         logging.info('contract %s by %s', contract, bridge.SIDES[declearer])
-        table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none')
-                         , m('start.play', contract = contract.replace('d', 'x').replace('r','xx') 
-                             , lead = leadmaker)])
+        start = m('start.play', contract = contract.replace('d', 'x').replace('r','xx') 
+                             , lead = leadmaker)
+        if alert is None :
+            table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start])
+        else :
+            table.broadcast([m('bid', side = cur_side, bid = bid, alert = alert, dbl_mode = 'none'), start]
+                            , **{bridge.SIDES[(cur_side + 2) % 4]
+                                 : [m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start]})
+            
         dummy = (declearer + 2) % 4
         dummy_side = bridge.SIDES[dummy]
         decl_side = bridge.SIDES[declearer]
@@ -218,8 +228,14 @@ def do_bid(prof, tid, player, bid) :
         dbl_mode = 'dbl'
     else : 
         dbl_mode = 'none'
+    if alert is None :
+        table.broadcast(m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode))
+    else :
+        table.broadcast(m('bid', side = cur_side, bid = bid, alert = alert, dbl_mode = dbl_mode)
+                        , **{bridge.SIDES[(cur_side + 2) % 4]
+                             : m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode)})
 
-    table.broadcast(m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode))
+        
 
 def leave_table(prof, tid) :
     table = repo.Table.get_by_id(int(tid))
