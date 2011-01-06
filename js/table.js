@@ -18,11 +18,14 @@ update_handlers["tricks"] = show_tricks;
 update_handlers["start.bidding"] = kick_bidding;
 update_handlers["start.play"] = kick_play;
 update_handlers["end.play"] = end_play;
+update_handlers["chat.add"] = handle_chat_add;
+update_handlers["chat.message"] = handle_chat_message;
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
     parse_params();
     start_updator(update_handlers);
+    init_chat();
 }
 
 function parse_params() {
@@ -45,7 +48,7 @@ function process_hand(v) {
     var h = $("#" + side + "_hand");
     $.each(cards, 
 	   function(idx, value) {
-	       h.append(create_card(side, value).css({"z-index": idx + 1, "left": idx * 6 + "%"}));
+	       h.append(create_card(side, value).css({"z-index": idx + 1, "left": idx * 9 + "%"}));
 	   });
 }
 

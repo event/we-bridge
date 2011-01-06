@@ -1,5 +1,5 @@
 html {
-    height:100%;
+    height: 96%;
 }
 
 body {
@@ -20,7 +20,7 @@ body {
 }
 
 #board .board_column {
-    width: 33%;
+    width: 32%;
 }
 
 #vuln_dealer {
@@ -50,6 +50,7 @@ body {
 .hand_container{
     position: relative;
     height: 100px;
+    width: 60%;
 }
 
 .hand_container td {
@@ -75,7 +76,7 @@ body {
 }
 
 .right_hand {
-    left: 40px;
+    left: 15%;
 }
 
 .user {

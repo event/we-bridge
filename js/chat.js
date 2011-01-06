@@ -54,6 +54,9 @@ function add_chat(id, title){
     ta.autoResize({extraSpace: 0, animateDuration: 100, limit: 100});
 }
 
+function remove_chat(id) {
+    $("#" + id).remove();
+}
 
 function stop_propagation(e) { 
     e.stopPropagation(); 
