@@ -1,3 +1,5 @@
+var max_cookie = 4096;
+
 function init_chat() {
     $(window).resize(function () { 
 	    adjust_panel($(".roompanel"));
@@ -16,7 +18,18 @@ function init_chat() {
 	.keypress(onenter);
     $("#global").data("wid", "global");
     $("#users").data("wid", "users");
-    // $("#friends div ul li").click(add_chat);
+    // $("#users div ul li").click(add_chat);
+    var rooms = JSON.parse($.cookie("we-chat-rooms"));
+    $.cookie("we-chat-rooms", "[]");
+    var messages = JSON.parse($.cookie("we-chat"));
+    messages.reverse();
+    for (m in messages) {
+	var idx = m.substr(0, m.indexOf("."));
+	var rest = m.substr(m.indexOf(".") + 1);
+	var sender = rest.substr(0, rest.indexOf(":"));
+	var msg = rest.substr(rest.indexOf(":") + 1);
+	show_message({"wid": rooms[idx].wid, "sender": sender, "message": msg});
+    }
 }
 
 function adjust_panel(panel){ 
@@ -53,6 +66,12 @@ function add_chat(wid, title){
     $("#footpanel").append(res);
     adjust_panel(d);
     ta.autoResize({extraSpace: 0, animateDuration: 100, limit: 100});
+    var rooms =  JSON.parse($.cookie("we-chat-rooms"));
+    if (rooms == null) {
+	rooms = [];
+    }
+    rooms.push({"wid": wid, "title": title});
+    $.cookie("we-chat-rooms", JSON.stringify(rooms));
     res.find("a").click();
     return res;
 }
@@ -94,7 +113,7 @@ function handle_chat_add(v) {
     add_chat(v.wid, v.title);
 }
 
-function handle_chat_message(v) {
+function show_message(v) {
     var wid = v.wid;
     var message = decodeURIComponent(v.message);
     var sender = v.sender;
@@ -113,6 +132,11 @@ function handle_chat_message(v) {
 	room = add_chat(wid, wid.substring(0, wid.lastIndexOf("@")));
     }
     room.find("div ul").append(res);
+}
+
+function handle_chat_message(v) {
+    show_message(v);
+    var room = $(".room").filter(function(idx){return $(this).data("wid") == wid});
     if (room.find(".roompanel").is(":not(:visible)")) {
 	var anc = room.find(".roomname");
 	if (anc.data("blink") != null) {
@@ -120,5 +144,18 @@ function handle_chat_message(v) {
 	}
 	anc.data("blink", window.setInterval(function(){anchor_blink(anc, 500)}, 1000))
     }
+    var stored =  JSON.parse($.cookie("we-chat"));
+    var rooms =  JSON.parse($.cookie("we-chat-rooms"));
+    var i = 0;
+    while (v.wid != rooms[i].wid) {
+	i += 1;
+    }
+    stored.splice(0, 0, i + "." + v.sender + ":" + v.message);
+    var tostore = JSON.stringify(stored);
+    while (tostore.lendth > max_cookie) {
+	stored.pop();
+	tostore = JSON.stringify(stored);
+    }
+    $.cookie("we-chat", tostore);
 }
 
