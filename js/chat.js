@@ -67,7 +67,12 @@ function stop_propagation(e) {
 function onroomclick () {
     if($(this).next(".roompanel").is(":visible")){ 
 	$(this).next(".roompanel").hide(); 
-	$(".roomname").removeClass("active"); 
+	$(".roomname").removeClass("active");
+	var blinker = $(this).data("blink");
+	if (blinker != null) {
+	    window.clearInterval(blinker); 
+	    $(this).data("blink", null);
+	} 
     } else { 
 	$(".roompanel").hide(); 
 	$(this).next(".roompanel").show(); 
@@ -78,6 +83,11 @@ function onroomclick () {
     return false; 
 }
  
+
+function anchor_blink(anchor, interval) {
+    anchor.toggleClass("blink");
+    window.setTimeout(function(){anchor.toggleClass("blink");}, interval);
+}
 
 // default handlers
 function handle_chat_add(v) {
@@ -103,5 +113,12 @@ function handle_chat_message(v) {
 	room = add_chat(wid, wid.substring(0, wid.lastIndexOf("@")));
     }
     room.find("div ul").append(res);
+    if (room.find(".roompanel").is(":not(:visible)")) {
+	var anc = room.find(".roomname");
+	if (anc.data("blink") != null) {
+	    return;
+	}
+	anc.data("blink", window.setInterval(function(){anchor_blink(anc, 500)}, 1000))
+    }
 }
 
