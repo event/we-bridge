@@ -14,7 +14,8 @@ function init_chat() {
 			  
     $(".roompanel textarea").autoResize({extraSpace: 0, animateDuration: 100, limit: 100})
 	.keypress(onenter);
-	
+    $("#global").data("wid", "global");
+    $("#users").data("wid", "users");
     // $("#friends div ul li").click(add_chat);
 }
 
@@ -35,23 +36,25 @@ function onenter(e){
 	return;
     }
     $(this).val("");
-    var target = $(this).parent().parent().attr("id");
+    var target = $(this).parent().parent().data("wid");
     var url = "action.json?chat/" + target + "/" + text;
     $.post(url);
 }
 
-function add_chat(id, title){
+function add_chat(wid, title){
     var ta = $("<textarea></textarea>").attr("rows", "1").keypress(onenter).click(stop_propagation);
-    var d = $("<div></div>").addClass("roompanel").attr("id", id)
+    var d = $("<div></div>").addClass("roompanel")
 	.append($("<h3></h3>").html(title + "<span>&mdash;</span>"))
 	.append($("<ul></ul>").click(stop_propagation))
 	.append(ta);
-
-    $("#footpanel").append($("<span></span>").addClass("room")
-			   .append($("<a></a>").addClass("roomname").click(openChat).text(title))
-			   .append(d));
+    var res = $("<span></span>").data("wid", wid).addClass("room")
+	.append($("<a></a>").addClass("roomname").click(onroomclick).text(title))
+	.append(d);
+    $("#footpanel").append(res);
     adjust_panel(d);
     ta.autoResize({extraSpace: 0, animateDuration: 100, limit: 100});
+    res.find("a").click();
+    return res;
 }
 
 function remove_chat(id) {
@@ -70,6 +73,7 @@ function onroomclick () {
 	$(this).next(".roompanel").show(); 
 	$(".roomname").removeClass("active"); 
 	$(this).toggleClass("active"); 
+	$(this).parent().find("div textarea").focus();
     }
     return false; 
 }
@@ -86,13 +90,18 @@ function handle_chat_message(v) {
     var sender = v.sender;
     var res;
     if (sender == "own") {
-	res = "<li class='self_message'>" + message + "</li>";
+	res = "<li class='own_message'>" + message + "</li>";
+    } else if (sender == "sys") {
+	res = "<li class='sys_message'>" + message + "</li>";
     } else if (sender != null) {
 	res = "<li>" + sender + ": " + message + "</li>";
     } else {
 	res = "<li>" + message + "</li>";
     }
-    
-    $("#" + wid + " div ul").append(res);
+    var room = $(".room").filter(function(idx){return $(this).data("wid") == wid});
+    if (room.length == 0) {
+	room = add_chat(wid, wid.substring(0, wid.lastIndexOf("@")));
+    }
+    room.find("div ul").append(res);
 }
 

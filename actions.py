@@ -16,6 +16,7 @@
 
 import logging
 import inspect
+from urllib import unquote
 
 from google.appengine.api import users
 from google.appengine.ext import db
@@ -262,14 +263,45 @@ def logoff(prof) :
     return users.create_logout_url(users.create_login_url('hall.html'))
 
 def chat_message(prof, target, *args) :
-    if target != 'global' :
-        return                  # only global is supported yet
     text = '/'.join(args).replace('<', '&lt;').replace('>', '&gt;')
+    if target == 'global' :
+        repo.UserProfile.broadcast(
+            m('chat.message', wid = 'global', sender = prof.user.nickname(), message = text)
+            , prof.user)
+        prof.enqueue(m('chat.message', wid = 'global', sender = 'own', message = text))
+    elif target == 'users' : 
+        uname = unquote(text) # check for ascii
+        if uname.find('@') < 0 :
+            uname += '@gmail.com'
+        u = repo.UserProfile.gql('WHERE user = USER(:1)', uname).get()
+        if u is None :
+            prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
+                           , message = 'user %s doesn\'t exist' % uname))
+        elif not u.loggedin :
+            prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
+                           , message = 'user %s offline' % uname))
+        else :
+            prof.enqueue(m('chat.add', wid = uname, title = uname[:uname.find('@')]))
+    else :
+        u = repo.UserProfile.gql('WHERE user = USER(:1)', target).get()
+        if u is None :
+            prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
+                           , message = 'user %s doesn\'t exist' % uname))
+        elif not u.loggedin :
+            prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
+                           , message = 'user %s offline' % uname))
+        else :
+            sender = prof.user.nickname()
+            if sender.find('@') < 0 :
+                wid = sender + '@gmail.com'
+            else :
+                wid = sender
+            prof.enqueue(m('chat.message', wid = target, message = text, sender = 'own'))
+            u.enqueue(m('chat.message', wid = wid, message = text))
+        
     
-    repo.UserProfile.broadcast(
-        m('chat.message', wid = 'global', sender = prof.user.nickname(), message = text)
-        , prof.user)
-    prof.enqueue(m('chat.message', wid = 'global', sender = 'own', message = text))
+            
+
 
 
 action_processors = {'move': do_move, 'bid': do_bid, 'leave': leave_table, 'logoff': logoff, 'chat': chat_message}
