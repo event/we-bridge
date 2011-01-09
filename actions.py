@@ -282,6 +282,11 @@ def chat_message(prof, target, *args) :
                            , message = 'user %s offline' % uname))
         else :
             prof.enqueue(m('chat.add', wid = uname, title = uname[:uname.find('@')]))
+    elif target.startswith('table') :
+        tid = int(target[target.find('_') + 1:])
+        t = repo.Table.get_by_id(tid)
+        t.broadcast(m('chat.message', wid = target, sender = prof.user.nickname(), message = text),
+                    **{prof.user: m('chat.message', wid = target, sender = 'own', message = text)})
     else :
         u = repo.UserProfile.gql('WHERE user = USER(:1)', target).get()
         if u is None :

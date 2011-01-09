@@ -19,13 +19,14 @@ update_handlers["start.bidding"] = kick_bidding;
 update_handlers["start.play"] = kick_play;
 update_handlers["end.play"] = end_play;
 update_handlers["chat.add"] = handle_chat_add;
-update_handlers["chat.message"] = handle_chat_message;
+update_handlers["chat.message"] = handle_table_chat_message;
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
     parse_params();
     start_updator(update_handlers);
     init_chat();
+    add_chat("table_" + tid, "Table");
     $("#alert_text").width($("#bidbox").width());
 }
 
@@ -352,4 +353,11 @@ function user_sit(v) {
 function user_leave(v) {
     var pos = v.position;
     $("." + pos + "_user").text("");
+}
+
+function handle_table_chat_message(v) {
+    var wid = v.wid;
+    if (wid != $("." + sides[(my_side + 2) % 4] + "_user").text()) {
+	handle_chat_message(v);
+    }
 }

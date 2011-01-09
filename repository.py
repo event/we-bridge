@@ -120,7 +120,7 @@ class Table(db.Model) :
     kibitzers = db.ListProperty(users.User)
     protocol = db.ReferenceProperty(Protocol)
     whosmove = db.StringProperty()
-
+    
     def nextmove(self) :
         self.whosmove = bridge.SIDES[(bridge.SIDES.index(self.whosmove) + 1) % 4]
     
@@ -149,7 +149,10 @@ class Table(db.Model) :
     def broadcast(self, m, **kwargs) :
         ulist = [self.N, self.E, self.S, self.W]
         for u, m1 in kwargs.iteritems() :
-            user = self.user_by_side(u)
+            if isinstance(u, str) :
+                user = self.user_by_side(u)
+            else :
+                user = u
             ulist.remove(user)
             UserProfile.uenqueue(user, m1)
         for u in ulist :
