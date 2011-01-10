@@ -61,6 +61,12 @@ body {
     display:inline;
 }
 
+.hand_mock{
+    width: 147px; 
+    height: 102px;
+    margin-left: 50%;
+}
+
 .card {
     width: 71px;
     height: 96px;

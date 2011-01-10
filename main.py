@@ -241,19 +241,24 @@ class TableHandler(webapp.RequestHandler) :
 
                     
 
-def nick_or_empty(user, tid, side):
+def nick_or_empty(user, tid, side, cur_user):
     if user is None :
         return "<a href=table.html?%s/%s>take a sit</a>" % (tid, side)
+    elif user == cur_user:
+        return "<a href=table.html?%s/%s>%s</a>" % (tid, side, user.nickname())
     else :
         return user.nickname()
 
-def show_all_tables() :
+def show_all_tables(cur_user) :
     res = []
     # obvious cache candidate
     for t in repo.Table.all():
         tid = t.key().id()
-        res.append({'tid': tid, 'N': nick_or_empty(t.N, tid, 'N'), 'E': nick_or_empty(t.E, tid, 'E')
-                    , 'S': nick_or_empty(t.S, tid, 'S'), 'W': nick_or_empty(t.W, tid, 'W')
+        res.append({'tid': tid
+                    , 'N': nick_or_empty(t.N, tid, 'N', cur_user)
+                    , 'E': nick_or_empty(t.E, tid, 'E', cur_user)
+                    , 'S': nick_or_empty(t.S, tid, 'S', cur_user)
+                    , 'W': nick_or_empty(t.W, tid, 'W', cur_user)
                     , 'kibcount': len(t.kibitzers)})
     return res
 
@@ -261,7 +266,7 @@ class HallHandler(webapp.RequestHandler) :
     @checklogin
     def get(self, prof):
         self.response.out.write(template.render(
-                'hall.html', {'tables': show_all_tables(), 'username': prof.user.nickname()}))
+                'hall.html', {'tables': show_all_tables(prof.user), 'username': prof.user.nickname()}))
 
 class ChannelHandler(webapp.RequestHandler) :
     @checklogin

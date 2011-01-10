@@ -27,7 +27,7 @@ function on_body_load() {
     start_updator(update_handlers);
     window.setInterval(function(){$.post("action.json?ping");}, 10 * 60 * 1000);
     init_chat();
-    add_chat("table_" + tid, "Table");
+    add_chat("table_" + tid, "Table", false);
     $("#alert_text").width($("#bidbox").width());
 }
 
@@ -49,6 +49,7 @@ function process_hand(v) {
     var cards = v.cards;
     cards.sort(card_sort);
     var h = $("#" + side + "_hand");
+    h.children().remove();
     $.each(cards, 
 	   function(idx, value) {
 	       h.append(create_card(side, value).css({"z-index": idx + 1, "left": idx * 9 + "%"}));

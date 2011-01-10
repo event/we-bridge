@@ -57,7 +57,7 @@ function onenter(e){
     $.post(url);
 }
 
-function add_chat(wid, title){
+function add_chat(wid, title, open){
     var ta = $("<textarea></textarea>").attr("rows", "1").keypress(onenter).click(stop_propagation);
     var d = $("<div></div>").addClass("roompanel")
 	.append($("<h3></h3>").html(title + "<span>&mdash;</span>"))
@@ -75,7 +75,9 @@ function add_chat(wid, title){
     }
     rooms.push({"wid": wid, "title": title});
     $.cookie("we-chat-rooms", JSON.stringify(rooms));
-    res.find("a").click();
+    if (open) {
+	res.find("a").click();
+    }
     return res;
 }
 
@@ -113,7 +115,7 @@ function anchor_blink(anchor, interval) {
 
 // default handlers
 function handle_chat_add(v) {
-    add_chat(v.wid, v.title);
+    add_chat(v.wid, v.title, true);
 }
 
 function show_message(v) {
@@ -132,7 +134,7 @@ function show_message(v) {
     }
     var room = $(".room").filter(function(idx){return $(this).data("wid") == wid});
     if (room.length == 0) {
-	room = add_chat(wid, wid.substring(0, wid.lastIndexOf("@")));
+	room = add_chat(wid, wid.substring(0, wid.lastIndexOf("@")), true);
     }
     room.find("div ul").append(res);
 }
