@@ -4,7 +4,7 @@ html {
 }
 
 body {
-    height: 85%;
+    height: 95%;
     width:99%;
 }
 
@@ -139,12 +139,14 @@ body {
     text-align: center;
     display: inline-block;
     background-color: #A3A098;
+    width: 63%;
 }
 
 #alert_text {
     background-color: LightSkyBlue;
     color: Black;
     float: right;
+    width: 63%;
 }
 
 .bidbox_bid {

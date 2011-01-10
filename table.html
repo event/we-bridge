@@ -18,10 +18,10 @@
     <meta http-equiv="cache-control" content="no-store"></meta>
   </head>
   <body onload="on_body_load()">
-    <h1>Webridge</h1>
+    <img src="images/logo.png" alt="We-bridge"></img>
     <span id="user_header">
-      <a href="action.json?leave/{{tid}}">Leave table</a>
       <a href="#">{{username}}</a>
+      <a href="action.json?leave/{{tid}}">Leave table</a>
       <a href="action.json?logoff">Log out</a></span>
     <table id="board">
       <col class="board_column left_col"/>
@@ -146,6 +146,15 @@
       <div id="popup_contract"></div>
     </div>
     <div id="footpanel">
+      <span class="room" id="users"> 
+        <a href="#" class="roomname">Users</a> 
+        <div class="roompanel"> 
+          <h3>Users<span>&mdash;</span></h3> 
+          <ul> 
+	  </ul> 
+	  <textarea rows="1"></textarea>
+	</div> 
+      </span>
       <span class="room" id="global">
         <a href="#" class="roomname">Global</a>
         <div class="roompanel">
