@@ -146,6 +146,9 @@ class Table(db.Model) :
     def full(self):
         return all(map(lambda x: x is not None, [self.N, self.E, self.S, self.W]))
 
+    def empty(self):
+        return all(map(lambda x: x is None, [self.N, self.E, self.S, self.W]))
+
     def broadcast(self, m, **kwargs) :
         ulist = [self.N, self.E, self.S, self.W]
         for u, m1 in kwargs.iteritems() :

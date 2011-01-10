@@ -22,6 +22,9 @@ function init_chat() {
     var rooms = JSON.parse($.cookie("we-chat-rooms"));
     $.cookie("we-chat-rooms", "[]");
     var messages = JSON.parse($.cookie("we-chat"));
+    if (messages == null) {
+	return;
+    }
     messages.reverse();
     for (m in messages) {
 	var idx = m.substr(0, m.indexOf("."));

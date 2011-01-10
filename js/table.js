@@ -124,7 +124,7 @@ function process_bid(v) {
 	    allow_bid("#bid_rdbl");
 	}
 	allow_bid(".bidbox_pass");
-	$(".bidbox_bid:not(.prohibited_bid)").bind("click", do_bid).addClass("clickable");
+	$(".bidbox_bid:not(.prohibited_bid)").click(do_bid).addClass("clickable");
     }
 }
 
@@ -133,7 +133,7 @@ function prohibit_bid(bid_selector) {
 }
 
 function allow_bid(bid_selector) {
-    $(bid_selector).bind("click", do_bid).addClass("clickable").removeClass("prohibited_bid");
+    $(bid_selector).click(do_bid).addClass("clickable").removeClass("prohibited_bid");
 }
 
 function disallow_lower_bids(r, s) {
@@ -193,8 +193,8 @@ function prohibit_cards(selector) {
 }
 
 function allow_cards(selector, side) {
-    return $(selector).bind("click", side, highlight_for_move)
-	.bind("dblclick", side, do_move).addClass("clickable");
+    return $(selector).click(side, highlight_for_move)
+	.dblclick(side, do_move).addClass("clickable");
 }
 
 function next_side(side) {
@@ -232,7 +232,7 @@ function kick_bidding(v) {
     indicate_turn(side);
     $("#dealer_" + side).addClass("dealer");
     if (my_side == v.dealer) {
-    	$(".bidbox_bid").bind("click", do_bid).addClass("clickable");
+    	$(".bidbox_bid").click(do_bid).addClass("clickable");
 	allow_bid(".bidbox_pass");
     }
 }
@@ -267,7 +267,7 @@ function highlight_for_move(event) {
     var splitted_id = event.target.id.split("_");
     var number = splitted_id[1];
     allow_cards(".highlighted", event.data).removeClass("highlighted");
-    $("#card_" + number).addClass("highlighted").bind("click", event.data, do_move);    
+    $("#card_" + number).addClass("highlighted").click(event.data, do_move);    
 }
 
 function do_bid(event) {

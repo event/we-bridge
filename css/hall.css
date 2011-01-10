@@ -8,11 +8,20 @@ body {
     background-color:white;
 }
 
+.logo {
+    border-width: 0;
+}
+
 #hall_holder {
     width:100%;
-    height: 99%;
+    height: 96%;
     background-color:#099B09;
     overflow: auto;
+}
+
+#hall_holder button {
+    float: right; 
+    width: 90px;
 }
 
 #table_list {
@@ -47,4 +56,14 @@ button {
     float: right;
     padding-right: 3%;
     padding-bottom: 1%;
+}
+
+.copyright{
+    text-align: left;
+    color: grey;
+    font-size: small;
+}
+
+.copyright a{
+    color: grey;
 }

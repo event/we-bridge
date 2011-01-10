@@ -150,9 +150,7 @@ def get_deck() :
     res = range(52)
     random = rand.Random()
     random.shuffle(res)
-    return zip(SIDES, [res[i:i + CARDS_IN_HAND] for i in xrange(0, len(res), CARDS_IN_HAND)])\
-        , random.choice(VULN_OPTIONS)\
-        , random.choice(DEALERS)
+    return zip(SIDES, [res[i:i + CARDS_IN_HAND] for i in xrange(0, len(res), CARDS_IN_HAND)])
 
 def split_by_suits(hand) :
     def as_str(suit) : 

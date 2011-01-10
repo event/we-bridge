@@ -41,7 +41,7 @@ function add_table(v) {
 }
 
 function remove_table(v) {
-    $("#table_" + data.value).remove();
+    $("#table_" + v.tid).remove();
 }
 
 function add_player(v) {

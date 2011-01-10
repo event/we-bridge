@@ -16,13 +16,14 @@
     <meta http-equiv="cache-control" content="no-store"></meta>
   </head>
   <body onload="on_body_load()">
-    <img src="images/logo.png" alt="We-bridge"></img>
+    <a href="hall.html"><img class="logo" src="images/logo.png" alt="We-bridge"></img></a>
     <span id="user_header">
       <a href="#">{{username}}</a>
       <a href="action.json?logoff">Log out</a>
     </span>
     
     <div id="hall_holder">
+      <button onclick="add_new_table()">Start<br/>New<br/>Table</button>
       <table id="table_list">
 	<tr class="table">
 	  <th class="player">N</th>
@@ -41,27 +42,31 @@
 	</tr>
 	{% endfor %}
       </table>
-      <button onclick="add_new_table()">Take N @ New Table</button>
     </div>
-      <div id="footpanel">
-        <span class="room" id="users"> 
-          <a href="#" class="roomname">Users</a> 
-          <div class="roompanel"> 
-            <h3>Users<span>&mdash;</span></h3> 
-            <ul> 
-	    </ul> 
-	    <textarea rows="1"></textarea>
-	  </div> 
-	</span>
-        <span class="room" id="global">
-          <a href="#" class="roomname">Global</a>
-          <div class="roompanel">
-            <h3>Global<span>&mdash;</span></h3>
-            <ul>
-            </ul>
-	    <textarea rows="1"></textarea>
-          </div>
-        </span>
-      </div>
+    <div class="copyright">&copy;<a href="mailto:we-bridge@googlegroups.com">Leonid Movshovich</a>.
+      <a href="http://gitorious.org/webridge">We-Bridge</a> is 
+      <a href="http://www.gnu.org/philosophy/free-sw.html">free software</a> licensed under 
+      <a href="http://www.gnu.org/licenses/agpl-3.0.txt">AGPL</a>.
+    </div>
+    <div id="footpanel">
+      <span class="room" id="users"> 
+        <a href="#" class="roomname">Users</a> 
+        <div class="roompanel"> 
+          <h3>Users<span>&mdash;</span></h3> 
+          <ul> 
+	  </ul> 
+	  <textarea rows="1"></textarea>
+	</div> 
+      </span>
+      <span class="room" id="global">
+        <a href="#" class="roomname">Global</a>
+        <div class="roompanel">
+          <h3>Global<span>&mdash;</span></h3>
+          <ul>
+          </ul>
+	  <textarea rows="1"></textarea>
+        </div>
+      </span>
+    </div>
   </body>
 </html>

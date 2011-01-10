@@ -124,7 +124,15 @@ def do_move(prof, tid, side, scard) :
     db.put([table, protocol])
 
 def create_new_deck(table) :
-    deck, vuln, dealer = bridge.get_deck()
+    d = table.protocol.deal
+    cvuln = d.vulnerability
+    cdealer = d.dealer
+    vinc = 1
+    if cdealer == 3 :
+        vinc += 1
+    dealer = (cdealer + 1) % 4 
+    vuln = (cvuln + vinc) % 4
+    deck = bridge.get_deck()
     deal = repo.Deal.create(deck, vuln, dealer) 
     table.protocol = repo.Protocol.create(deal, N=table.N, E=table.E, S=table.S, W=table.W)
     table.whosmove = bridge.SIDES[dealer]
@@ -251,8 +259,12 @@ def leave_table(prof, tid) :
             return 'hall.html'
         table.sit(place, None)
         table.broadcast(m('user.leave', position = place))
-    table.put()
-    mes = m('player.leave', tid = tid, position = place)
+    if table.empty() :
+        table.delete()
+        mes = m('table.remove', tid = tid)
+    else :
+        table.put()
+        mes = m('player.leave', tid = tid, position = place)
     repo.UserProfile.broadcast(mes)
 
     return 'hall.html'
