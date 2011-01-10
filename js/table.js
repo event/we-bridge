@@ -25,6 +25,7 @@ function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
     parse_params();
     start_updator(update_handlers);
+    window.setInterval(function(){$.post("action.json?ping");}, 10 * 60 * 1000);
     init_chat();
     add_chat("table_" + tid, "Table");
     $("#alert_text").width($("#bidbox").width());

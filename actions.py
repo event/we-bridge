@@ -307,7 +307,9 @@ def chat_message(prof, target, *args) :
     
             
 
+def ping(prof):
+    pass
 
-
-action_processors = {'move': do_move, 'bid': do_bid, 'leave': leave_table, 'logoff': logoff, 'chat': chat_message}
+action_processors = {'move': do_move, 'bid': do_bid, 'leave': leave_table
+                     , 'logoff': logoff, 'chat': chat_message, 'ping': ping}
 

@@ -19,3 +19,10 @@ handlers:
 
 - url: /.*
   script: main.py
+
+error_handlers:
+- file: error.html
+
+- error_code: over_quota
+  file: resource_exhausted.html
+
