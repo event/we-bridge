@@ -321,7 +321,8 @@ class CronHandler(webapp.RequestHandler) :
     TIME_LIMIT_SECS = 5 * 30
     def get(self) :
         def logoff(p): 
-            p.table = None
+            if p.table is not None :
+                p.table.remove_user(p)
             p.loggedin = False
 
         if self.request.headers['X-AppEngine-Cron'] != 'true' :

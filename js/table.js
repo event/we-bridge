@@ -314,6 +314,7 @@ function end_play(v) {
     $("#bidding_area tr:gt(1)").remove();
     $("#bidding_area tr td").text("").RemoveBubblePopup();
     $("#alert_text").removeClass("hidden");
+    $(".hand_container").children().remove().append("<img src='images/back.png' class='hand_mock'></img>");
     $(".bidbox_bid,.bidbox_pass,.bidbox_dbl,.bidbox_rdbl")
 	.unbind("click").removeClass("prohibited_bid clickable");
     $(".lead").text("");

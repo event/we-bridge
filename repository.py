@@ -134,6 +134,29 @@ class Table(db.Model) :
         return dict(filter(lambda x: x[1] is not None, 
                            zip(['N', 'E', 'S', 'W'], [self.N, self.E, self.S, self.W])))
 
+    def remove_user(self, prof) :
+        user = prof.user
+        if user in self.kibitzers :
+            self.kibitzers.remove(user)
+            place = None # MAYBE this doesn't need to be published
+        else : 
+            place = self.side(user)
+            if place is None :
+                logging.warn('%s tried to leave a table while not sitting at it', user)
+                return 
+            self.sit(place, None)
+            prof.table = None
+            prof.put()
+            self.broadcast(m('user.leave', position = place))
+        if self.empty() :
+            self.delete()
+            mes = m('table.remove', tid = tid)
+        else :
+            self.put()
+            mes = m('player.leave', tid = tid, position = place)
+        UserProfile.broadcast(mes)
+
+
 
 class UserProfile(db.Model) :
     chanid = db.StringProperty()
