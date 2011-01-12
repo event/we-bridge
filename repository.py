@@ -73,44 +73,6 @@ class Protocol(db.Model) :
     def dummy(self) :
         return bridge.SIDES[(bridge.SIDES.index(self.contract[-1]) + 2) % 4]
 
-class UserProfile(db.Model) :
-    chanid = db.StringProperty()
-    user = db.UserProperty()
-    loggedin = db.BooleanProperty()
-    lastact = db.DateTimeProperty(auto_now = True)
-
-    # MAYBE time consuming, optimize using background task
-    @staticmethod
-    def broadcast(m, exclude = None) :          
-        users = UserProfile.all().filter('loggedin =', True)
-        if exclude is not None :
-            users = users.filter('user !=', exclude)
-        for p in users :
-            p.enqueue(m)
-           
-
-    @staticmethod
-    def uenqueue(user, m) :
-        UserProfile.get_or_create(user).enqueue(m)
-
-    @staticmethod
-    def get_or_create(user) :
-        res = UserProfile.gql('WHERE user = :1', user).get()
-        if res is None :
-            res = UserProfile()
-            res.user = user
-            res.put()
-        return res
-            
-    def enqueue(self, m) :
-        logging.info('%s: %s', self.user.nickname(), m)
-        try :
-            channel.send_message(self.chanid, json.dumps(m))
-        except channel.InvalidChannelClientIdError :
-            logging.warn('broadcast to %s failed', self.user.nickname())
-            self.loggedin = False
-            self.put()
-
 
 class Table(db.Model) :
     N = db.UserProperty()
@@ -152,10 +114,7 @@ class Table(db.Model) :
     def broadcast(self, m, **kwargs) :
         ulist = [self.N, self.E, self.S, self.W]
         for u, m1 in kwargs.iteritems() :
-            if isinstance(u, str) :
-                user = self.user_by_side(u)
-            else :
-                user = u
+            user = self.user_by_side(u)
             ulist.remove(user)
             UserProfile.uenqueue(user, m1)
         for u in ulist :
@@ -166,8 +125,52 @@ class Table(db.Model) :
     def kib_broadcast(self, m) :
         for u in self.kibitzers :
             UserProfile.uenqueue(u, m)
+            
+    def userlist(self) :
+        return filter(lambda x: x is not None, [self.N, self.E, self.S, self.W])
 
     # MAYBE store it in memory in place of each time recalculation
     def usermap(self) :
         return dict(filter(lambda x: x[1] is not None, 
                            zip(['N', 'E', 'S', 'W'], [self.N, self.E, self.S, self.W])))
+
+
+class UserProfile(db.Model) :
+    chanid = db.StringProperty()
+    user = db.UserProperty()
+    table = db.ReferenceProperty(Table)
+    loggedin = db.BooleanProperty()
+    lastact = db.DateTimeProperty(auto_now = True)
+
+    # MAYBE time consuming, optimize using background task
+    @staticmethod
+    def broadcast(m, exclude = None) :          
+        users = UserProfile.all().filter('loggedin =', True)
+        if exclude is not None :
+            users = users.filter('user !=', exclude)
+        for p in users :
+            p.enqueue(m)
+           
+
+    @staticmethod
+    def uenqueue(user, m) :
+        UserProfile.get_or_create(user).enqueue(m)
+
+    @staticmethod
+    def get_or_create(user) :
+        res = UserProfile.gql('WHERE user = :1', user).get()
+        if res is None :
+            res = UserProfile()
+            res.user = user
+            res.put()
+        return res
+            
+    def enqueue(self, m) :
+        logging.info('%s: %s', self.user.nickname(), m)
+        try :
+            channel.send_message(self.chanid, json.dumps(m))
+        except channel.InvalidChannelClientIdError :
+            logging.warn('broadcast to %s failed', self.user.nickname())
+            self.loggedin = False
+            self.put()
+

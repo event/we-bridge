@@ -125,7 +125,7 @@ function process_bid(v) {
 	    allow_bid("#bid_rdbl");
 	}
 	allow_bid(".bidbox_pass");
-	$(".bidbox_bid:not(.prohibited_bid)").click(do_bid).addClass("clickable");
+	$(".bidbox_bid:not(.prohibited_bid)").bind("click", do_bid).addClass("clickable");
     }
 }
 
@@ -134,7 +134,7 @@ function prohibit_bid(bid_selector) {
 }
 
 function allow_bid(bid_selector) {
-    $(bid_selector).click(do_bid).addClass("clickable").removeClass("prohibited_bid");
+    $(bid_selector).bind("click", do_bid).addClass("clickable").removeClass("prohibited_bid");
 }
 
 function disallow_lower_bids(r, s) {
@@ -194,8 +194,8 @@ function prohibit_cards(selector) {
 }
 
 function allow_cards(selector, side) {
-    return $(selector).click(side, highlight_for_move)
-	.dblclick(side, do_move).addClass("clickable");
+    return $(selector).bind("click", side, highlight_for_move)
+	.bind("dblclick", side, do_move).addClass("clickable");
 }
 
 function next_side(side) {
@@ -233,7 +233,7 @@ function kick_bidding(v) {
     indicate_turn(side);
     $("#dealer_" + side).addClass("dealer");
     if (my_side == v.dealer) {
-    	$(".bidbox_bid").click(do_bid).addClass("clickable");
+    	$(".bidbox_bid").bind("click", do_bid).addClass("clickable");
 	allow_bid(".bidbox_pass");
     }
 }
@@ -268,7 +268,7 @@ function highlight_for_move(event) {
     var splitted_id = event.target.id.split("_");
     var number = splitted_id[1];
     allow_cards(".highlighted", event.data).removeClass("highlighted");
-    $("#card_" + number).addClass("highlighted").click(event.data, do_move);    
+    $("#card_" + number).addClass("highlighted").bind("click", event.data, do_move);    
 }
 
 function do_bid(event) {
@@ -310,7 +310,7 @@ function end_play(v) {
     $("#lead_area").addClass("hidden");
     $("#contract,.tricks").html("");
     $("#bidding_area tr:gt(1)").remove();
-    $("#bidding_area tr:gt(0) td").text("");
+    $("#bidding_area tr td").text("").RemoveBubblePopup();
     $("#alert_text").removeClass("hidden");
     $(".bidbox_bid,.bidbox_pass,.bidbox_dbl,.bidbox_rdbl")
 	.unbind("click").removeClass("prohibited_bid clickable");
@@ -359,6 +359,10 @@ function user_leave(v) {
 
 function handle_table_chat_message(v) {
     var wid = v.wid;
+    var idx = wid.indexOf("@");
+    if (idx >= 0) {
+	wid = wid.substr(0, idx);
+    }
     if (wid != $("." + sides[(my_side + 2) % 4] + "_user").text()) {
 	handle_chat_message(v);
     }

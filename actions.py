@@ -94,11 +94,9 @@ def do_move(prof, tid, side, scard) :
 
     umap = table.usermap()
     table.whosmove = next
+    real_move = next
     if next == dummy :
-        real_move = next
         next = protocol.contract[-1]
-    else :
-        real_move = next
     next_user = umap.pop(next)
     if rndend :
         if next in ['N', 'S'] :
@@ -124,14 +122,19 @@ def do_move(prof, tid, side, scard) :
     db.put([table, protocol])
 
 def create_new_deck(table) :
-    d = table.protocol.deal
-    cvuln = d.vulnerability
-    cdealer = d.dealer
-    vinc = 1
-    if cdealer == 3 :
-        vinc += 1
-    dealer = (cdealer + 1) % 4 
-    vuln = (cvuln + vinc) % 4
+    p = table.protocol
+    if p is not None :
+        d = p.deal
+        cvuln = d.vulnerability
+        cdealer = d.dealer
+        vinc = 1
+        if cdealer == 3 :
+            vinc += 1
+        dealer = (cdealer + 1) % 4 
+        vuln = (cvuln + vinc) % 4
+    else :
+        dealer = 0
+        vuln = 0
     deck = bridge.get_deck()
     deal = repo.Deal.create(deck, vuln, dealer) 
     table.protocol = repo.Protocol.create(deal, N=table.N, E=table.E, S=table.S, W=table.W)
@@ -185,7 +188,7 @@ def do_bid(prof, tid, player, bid, alert=None) :
         fullbid = bid
     protocol.bidding.append(fullbid)
     bid_cnt = len(protocol.bidding)
-    if bid_cnt > 3 and all([b == bridge.BID_PASS for b in protocol.bidding[-3:]]) :
+    if bid_cnt > 3 and all([b.startswith(bridge.BID_PASS) for b in protocol.bidding[-3:]]) :
         contract, rel_declearer = bridge.get_contract_and_declearer(protocol.bidding)
         deal = protocol.deal
         if contract == bridge.BID_PASS :
@@ -199,6 +202,7 @@ def do_bid(prof, tid, player, bid, alert=None) :
                                  , points = protocol.result
                                  , tricks = protocol.tricks
                                  , protocol_url = 'protocol.html?%s' % deal.key().id())])
+            start_new_deal(table)
             return
 
         declearer = (rel_declearer + protocol.deal.dealer) % 4
@@ -251,13 +255,15 @@ def leave_table(prof, tid) :
     user = prof.user
     if user in table.kibitzers :
         table.kibitzers.remove(user)
-        place = None
+        place = None # MAYBE this doesn't need to be published
     else : 
         place = table.side(user)
         if place is None :
             logging.warn('%s tried to leave a table while not sitting at it', user)
             return 'hall.html'
         table.sit(place, None)
+        prof.table = None
+        prof.put()
         table.broadcast(m('user.leave', position = place))
     if table.empty() :
         table.delete()
@@ -297,8 +303,12 @@ def chat_message(prof, target, *args) :
     elif target.startswith('table') :
         tid = int(target[target.find('_') + 1:])
         t = repo.Table.get_by_id(tid)
-        t.broadcast(m('chat.message', wid = target, sender = prof.user.nickname(), message = text),
-                    **{prof.user: m('chat.message', wid = target, sender = 'own', message = text)})
+        ulist = t.userlist()
+        prof.enqueue(m('chat.message', wid = target, sender = 'own', message = text))
+        ulist.remove(prof.user)
+        mes = m('chat.message', wid = target, sender = prof.user.nickname(), message = text)
+        [repo.UserProfile.uenqueue(u, mes) for u in ulist]
+        t.kib_broadcast(mes)
     else :
         u = repo.UserProfile.gql('WHERE user = USER(:1)', target).get()
         if u is None :

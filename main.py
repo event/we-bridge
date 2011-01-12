@@ -78,7 +78,7 @@ class ActionHandler(webapp.RequestHandler):
         else :
             redir = f(prof, *arglist[1:])
             if redir is not None :
-                logging.info('redirect to %s' % redir)
+                logging.info('redirect to %s', redir)
                 self.redirect(redir)
 
 def current_table_state(user, place, table, allow_moves=True) :
@@ -98,12 +98,11 @@ def current_table_state(user, place, table, allow_moves=True) :
     side = deal.dealer
     place_idx = bridge.SIDES.index(place)
     part_idx = (place_idx + 2) % 4
-    for b in p.bidding :
-        s = b.split(':')
-        if len(s) > 1 :
-            b = s[0]
+    for bid in p.bidding :
+        s = bid.split(':')
+        b = s[0]
+        if len(s) > 1 and side != part_idx:
             alert = ''.join(s[1:])
-        if side != part_idx :
             messages.append(m('bid', side = side, alert = alert, bid = b))
         else:
             messages.append(m('bid', side = side, bid = b))
@@ -224,6 +223,7 @@ class TableHandler(webapp.RequestHandler) :
                         
                     if table.full() :
                         actions.start_new_deal(table)
+                    prof.table = table
                     table.put()    
                     self.response.out.write(htmltable(user, place, tid))
                 elif current == user :
@@ -321,6 +321,7 @@ class CronHandler(webapp.RequestHandler) :
     TIME_LIMIT_SECS = 30 * 60
     def get(self) :
         def logoff(p): 
+            p.table = None
             p.loggedin = False
 
         if self.request.headers['X-AppEngine-Cron'] != 'true' :
