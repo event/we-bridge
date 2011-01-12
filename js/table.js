@@ -25,7 +25,9 @@ function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
     parse_params();
     start_updator(update_handlers);
-    window.setInterval(function(){$.post("action.json?ping");}, 10 * 60 * 1000);
+    if (my_side == null) { 	// I'm a kibitzer
+	window.setInterval(function(){$.post("action.json?ping");}, 2 * 60 * 1000);
+    }
     init_chat();
     add_chat("table_" + tid, "Table", false);
     $("#alert_text").width($("#bidbox").width());

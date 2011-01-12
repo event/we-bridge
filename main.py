@@ -21,7 +21,7 @@ import string
 import math
 
 from google.appengine.api import users, channel
-from google.appengine.ext import webapp
+from google.appengine.ext import webapp, db
 from google.appengine.ext.webapp import util, template
 from django.utils  import simplejson as json
 
@@ -318,7 +318,7 @@ class ProtocolHandler(webapp.RequestHandler) :
 
 
 class CronHandler(webapp.RequestHandler) :
-    TIME_LIMIT_SECS = 30 * 60
+    TIME_LIMIT_SECS = 5 * 30
     def get(self) :
         def logoff(p): 
             p.table = None
@@ -331,9 +331,11 @@ class CronHandler(webapp.RequestHandler) :
         cmd = args[0]
         if cmd == 'logoff' :
             old = time.strftime('%F %T', time.gmtime(time.time() - self.TIME_LIMIT_SECS))
-            profiles = repo.UserProfile.all().filter('lastact < ', old).fetch(100)
+            logging.info("logging out users older then %s", old)
+            profiles = repo.UserProfile.gql('WHERE lastact < DATETIME(:1)', old).fetch(100)
             map(logoff, profiles)
             db.put(profiles)
+            logging.info("Logged off %s users", len(profiles))
 
 
 def main():

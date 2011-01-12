@@ -13,7 +13,7 @@ update_handlers["chat.message"] = handle_chat_message;
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
     start_updator(update_handlers);
-    window.setInterval(function(){$.post("action.json?ping");}, 10 * 60 * 1000);
+    window.setInterval(function(){$.post("action.json?ping");}, 2 * 60 * 1000);
     init_chat();
 }
 
