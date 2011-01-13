@@ -65,7 +65,9 @@ function add_chat(wid, title, open){
     var ta = $("<textarea></textarea>").attr("rows", "1").bind("keypress", onenter)
 	.bind("click", stop_propagation);
     var d = $("<div></div>").addClass("roompanel")
-	.append($("<h3></h3>").html(title + "<span>&mdash;</span>"))
+	.append($("<h3></h3>").html(title)
+		.append($("<img src='images/close.png' alt='X'></img>")
+			.bind("click", function(){remove_chat(wid)})))
 	.append($("<ul></ul>").bind("click", stop_propagation))
 	.append(ta);
     var res = $("<span></span>").data("wid", wid).addClass("room")
@@ -87,7 +89,7 @@ function add_chat(wid, title, open){
 }
 
 function remove_chat(id) {
-    $("#" + id).remove();
+    $(".room").filter(function(idx){return $(this).data("wid") == id}).remove();
 }
 
 function stop_propagation(e) { 
