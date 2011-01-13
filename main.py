@@ -50,7 +50,7 @@ def checklogin(f) :
         else :
             self.redirect(users.create_login_url(self.request.uri))
         
-    if len(inspect.getargspec(f).args) > 1 :
+    if len(inspect.getargspec(f)[0].args) > 1 :
         return decorated_w_user
     else :
         return decorated 
