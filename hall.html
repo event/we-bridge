@@ -1,11 +1,12 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
 	  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html>
+<html xmlns:og="http://ogp.me/ns#">
   <head>
     <title>Webridge</title>
     <link rel="stylesheet" type="text/css" href="css/hall.css"/>
     <link rel="stylesheet" type="text/css" href="css/chat.css"/>
     <script src="/_ah/channel/jsapi"></script>
+    <script type="text/javascript" src="http://platform.twitter.com/widgets.js"></script>
     <script type="text/javascript" src="js/jquery.js"></script>
     <script type="text/javascript" src="js/autoresize.jquery.js"></script>
     <script type="text/javascript" src="js/jquery.cookie.js"></script>
@@ -14,9 +15,14 @@
     <script type="text/javascript" src="js/hall.js"></script>
     <meta http-equiv="vary" content="*"></meta>
     <meta http-equiv="cache-control" content="no-store"></meta>
-  </head>
+    <meta property="og:title" content="We-bridge" />
+    <meta property="og:type" content="game" />
+    <meta property="og:url" content="http://we-bridge.appspot.com/" />
+    <meta property="og:image" content="http://we-bridge.appspot.com/images/sbig.png" />  </head>
   <body onload="on_body_load()">
     <a href="hall.html"><img class="logo" src="images/logo.png" alt="We-bridge"></img></a>
+    <a href="http://twitter.com/share" class="twitter-share-button" data-count="horizontal">Tweet</a>
+    <iframe src="http://www.facebook.com/plugins/like.php?href=we-bridge.appspot.com&amp;layout=button_count&amp;show_faces=true&amp;width=450&amp;action=like&amp;colorscheme=light&amp;height=21" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width: 450px; height:21px;" allowTransparency="true"></iframe>
     <span id="user_header">
       <a href="#">{{username}}</a>
       <a href="action.json?logoff">Log out</a>
@@ -44,7 +50,7 @@
       </table>
     </div>
     <div class="copyright">&copy;<a href="mailto:we-bridge@googlegroups.com">Leonid Movshovich</a>.
-      <a href="http://gitorious.org/webridge">We-Bridge</a> is 
+      <a href="https://github.com/event/we-bridge">We-Bridge</a> is 
       <a href="http://www.gnu.org/philosophy/free-sw.html">free software</a> licensed under 
       <a href="http://www.gnu.org/licenses/agpl-3.0.txt">AGPL</a>.
     </div>
