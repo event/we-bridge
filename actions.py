@@ -252,7 +252,7 @@ def do_bid(prof, tid, player, bid, alert=None) :
 
 def leave_table(prof, tid) :
     table = repo.Table.get_by_id(int(tid))
-    table.remove_user(prof)
+    table.remove_user(prof, m)
     return 'hall.html'
 
 def logoff(prof) :

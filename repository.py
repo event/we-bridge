@@ -19,6 +19,7 @@ import logging
 from google.appengine.ext import db
 from google.appengine.api import users, channel
 from django.utils  import simplejson as json
+
 import bridge
 
 class Deal(db.Model) :
@@ -134,7 +135,7 @@ class Table(db.Model) :
         return dict(filter(lambda x: x[1] is not None, 
                            zip(['N', 'E', 'S', 'W'], [self.N, self.E, self.S, self.W])))
 
-    def remove_user(self, prof) :
+    def remove_user(self, prof, m) :
         user = prof.user
         if user in self.kibitzers :
             self.kibitzers.remove(user)
@@ -148,6 +149,7 @@ class Table(db.Model) :
             prof.table = None
             prof.put()
             self.broadcast(m('user.leave', position = place))
+        tid = self.key().id()
         if self.empty() :
             self.delete()
             mes = m('table.remove', tid = tid)
