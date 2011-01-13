@@ -18,7 +18,7 @@ function init_chat() {
 	.bind("keypress", onenter);
     $("#global").data("wid", "global");
     $("#users").data("wid", "users");
-    // $("#users div ul li").bind("click", add_chat);
+
     var rooms = JSON.parse($.cookie("we-chat-rooms"));
     $.cookie("we-chat-rooms", "[]");
     var messages = JSON.parse($.cookie("we-chat"));
@@ -88,8 +88,23 @@ function add_chat(wid, title, open){
     return res;
 }
 
-function remove_chat(id) {
-    $(".room").filter(function(idx){return $(this).data("wid") == id}).remove();
+function remove_chat(wid) {
+    var rooms = JSON.parse($.cookie("we-chat-rooms"));
+    var messages = JSON.parse($.cookie("we-chat"));
+    var roomidx = 0;
+    while (rooms[roomidx].wid != wid) {
+	roomidx += 1;
+    }
+    var newmessages = [];
+    var prefix = "" + roomidx + ".";
+    messages.reverse();
+    for (var i = 0; i < messages.length; i += 1) {
+	if (messages[i].indexOf(prefix) != 0) {
+	    newmessages.push(messages[i])
+	}
+    }
+    $.cookie("we-chat", JSON.stringify(newmessages));
+    $(".room").filter(function(idx){return $(this).data("wid") == wid}).remove();
 }
 
 function stop_propagation(e) { 

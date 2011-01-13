@@ -252,27 +252,7 @@ def do_bid(prof, tid, player, bid, alert=None) :
 
 def leave_table(prof, tid) :
     table = repo.Table.get_by_id(int(tid))
-    user = prof.user
-    if user in table.kibitzers :
-        table.kibitzers.remove(user)
-        place = None # MAYBE this doesn't need to be published
-    else : 
-        place = table.side(user)
-        if place is None :
-            logging.warn('%s tried to leave a table while not sitting at it', user)
-            return 'hall.html'
-        table.sit(place, None)
-        prof.table = None
-        prof.put()
-        table.broadcast(m('user.leave', position = place))
-    if table.empty() :
-        table.delete()
-        mes = m('table.remove', tid = tid)
-    else :
-        table.put()
-        mes = m('player.leave', tid = tid, position = place)
-    repo.UserProfile.broadcast(mes)
-
+    table.remove_user(prof)
     return 'hall.html'
 
 def logoff(prof) :
@@ -313,10 +293,10 @@ def chat_message(prof, target, *args) :
         u = repo.UserProfile.gql('WHERE user = USER(:1)', target).get()
         if u is None :
             prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
-                           , message = 'user %s doesn\'t exist' % uname))
+                           , message = 'user %s doesn\'t exist' % target))
         elif not u.loggedin :
             prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
-                           , message = 'user %s offline' % uname))
+                           , message = 'user %s offline' % target))
         else :
             sender = prof.user.nickname()
             if sender.find('@') < 0 :
