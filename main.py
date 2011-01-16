@@ -224,7 +224,7 @@ class TableHandler(webapp.RequestHandler) :
                     repo.UserProfile.uenqueue(
                         user, [m('user.sit', position = p, name = u.nickname()) for p,u in umap.iteritems()])
                         
-                    if table.full() :
+                    if table.full() and table.protocol is None :
                         actions.start_new_deal(table)
                     prof.table = table
                     table.put()    
