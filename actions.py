@@ -24,8 +24,7 @@ from google.appengine.ext import db
 import bridge
 import repository as repo
 
-def m(t, **kwargs) :
-    return {'type': t, 'value': kwargs}
+from utils import m
 
 def hand_left(hand, moves) :
     s = set(hand)

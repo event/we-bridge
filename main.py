@@ -27,7 +27,7 @@ from django.utils  import simplejson as json
 
 import bridge
 import actions
-from actions import m 
+from utils import m 
 import repository as repo
 import time
 

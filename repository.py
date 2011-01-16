@@ -21,6 +21,7 @@ from google.appengine.api import users, channel
 from django.utils  import simplejson as json
 
 import bridge
+from utils import m
 
 class Deal(db.Model) :
     N = db.ListProperty(int)
@@ -135,7 +136,7 @@ class Table(db.Model) :
         return dict(filter(lambda x: x[1] is not None, 
                            zip(['N', 'E', 'S', 'W'], [self.N, self.E, self.S, self.W])))
 
-    def remove_user(self, prof, m) :
+    def remove_user(self, prof) :
         user = prof.user
         if user in self.kibitzers :
             self.kibitzers.remove(user)
