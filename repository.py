@@ -182,7 +182,8 @@ class UserProfile(db.Model) :
 
     @staticmethod
     def uenqueue(user, m) :
-        UserProfile.get_or_create(user).enqueue(m)
+        prof = UserProfile.get_or_create(user)
+        prof.enqueue(m)
 
     @staticmethod
     def get_or_create(user) :
@@ -207,11 +208,11 @@ class UserProfile(db.Model) :
                 return
         if not isinstance(m, list) :
             m = [m]
+       
         self.messages += [json.dumps(x) for x in m]
         self.put()
 
     def send_stored_messages(self) :
-        logging.info('clearing out %s', self.messages)
         channel.send_message(self.chanid, '[' + ','.join(self.messages) + ']')
         self.messages = []
         self.connected = True

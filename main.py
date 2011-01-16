@@ -221,7 +221,8 @@ class TableHandler(webapp.RequestHandler) :
                     umap = table.usermap()
                     table.broadcast(m('user.sit', position = place, name = nick))
                     del umap[place]
-                    prof.enqueue([m('user.sit', position = p, name = u.nickname()) for p,u in umap.iteritems()])
+                    repo.UserProfile.uenqueue(
+                        user, [m('user.sit', position = p, name = u.nickname()) for p,u in umap.iteritems()])
                         
                     if table.full() :
                         actions.start_new_deal(table)
