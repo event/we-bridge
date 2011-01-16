@@ -6,10 +6,21 @@ function init_channel(handlers) {
     $.getJSON("channel.json", function(data){reg_channel(data, handlers)});
 }
 
+function ping(){
+    $.post("action.json?ping");
+}
+
+function onopen(){
+    ping(); 
+    window.setInterval(ping, 2 * 60 * 1000);
+}
+
 function reg_channel(chid, handlers) {
     var channel = new goog.appengine.Channel(chid);
-    channel.open({"onmessage": function(data){process_update(data, handlers)}, "onerror": process_error
-		, "onopen": function(){}, "onclose": function(){}})
+    channel.open({"onmessage": function(data){process_update(data, handlers)}
+	    , "onerror": process_error
+		  , "onopen": onopen 
+		  , "onclose": function(){}})
 }
 
 function process_error(e) {

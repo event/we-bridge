@@ -106,7 +106,7 @@ def do_move(prof, tid, side, scard) :
         t = None
     mes = m('move', card = card, next = real_move, side = side, trick = t) 
     mover_mes = m('move', card = card, next = real_move, side = side, trick = t, allowed = allowed)
-    table.broadcast(mes, **{next: mover_mes})
+    table.broadcast(mes, **{str(next): mover_mes})
     if protocol.finished() :
         cntrct = protocol.contract[:-1]
         protocol.result, protocol.tricks = bridge.deal_result(cntrct \
@@ -251,7 +251,7 @@ def do_bid(prof, tid, player, bid, alert=None) :
 
 def leave_table(prof, tid) :
     table = repo.Table.get_by_id(int(tid))
-    table.remove_user(prof, m)
+    table.remove_user(prof)
     return 'hall.html'
 
 def logoff(prof) :
@@ -309,7 +309,8 @@ def chat_message(prof, target, *args) :
             
 
 def ping(prof):
-    pass
+    if not prof.connected :
+        prof.send_stored_messages()
 
 action_processors = {'move': do_move, 'bid': do_bid, 'leave': leave_table
                      , 'logoff': logoff, 'chat': chat_message, 'ping': ping}

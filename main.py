@@ -206,6 +206,8 @@ class TableHandler(webapp.RequestHandler) :
                                         , m('player.sit', tid = ident, position = 'N', name = user.nickname())])
             self.redirect('table.html?%s/N' % ident)
         else :
+            prof.connected = False
+            prof.put()
             tid = int(args[0]) 
             table = repo.Table.get_by_id(tid)
             if len(args) > 1 :
@@ -265,6 +267,8 @@ def show_all_tables(cur_user) :
 class HallHandler(webapp.RequestHandler) :
     @checklogin
     def get(self, prof):
+        prof.connected = False
+        prof.put()
         self.response.out.write(template.render(
                 'hall.html', {'tables': show_all_tables(prof.user), 'username': prof.user.nickname()}))
 
@@ -272,13 +276,13 @@ class ChannelHandler(webapp.RequestHandler) :
     @checklogin
     def get(self, prof):
         if prof.chanid is None :
-            chanid = prof.user.nickname() \
-                + ''.join([random.choice(string.letters + string.digits) for i in xrange(10)])
+            chanid = prof.user.nickname()
             prof.chanid = chanid
         else : 
             chanid = prof.chanid
-        token = channel.create_channel(chanid)
+        prof.connected = False
         prof.put()
+        token = channel.create_channel(chanid)
         self.response.out.write(json.dumps(token))
 
 def protocol2map(curuser, p) :

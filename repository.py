@@ -166,6 +166,8 @@ class UserProfile(db.Model) :
     user = db.UserProperty()
     table = db.ReferenceProperty(Table)
     loggedin = db.BooleanProperty()
+    connected = db.BooleanProperty()
+    messages = db.StringListProperty()
     lastact = db.DateTimeProperty(auto_now = True)
 
     # MAYBE time consuming, optimize using background task
@@ -192,11 +194,28 @@ class UserProfile(db.Model) :
         return res
             
     def enqueue(self, m) :
+        if not self.loggedin :
+            return
         logging.info('%s: %s', self.user.nickname(), m)
-        try :
-            channel.send_message(self.chanid, json.dumps(m))
-        except channel.InvalidChannelClientIdError :
-            logging.warn('broadcast to %s failed', self.user.nickname())
-            self.loggedin = False
-            self.put()
+        if self.connected :
+            try :
+                channel.send_message(self.chanid, json.dumps(m))
+            except channel.InvalidChannelClientIdError :
+                logging.warn('broadcast to %s failed', self.user.nickname())
+                self.connected = False
+            else :
+                return
+        if not isinstance(m, list) :
+            m = [m]
+        self.messages += [json.dumps(x) for x in m]
+        self.put()
+
+    def send_stored_messages(self) :
+        logging.info('clearing out %s', self.messages)
+        channel.send_message(self.chanid, '[' + ','.join(self.messages) + ']')
+        self.messages = []
+        self.connected = True
+        self.put()
+            
+            
 
