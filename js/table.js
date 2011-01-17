@@ -40,7 +40,7 @@ function parse_params() {
 
 function ajaxErrorHandler(event, xhr, opts, error) {
     // retry should be here for some requests
-    window.alert("request failed");
+    window.alert("operation failed");
 }
 
 function process_hand(v) {
@@ -311,7 +311,8 @@ function end_play(v) {
     $("#bidding_area tr:gt(1)").remove();
     $("#bidding_area tr td").text("").RemoveBubblePopup();
     $("#alert_text").removeClass("hidden");
-    $(".hand_container").children().remove().append("<img src='images/back.png' class='hand_mock'></img>");
+    $(".hand_container").children().remove();
+    $(".hand_container").append($("<img src='images/back.png' class='hand_mock'></img>"));
     $(".bidbox_bid,.bidbox_pass,.bidbox_dbl,.bidbox_rdbl")
 	.unbind("click").removeClass("prohibited_bid clickable");
     $(".lead").text("");
