@@ -210,6 +210,9 @@ class TableHandler(webapp.RequestHandler) :
             prof.put()
             tid = int(args[0]) 
             table = repo.Table.get_by_id(tid)
+            if table is None :
+                self.redirect('hall.html')
+                return
             if len(args) > 1 :
                 place = args[1]
                 current = table.user_by_side(place)
@@ -221,8 +224,7 @@ class TableHandler(webapp.RequestHandler) :
                     umap = table.usermap()
                     table.broadcast(m('user.sit', position = place, name = nick))
                     del umap[place]
-                    repo.UserProfile.uenqueue(
-                        user, [m('user.sit', position = p, name = u.nickname()) for p,u in umap.iteritems()])
+                    repo.UserProfile.uenqueue(user, current_table_state(user, place, table))
                         
                     if table.full() and table.protocol is None :
                         actions.start_new_deal(table)

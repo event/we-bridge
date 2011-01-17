@@ -202,6 +202,7 @@ def do_bid(prof, tid, player, bid, alert=None) :
                                  , tricks = protocol.tricks
                                  , protocol_url = 'protocol.html?%s' % deal.key().id())])
             start_new_deal(table)
+            table.put()
             return
 
         declearer = (rel_declearer + protocol.deal.dealer) % 4
