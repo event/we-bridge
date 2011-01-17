@@ -26,8 +26,8 @@ function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
     parse_params();
     start_updator(update_handlers);
+    $("#table").data("wid", "table_" + tid);
     init_chat();
-    add_chat("table_" + tid, "Table", false);
     $("#alert_text").width($("#bidbox").width());
     $("#popup_res").text("Waiting for partners");
     $(".popup").bPopup();

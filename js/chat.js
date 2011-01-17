@@ -20,12 +20,22 @@ function init_chat() {
     $("#users").data("wid", "users");
 
     var rooms = JSON.parse($.cookie("we-chat-rooms"));
-    $.cookie("we-chat-rooms", "[]");
+    if (rooms == null || rooms.length == 0) {
+	rooms = $(".room").map(function() {return {"wid": $(this).data("wid")
+						   , "title": $(this).find("div h3").text()}}).toArray();
+    }
     var messages = JSON.parse($.cookie("we-chat"));
     if (messages == null) {
 	return;
     }
     messages.reverse();
+    var newrooms = $(".room").map(function() {return {"wid": $(this).data("wid")
+						      , "title": $(this).find("div h3").text()}}).toArray();
+    var newmessages = [];
+    var roomidxmap = {};
+    for (var i = 0; i < newrooms.length; i += 1) {
+	roomidxmap[i] = i;
+    }
     for (var i = 0; i < messages.length; i += 1) {
 	var m = messages[i];
 	var idx = m.substr(0, m.indexOf("."));
@@ -34,9 +44,19 @@ function init_chat() {
 	var msg = rest.substr(rest.indexOf(":") + 1);
 	var r = rooms[idx];
 	if (r != null) {
-	    show_message({"wid": r.wid, "sender": sender, "message": msg});
+	    var chatw = $(".room").filter(function(idx){return $(this).data("wid") == r.wid});
+	    if (chatw.length == 0) {
+		chatw = add_chat(r.wid, r.title, false);
+		roomidxmap[idx] = newrooms.length;
+		newrooms.push(r);
+	    }
+	    show_message({"wid": r.wid, "sender": sender, "message": msg}, chatw);
+	    newmessages.push("" + roomidxmap[idx] + "." + sender + ":" + msg);
 	}
     }
+    newmessages.reverse();
+    $.cookie("we-chat-rooms", JSON.stringify(newrooms));
+    $.cookie("we-chat", JSON.stringify(newmessages));
 }
 
 function adjust_panel(panel){ 
@@ -140,7 +160,7 @@ function handle_chat_add(v) {
     add_chat(v.wid, v.title, true);
 }
 
-function show_message(v) {
+function show_message(v, room) {
     var wid = v.wid;
     var message = decodeURIComponent(v.message);
     var sender = v.sender;
@@ -149,21 +169,21 @@ function show_message(v) {
 	res = "<li class='own_message'>" + message + "</li>";
     } else if (sender == "sys") {
 	res = "<li class='sys_message'>" + message + "</li>";
-    } else if (sender != null) {
+    } else if (sender != null && sender != "") {
 	res = "<li>" + sender + ": " + message + "</li>";
     } else {
 	res = "<li>" + message + "</li>";
-    }
-    var room = $(".room").filter(function(idx){return $(this).data("wid") == wid});
-    if (room.length == 0) {
-	room = add_chat(wid, wid.substring(0, wid.lastIndexOf("@")), true);
     }
     room.find("div ul").append(res);
 }
 
 function handle_chat_message(v) {
-    show_message(v);
     var room = $(".room").filter(function(idx){return $(this).data("wid") == v.wid});
+    if (room.length == 0) {
+	var wid = v.wid;
+	room = add_chat(wid, wid.substring(0, wid.lastIndexOf("@")), true);
+    }
+    show_message(v, room);
     if (room.find(".roompanel").is(":not(:visible)") && v.sender != "own") {
 	var anc = room.find(".roomname");
 	if (anc.data("blink") != null) {

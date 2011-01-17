@@ -280,7 +280,7 @@ def chat_message(prof, target, *args) :
                            , message = 'user %s offline' % uname))
         else :
             prof.enqueue(m('chat.add', wid = uname, title = uname[:uname.find('@')]))
-    elif target.startswith('table') :
+    elif target.startswith('table') and target.find('@') < 0 :
         tid = int(target[target.find('_') + 1:])
         t = repo.Table.get_by_id(tid)
         ulist = t.userlist()
