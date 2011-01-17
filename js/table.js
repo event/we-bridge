@@ -7,6 +7,7 @@ var lead_count;
 var my_side;
 var tid;
 var ind_int = window.setInterval(function(){}, 9999);
+var first_deal = true;
 
 var update_handlers = new Array();
 update_handlers["move"] = process_move;
@@ -28,6 +29,8 @@ function on_body_load() {
     init_chat();
     add_chat("table_" + tid, "Table", false);
     $("#alert_text").width($("#bidbox").width());
+    $("#popup_res").text("Waiting for partners");
+    $(".popup").bPopup();
 }
 
 function parse_params() {
@@ -219,6 +222,10 @@ function img_by_suit(suit) {
 }
 
 function kick_bidding(v) {
+    if (first_deal) {
+	$(".popup").bPopup().close();
+	first_deal = false;
+    }
     prohibit_bid(".bidbox_pass,.bidbox_dbl,.bidbox_rdbl");
     if (v.vuln & 1) {
 	$(".vuln_NS").addClass("vulnerable");
@@ -344,7 +351,6 @@ function end_play(v) {
 			 + " tricks, " + sign + points + "</a>");
     $("#popup_contract").html(contract_html + " by " + decl);
     $(".popup").bPopup();
-	
 }
 
 function user_sit(v) {
