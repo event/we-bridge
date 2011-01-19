@@ -314,7 +314,12 @@ def ping(prof):
         prof.send_stored_messages()
 
 def usernames(prof, query):
-    return lambda x: x.response.out.write(json.dumps(['user1', 'user2', 'user3']))
+    # MAYBE list of online users should be maintained in memcache
+    profiles = repo.UserProfile.gql(
+        'WHERE loggedin = True AND user >= USER(:1) AND user <= USER(:2)', query, query + 'z') \
+        .fetch(10)
+        
+    return lambda x: x.response.out.write(json.dumps([p.user.nickname() for p in profiles]))
 
 action_processors = {'move': do_move, 'bid': do_bid, 'leave': leave_table
                      , 'logoff': logoff, 'chat': chat_message, 'ping': ping, 'usernames': usernames}
