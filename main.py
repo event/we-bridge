@@ -74,12 +74,12 @@ class ActionHandler(webapp.RequestHandler):
         try :
             f = actions.action_processors[action]
         except KeyError:
+            logging.warn('unsupported action %s from %s', action, prof.user)
             self.response.set_status(404)
         else :
-            redir = f(prof, *arglist[1:])
-            if redir is not None :
-                logging.info('redirect to %s', redir)
-                self.redirect(redir)
+            cont = f(prof, *arglist[1:])
+            if cont is not None :
+                cont(self)
 
 def current_table_state(user, place, table, allow_moves=True) :
     tid = table.key().id()

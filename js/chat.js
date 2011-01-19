@@ -19,6 +19,10 @@ function init_chat() {
     $("#global").data("wid", "global");
     $("#users").data("wid", "users");
 
+    $("#users div textarea").jsonSuggest(function(text, wildCard, caseSensitive, notCharacter, cb){
+	    username_typeahead(text, cb);
+	}, {"ajaxResults": true, minCharacters: 3, "onSelect": typeahead_select});
+
     var rooms = JSON.parse($.cookie("we-chat-rooms"));
     if (rooms == null || rooms.length == 0) {
 	rooms = $(".room").map(function() {return {"wid": $(this).data("wid")
@@ -57,6 +61,21 @@ function init_chat() {
     newmessages.reverse();
     $.cookie("we-chat-rooms", JSON.stringify(newrooms));
     $.cookie("we-chat", JSON.stringify(newmessages));
+}
+
+function username_typeahead(text, callback) {
+    $.getJSON("action.json?usernames/" + text, 
+	      function(data){
+		  callback(
+			   $.map(data, 
+				 function(e, i){return {"text": e};}));
+		      });
+}
+
+function typeahead_select(selected) {
+    $("#users div textarea").val("");
+    var url = "action.json?chat/users/" + selected.text;
+    $.post(url);
 }
 
 function adjust_panel(panel){ 

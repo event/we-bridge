@@ -20,10 +20,10 @@ from urllib import unquote
 
 from google.appengine.api import users
 from google.appengine.ext import db
+from django.utils  import simplejson as json
 
 import bridge
 import repository as repo
-
 from utils import m
 
 def hand_left(hand, moves) :
@@ -253,12 +253,12 @@ def do_bid(prof, tid, player, bid, alert=None) :
 def leave_table(prof, tid) :
     table = repo.Table.get_by_id(int(tid))
     table.remove_user(prof)
-    return 'hall.html'
+    return lambda x: x.redirect('hall.html')
 
 def logoff(prof) :
     prof.loggedin = False
     prof.put()
-    return users.create_logout_url(users.create_login_url('hall.html'))
+    return lambda x: x.redirect(users.create_logout_url(users.create_login_url('hall.html')))
 
 def chat_message(prof, target, *args) :
     text = '/'.join(args).replace('<', '&lt;').replace('>', '&gt;')
@@ -313,6 +313,9 @@ def ping(prof):
     if not prof.connected :
         prof.send_stored_messages()
 
+def usernames(prof, query):
+    return lambda x: x.response.out.write(json.dumps(['user1', 'user2', 'user3']))
+
 action_processors = {'move': do_move, 'bid': do_bid, 'leave': leave_table
-                     , 'logoff': logoff, 'chat': chat_message, 'ping': ping}
+                     , 'logoff': logoff, 'chat': chat_message, 'ping': ping, 'usernames': usernames}
 
