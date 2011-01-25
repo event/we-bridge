@@ -6,6 +6,12 @@ html {
 body {
     height: 95%;
     width:99%;
+    min-height: 500px;
+    min-width: 700px;
+}
+
+.logo {
+    border-width: 0;
 }
 
 #board {
