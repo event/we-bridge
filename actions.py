@@ -169,9 +169,17 @@ def bid_allowed(bidding, bid, contract) :
         res = i > bid_cnt or bidding[-i] < bid
     return res
 
-def last_value_bid_is(check_fun, bidding) :
-    return check_fun(bidding[-1]) \
-        or (len(bidding) > 2 and check_fun(bidding[-3]) and bidding[-2] == bidding[-1] == bridge.BID_PASS)
+def get_dbl_mode(bidding) :
+    def last_value_bid_is(check_fun, bidding) :
+        return check_fun(bidding[-1]) \
+            or (len(bidding) > 2 and check_fun(bidding[-3]) and bidding[-2] == bidding[-1] == bridge.BID_PASS)
+    if last_value_bid_is(lambda x: x.startswith(bridge.BID_DOUBLE), bidding):
+        dbl_mode = 'rdbl'
+    elif last_value_bid_is(bridge.is_value_bid, bidding) : 
+        dbl_mode = 'dbl'
+    else : 
+        dbl_mode = 'none'
+    return dbl_mode
 
 
 def do_bid(prof, tid, player, bid, alert=None) :
@@ -237,12 +245,7 @@ def do_bid(prof, tid, player, bid, alert=None) :
         return
     table.nextmove()
     db.put([protocol, table])
-    if last_value_bid_is(lambda x: x.startswith(bridge.BID_DOUBLE), protocol.bidding):
-        dbl_mode = 'rdbl'
-    elif last_value_bid_is(bridge.is_value_bid, protocol.bidding) : 
-        dbl_mode = 'dbl'
-    else : 
-        dbl_mode = 'none'
+    dbl_mode = get_dbl_mode(protocol.bidding)
     if alert is None :
         table.broadcast(m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode))
     else :

@@ -98,16 +98,22 @@ def current_table_state(user, place, table, allow_moves=True) :
     side = deal.dealer
     place_idx = bridge.SIDES.index(place)
     part_idx = (place_idx + 2) % 4
-    for bid in p.bidding :
-        s = bid.split(':')
+    def bidmes(bid, side, part_idx) :
+        s = bid.split(':', 1)
         b = s[0]
         if len(s) > 1 and side != part_idx:
-            alert = ''.join(s[1:])
-            messages.append(m('bid', side = side, alert = process_chat_message(alert), bid = b))
+            alert = s[1]
+            return m('bid', side = side, alert = process_chat_message(alert), bid = b)
         else:
-            messages.append(m('bid', side = side, bid = b))
+            return m('bid', side = side, bid = b)
+        
+    for bid in p.bidding[:-1] :
+        messages.append(bidmes(bid, side, part_idx))
         side = (side + 1) % 4
-
+    last_bid = bidmes(p.bidding[-1], side, part_idx)
+    last_bid['value']['dbl_mode'] = actions.get_dbl_mode(p.bidding)
+    messages.append(last_bid)
+    
     c = p.contract
     if c is None :
         return messages
