@@ -27,7 +27,7 @@ from django.utils  import simplejson as json
 
 import bridge
 import actions
-from utils import m 
+from utils import *
 import repository as repo
 import time
 
@@ -103,7 +103,7 @@ def current_table_state(user, place, table, allow_moves=True) :
         b = s[0]
         if len(s) > 1 and side != part_idx:
             alert = ''.join(s[1:])
-            messages.append(m('bid', side = side, alert = alert, bid = b))
+            messages.append(m('bid', side = side, alert = process_chat_message(alert), bid = b))
         else:
             messages.append(m('bid', side = side, bid = b))
         side = (side + 1) % 4

@@ -14,6 +14,15 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Webridge.  If not, see <http://www.gnu.org/licenses/>.
 
+import re
+
 def m(t, **kwargs) :
     return {'type': t, 'value': kwargs}
+
+suitre = re.compile('!([SHDC])')
+def process_chat_message(text) :
+    def suit_replacer(match) :
+        s = match.group(1)
+        return '<img src="images/%s.png" alt="%s"/>' % (s.lower(), s)
+    return suitre.sub(suit_replacer, text.replace('<', '&lt;').replace('>', '&gt;'))
 

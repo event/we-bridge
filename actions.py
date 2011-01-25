@@ -17,7 +17,6 @@
 import logging
 import inspect
 from urllib import unquote
-import re
 
 from google.appengine.api import users
 from google.appengine.ext import db
@@ -25,7 +24,7 @@ from django.utils  import simplejson as json
 
 import bridge
 import repository as repo
-from utils import m
+from utils import *
 
 def hand_left(hand, moves) :
     s = set(hand)
@@ -218,7 +217,8 @@ def do_bid(prof, tid, player, bid, alert=None) :
         if alert is None :
             table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start])
         else :
-            table.broadcast([m('bid', side = cur_side, bid = bid, alert = alert, dbl_mode = 'none'), start]
+            table.broadcast([m('bid', side = cur_side, bid = bid, alert = process_chat_message(alert)
+                               , dbl_mode = 'none'), start]
                             , **{bridge.SIDES[(cur_side + 2) % 4]
                                  : [m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start]})
             
@@ -245,7 +245,8 @@ def do_bid(prof, tid, player, bid, alert=None) :
     if alert is None :
         table.broadcast(m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode))
     else :
-        table.broadcast(m('bid', side = cur_side, bid = bid, alert = alert, dbl_mode = dbl_mode)
+        table.broadcast(m('bid', side = cur_side, bid = bid, alert = process_chat_message(alert)
+                          , dbl_mode = dbl_mode)
                         , **{bridge.SIDES[(cur_side + 2) % 4]
                              : m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode)})
 
@@ -260,13 +261,6 @@ def logoff(prof) :
     prof.loggedin = False
     prof.put()
     return lambda x: x.redirect(users.create_logout_url(users.create_login_url('hall.html')))
-
-suitre = re.compile('!([SHDC])')
-def process_chat_message(text) :
-    def suit_replacer(match) :
-        s = match.group(1)
-        return '<img src="images/%s.png" alt="%s"/>' % (s.lower(), s)
-    return suitre.sub(suit_replacer, text.replace('<', '&lt;').replace('>', '&gt;'))
 
 def chat_message(prof, target, *args) :
     text = process_chat_message('/'.join(args))
