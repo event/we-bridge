@@ -95,6 +95,8 @@ def current_table_state(user, place, table, allow_moves=True) :
     hand = actions.hand_left(deal.hand_by_side(place), moves)
     messages += [m('hand', cards = hand, side = place)
                 , m('start.bidding', vuln = deal.vulnerability, dealer = deal.dealer)]
+    if len(p.bidding) == 0 :
+        return messages
     side = deal.dealer
     place_idx = bridge.SIDES.index(place)
     part_idx = (place_idx + 2) % 4
