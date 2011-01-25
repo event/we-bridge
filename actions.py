@@ -263,7 +263,10 @@ def leave_table(prof, tid) :
 
 def logoff(prof) :
     prof.loggedin = False
-    prof.put()
+    if prof.table is not None :
+        leave_table(prof, table.key().id())
+    else :
+        prof.put()
     return lambda x: x.redirect(users.create_logout_url(users.create_login_url('hall.html')))
 
 def chat_message(prof, target, *args) :
