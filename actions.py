@@ -169,6 +169,10 @@ def bid_allowed(bidding, bid, contract) :
         res = i > bid_cnt or bidding[-i] < bid
     return res
 
+def last_value_bid_is(check_fun, bidding) :
+    return check_fun(bidding[-1]) \
+        or (len(bidding) > 2 and check_fun(bidding[-3]) and bidding[-2] == bidding[-1] == bridge.BID_PASS)
+
 
 def do_bid(prof, tid, player, bid, alert=None) :
     user = prof.user
@@ -233,12 +237,9 @@ def do_bid(prof, tid, player, bid, alert=None) :
         return
     table.nextmove()
     db.put([protocol, table])
-
-    if bid == bridge.BID_DOUBLE or bid_cnt > 2 and protocol.bidding[-3] == bridge.BID_DOUBLE \
-            and protocol.bidding[-2] == bid == bridge.BID_PASS :
+    if last_value_bid_is(lambda x: x.startswith(bridge.BID_DOUBLE), protocol.bidding):
         dbl_mode = 'rdbl'
-    elif bridge.is_value_bid(bid) or bid_cnt > 2 and bridge.is_value_bid(protocol.bidding[-3]) \
-            and protocol.bidding[-2] == bid == bridge.BID_PASS: 
+    elif last_value_bid_is(bridge.is_value_bid, protocol.bidding) : 
         dbl_mode = 'dbl'
     else : 
         dbl_mode = 'none'
