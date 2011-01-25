@@ -104,7 +104,7 @@ def get_contract_and_declearer(bidding) :
 
 
 def is_value_bid(bid) :
-    return bid not in SPECIAL_BIDS
+    return remove_alert(bid) not in SPECIAL_BIDS
 
 def suit_rank_to_num(suit, rank):
     return 13 * SUITS.index(suit) + RANKS.index(rank)
