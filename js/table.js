@@ -316,7 +316,7 @@ function end_play(v) {
     $("#bidbox").css("display", "inline-block");
     $("#bidbox_cell").css("text-align", "right");
     $("#lead_area").addClass("hidden");
-    $("#contract,.tricks").html("");
+    $("#contract,#contract_by,.tricks").html("");
     $("#bidding_area tr:gt(1)").remove();
     $("#bidding_area tr td").text("").RemoveBubblePopup();
     $("#alert_text").removeClass("hidden");
