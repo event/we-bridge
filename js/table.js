@@ -128,6 +128,8 @@ function process_bid(v) {
 	}
 	allow_bid(".bidbox_pass");
 	$(".bidbox_bid:not(.prohibited_bid)").bind("click", do_bid).addClass("clickable");
+    } else if (side == my_side) {
+	$("#alert_text").val("Alert");
     }
 }
 
