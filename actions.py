@@ -17,6 +17,7 @@
 import logging
 import inspect
 from urllib import unquote
+import re
 
 from google.appengine.api import users
 from google.appengine.ext import db
@@ -260,8 +261,15 @@ def logoff(prof) :
     prof.put()
     return lambda x: x.redirect(users.create_logout_url(users.create_login_url('hall.html')))
 
+suitre = re.compile('!([SHDC])')
+def process_chat_message(text) :
+    def suit_replacer(match) :
+        s = match.group(1)
+        return '<img src="images/%s.png" alt="%s"/>' % (s.lower(), s)
+    return suitre.sub(suit_replacer, text.replace('<', '&lt;').replace('>', '&gt;'))
+
 def chat_message(prof, target, *args) :
-    text = '/'.join(args).replace('<', '&lt;').replace('>', '&gt;')
+    text = process_chat_message('/'.join(args))
     if target == 'global' :
         repo.UserProfile.broadcast(
             m('chat.message', wid = 'global', sender = prof.user.nickname(), message = text)
