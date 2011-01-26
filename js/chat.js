@@ -21,7 +21,7 @@ function init_chat() {
 
     $("#users div textarea").jsonSuggest(function(text, wildCard, caseSensitive, notCharacter, cb){
 	    username_typeahead(text, cb);
-	}, {"ajaxResults": true, minCharacters: 3, "onSelect": typeahead_select});
+	}, {"ajaxResults": true, minCharacters: 3, "onSelect": typeahead_select}).unbind("keypress");
 
     var rooms = JSON.parse($.cookie("we-chat-rooms"));
     if (rooms == null || rooms.length == 0) {
