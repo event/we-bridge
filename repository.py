@@ -24,12 +24,12 @@ import bridge
 from utils import m
 
 class Deal(db.Model) :
-    N = db.ListProperty(int)
-    S = db.ListProperty(int)
-    E = db.ListProperty(int)
-    W = db.ListProperty(int)
-    vulnerability = db.IntegerProperty(choices = bridge.VULN_OPTIONS)
-    dealer = db.IntegerProperty(choices = bridge.DEALERS)
+    N = db.ListProperty(int, required=True)
+    S = db.ListProperty(int, required=True)
+    E = db.ListProperty(int, required=True)
+    W = db.ListProperty(int, required=True)
+    vulnerability = db.IntegerProperty(choices = bridge.VULN_OPTIONS, required=True)
+    dealer = db.IntegerProperty(choices = bridge.DEALERS, required=True)
     createDate = db.DateTimeProperty(auto_now_add=True)
     @staticmethod
     def create(deal, vuln, dealer) :
@@ -46,13 +46,13 @@ class Deal(db.Model) :
     
 
 class Protocol(db.Model) :
-    N = db.UserProperty()
-    S = db.UserProperty()
-    E = db.UserProperty()
-    W = db.UserProperty()
+    N = db.UserProperty(required=True)
+    S = db.UserProperty(required=True)
+    E = db.UserProperty(required=True)
+    W = db.UserProperty(required=True)
     bidding = db.StringListProperty()
     moves = db.ListProperty(int)
-    deal = db.ReferenceProperty(Deal)
+    deal = db.ReferenceProperty(Deal, required=True)
     contract = db.StringProperty() # <level><suit>[d|r]<decl> eg. 3SdN, 2DS 
     tricks = db.IntegerProperty() # 0 = just made, +1 = one overtrick, -1 = one down
     result = db.IntegerProperty() # +100, -800, etc.
@@ -75,21 +75,19 @@ class Protocol(db.Model) :
     def dummy(self) :
         return bridge.SIDES[(bridge.SIDES.index(self.contract[-1]) + 2) % 4]
 
-
 class Table(db.Model) :
-    N = db.UserProperty()
-    E = db.UserProperty()
-    S = db.UserProperty()
-    W = db.UserProperty()
-    kibitzers = db.ListProperty(users.User)
     protocol = db.ReferenceProperty(Protocol)
-    whosmove = db.StringProperty()
+    whosmove = db.StringProperty(choices = bridge.SIDES)
     
     def nextmove(self) :
         self.whosmove = bridge.SIDES[(bridge.SIDES.index(self.whosmove) + 1) % 4]
     
     def user_by_side(self, side) :
-        return self.__getattribute__(side)
+        res = TablePlace.get1(table=self, side=side)
+        if res is None :
+            return None
+        else :
+            return res.user 
 
     def side(self, user, player='own') :
         try :
@@ -99,72 +97,70 @@ class Table(db.Model) :
 
     def side_idx(self, user, player='own') :
         try :
-            return ([self.N, self.E, self.S, self.W].index(user)
+            return (bridge.SIDES.index(TablePlace.get1(table=self, user=user).side)
                     + bridge.REL_SIDES.index(player)) % 4
         except ValueError : 
             return None
 
     def sit(self, place, user):
-        self.__setattr__(place, user)
+        tp = TablePlace.get1(table=self, side=place)
+        if tp is None :
+            tp = TablePlace(table=self, side=place, user=user)
+        else :
+            tp.user = user
+        return tp
 
     def full(self):
-        return all(map(lambda x: x is not None, [self.N, self.E, self.S, self.W]))
+        return TablePlace.player_q(self).count(4) == 4
 
     def empty(self):
-        return all(map(lambda x: x is None, [self.N, self.E, self.S, self.W]))
+        return TablePlace.player_q(self).count(4) == 4
 
-    def broadcast(self, m, **kwargs) :
-        ulist = [self.N, self.E, self.S, self.W]
-        for u, m1 in kwargs.iteritems() :
-            user = self.user_by_side(u)
-            ulist.remove(user)
-            UserProfile.uenqueue(user, m1)
-        for u in ulist :
-            if u is not None :
-                UserProfile.uenqueue(u, m)
-        self.kib_broadcast(m)
+    def bcast(self, m, q) :
+        res = []
+        for tp in q :
+            p = UserProfile.uenqueue(tp.user, m)
+            if p is not None :
+                res.append(p)
+        return res
+        
+ 
+    def broadcast(self, m) :
+        return self.bcast(m, TablePlace.all().filter('table', self))
 
     def kib_broadcast(self, m) :
-        for u in self.kibitzers :
-            UserProfile.uenqueue(u, m)
+        return self.bcast(m, TablePlace.kibitzer_q(self))
             
     def userlist(self) :
-        return filter(lambda x: x is not None, [self.N, self.E, self.S, self.W])
+        return [tp.user for tp in TablePlace.player_q(self).fetch(4)]
 
     # MAYBE store it in memory in place of each time recalculation
     def usermap(self) :
-        return dict(filter(lambda x: x[1] is not None, 
-                           zip(['N', 'E', 'S', 'W'], [self.N, self.E, self.S, self.W])))
+        return dict([(tp.side, tp.user) for tp in TablePlace.player_q(self).fetch(4)])
 
-    def remove_user(self, prof) :
-        user = prof.user
-        if user in self.kibitzers :
-            self.kibitzers.remove(user)
-            place = None # MAYBE this doesn't need to be published
-        else : 
-            place = self.side(user)
-            if place is None :
-                logging.warn('%s tried to leave a table while not sitting at it', user)
-                return 
-            self.sit(place, None)
-            prof.table = None
-            prof.put()
-            self.broadcast(m('user.leave', position = place))
-        tid = self.key().id()
-        if self.empty() :
-            self.delete()
-            mes = m('table.remove', tid = tid)
-        else :
-            self.put()
-            mes = m('player.leave', tid = tid, position = place)
-        UserProfile.broadcast(mes)
+class TablePlace(db.Model) :
+    user = db.UserProperty(required=True)
+    side = db.StringProperty(required=True, choices = bridge.SIDES) #None for kibitzers
+    table = db.ReferenceProperty(Table, required=True)
+    
+    @staticmethod
+    def get1(**kwargs) :
+        q = TablePlace.all()
+        for k, v in kwargs.items() :
+            q = q.filter(k, v)
+        return q.get()
 
+    @staticmethod
+    def player_q(table) :
+        return TablePlace.all().filter('table', table).filter('side !=', None)
 
+    @staticmethod
+    def kibitzer_q(table) :
+        return TablePlace.all().filter('table', table).filter('side', None)
 
 class UserProfile(db.Model) :
     chanid = db.StringProperty()
-    user = db.UserProperty()
-    table = db.ReferenceProperty(Table)
+    user = db.UserProperty(required=True)
     loggedin = db.BooleanProperty()
     connected = db.BooleanProperty()
     messages = db.StringListProperty()
@@ -176,27 +172,27 @@ class UserProfile(db.Model) :
         users = UserProfile.all().filter('loggedin =', True)
         if exclude is not None :
             users = users.filter('user !=', exclude)
-        for p in users :
-            p.enqueue(m)
-           
+        return filter(lambda x: x.enqueue(m), users)
 
     @staticmethod
     def uenqueue(user, m) :
         prof = UserProfile.get_or_create(user)
-        prof.enqueue(m)
+        if prof.enqueue(m) :
+            return prof
+        else :
+            return None
 
     @staticmethod
     def get_or_create(user) :
         res = UserProfile.gql('WHERE user = :1', user).get()
         if res is None :
-            res = UserProfile()
-            res.user = user
+            res = UserProfile(user = user)
             res.put()
         return res
             
     def enqueue(self, m) :
         if not self.loggedin :
-            return
+            return False
         logging.info('%s: %s', self.user.nickname(), m)
         if self.connected :
             try :
@@ -205,18 +201,22 @@ class UserProfile(db.Model) :
                 logging.warn('broadcast to %s failed', self.user.nickname())
                 self.connected = False
             else :
-                return
+                return False
         if not isinstance(m, list) :
             m = [m]
        
         self.messages += [json.dumps(x) for x in m]
-        self.put()
+        return True
 
     def send_stored_messages(self) :
         channel.send_message(self.chanid, '[' + ','.join(self.messages) + ']')
         self.messages = []
         self.connected = True
-        self.put()
             
-            
-
+    def logoff(self, toput):
+        self.loggedin = False
+        tps = TablePlace.all().filter('user', self.user).fetch(100)
+        db.delete(tps)
+        for tp in tps :
+            table = tp.table
+            toput.append(UserProfile.broadcast(m('player.leave', tid = table.key().id(), position = tp.side)))

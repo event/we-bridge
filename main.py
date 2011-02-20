@@ -15,7 +15,7 @@
 # along with Webridge.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import inspect
+import inspect #TODO: remove
 import random
 import string
 import math
@@ -33,42 +33,48 @@ import time
 
 IMAGE_TEMPLATE = '<img src="images/%s.png" alt="%s"/>'
 
-def checklogin(f) :
-    def decorated(self):
-        if users.get_current_user() is not None :
-            f(self)
-        else :
-            self.redirect(users.create_login_url(self.request.uri))
-        
-    def decorated_w_user(self):
-        user = users.get_current_user()
-        if user is not None :
-            prof = repo.UserProfile.get_or_create(user)
-            prof.loggedin = True
-            prof.put() # updates last access time for inactive user tracking
-            f(self, prof)
-        else :
-            self.redirect(users.create_login_url(self.request.uri))
-        
-    if len(inspect.getargspec(f)[0]) > 1 :
-        return decorated_w_user
-    else :
-        return decorated 
-
 def arguments(request) :
     return request.query_string.split('/')
 
-class Redirector(webapp.RequestHandler) :
-    @checklogin
+class BaseHandler(webapp.RequestHandler) :
     def get(self) :
+        self.process()
+
+    def post(self) :
+        self.process()
+
+    def process(self) :
+        user = users.get_current_user()
+        if user is None :
+            self.redirect(users.create_login_url(self.request.uri))
+            return
+
+        prof = repo.UserProfile.get_or_create(user)
+        prof.loggedin = True
+        toput = [prof]
+        try :
+            self.do(prof, toput)
+        finally :
+           tc = {}
+           for v in toput :
+               if isinstance(v, list) :
+                   tc.update([(i.key(), i) for i in v])
+               elif v is not None :
+                   if v.is_saved() :
+                       tc[v.key()] = v 
+                   else :
+                       tc[id(v)] = v
+           items = list(tc.values())
+           logging.info('puting items %s', items)
+           db.put(items)
+        
+
+class Redirector(BaseHandler) :
+    def do(self, *args) :
         self.redirect('hall.html')
 
-class ActionHandler(webapp.RequestHandler):
-    def get(self) :
-        return self.post()
-
-    @checklogin
-    def post(self, prof):
+class ActionHandler(BaseHandler):
+    def do(self, prof, toput):
         arglist = arguments(self.request)
         action = arglist[0]
         try :
@@ -77,7 +83,7 @@ class ActionHandler(webapp.RequestHandler):
             logging.warn('unsupported action %s from %s', action, prof.user)
             self.response.set_status(404)
         else :
-            cont = f(prof, *arglist[1:])
+            cont = f(prof, toput, *arglist[1:])
             if cont is not None :
                 cont(self)
 
@@ -85,7 +91,7 @@ def current_table_state(user, place, table, allow_moves=True) :
     tid = table.key().id()
     umap = table.usermap()
     
-    messages = [m('user.sit', position = p, name = u.nickname()) 
+    messages = [m('player.sit', position = p, name = u.nickname(), tid = tid) 
                 for p, u in umap.iteritems()]
     p = table.protocol
     if p is None :
@@ -201,9 +207,9 @@ def htmltable(user, place, tid) :
     return template.render('table.html', values)
 
 
-class TableHandler(webapp.RequestHandler) :
-    @checklogin
-    def get(self, prof):
+class TableHandler(BaseHandler) :
+
+    def do(self, prof, toput):
         args = arguments(self.request)
         user = prof.user  
         if args[0] == 'new' :
@@ -215,7 +221,7 @@ class TableHandler(webapp.RequestHandler) :
             self.redirect('table.html?%s/N' % ident)
         else :
             prof.connected = False
-            prof.put()
+            toput.append(prof)
             tid = int(args[0]) 
             table = repo.Table.get_by_id(tid)
             if table is None :
@@ -225,74 +231,72 @@ class TableHandler(webapp.RequestHandler) :
                 place = args[1]
                 current = table.user_by_side(place)
                 if current is None :
-                    table.sit(place, user)
                     nick = user.nickname()
                     mes = m('player.sit', tid = tid, position = place, name = nick)
-                    repo.UserProfile.broadcast(mes)
-                    umap = table.usermap()
-                    table.broadcast(m('user.sit', position = place, name = nick))
-                    del umap[place]
-                    repo.UserProfile.uenqueue(user, current_table_state(user, place, table))
-                        
+                    toput.append(repo.UserProfile.broadcast(mes))
+                    prof.enqueue(current_table_state(user, place, table))
+                    toput.append(table.sit(place, user))
                     if table.full() and table.protocol is None :
                         actions.start_new_deal(table)
-                    prof.table = table
-                    table.put()    
+                    toput.append(table)   
                     self.response.out.write(htmltable(user, place, tid))
                 elif current == user :
                     prof.enqueue(current_table_state(user, place, table))
+                    toput.append(prof)
                     self.response.out.write(htmltable(user, place, tid))
                 else : # user tried to pick someones place
                     self.redirect('hall.html')
             else :
                 place = 'S'
-                table.kibitzers.append(user)
-                table.put()
+                toput.append(repo.TablePlace(table=table, user=user))
                 prof.enqueue(current_table_state(user, place, table, False))
                 repo.UserProfile.broadcast(m('player.sit', tid = tid))
                 self.response.out.write(htmltable(user, place, tid))
 
                     
 
-def nick_or_empty(user, tid, side, cur_user):
-    if user is None :
-        return "<a href=table.html?%s/%s>take a sit</a>" % (tid, side)
-    elif user == cur_user:
-        return "<a href=table.html?%s/%s>%s</a>" % (tid, side, user.nickname())
+def nick_or_empty(umap, tid, side, cur_user):
+    if umap.has_key(side) :
+        user = umap[side]
+        if user == cur_user:
+            return "<a href=table.html?%s/%s>%s</a>" % (tid, side, user.nickname())
+        else :
+            return user.nickname()
     else :
-        return user.nickname()
+        return "<a href=table.html?%s/%s>take a sit</a>" % (tid, side)
 
 def show_all_tables(cur_user) :
     res = []
     # obvious cache candidate
     for t in repo.Table.all():
         tid = t.key().id()
+        umap = t.usermap()
         res.append({'tid': tid
-                    , 'N': nick_or_empty(t.N, tid, 'N', cur_user)
-                    , 'E': nick_or_empty(t.E, tid, 'E', cur_user)
-                    , 'S': nick_or_empty(t.S, tid, 'S', cur_user)
-                    , 'W': nick_or_empty(t.W, tid, 'W', cur_user)
-                    , 'kibcount': len(t.kibitzers)})
+                    , 'N': nick_or_empty(umap, tid, 'N', cur_user)
+                    , 'E': nick_or_empty(umap, tid, 'E', cur_user)
+                    , 'S': nick_or_empty(umap, tid, 'S', cur_user)
+                    , 'W': nick_or_empty(umap, tid, 'W', cur_user)
+                    , 'kibcount': repo.TablePlace.kibitzer_q(t).count()})
     return res
 
-class HallHandler(webapp.RequestHandler) :
-    @checklogin
-    def get(self, prof):
+class HallHandler(BaseHandler) :
+
+    def do(self, prof, toput):
         prof.connected = False
-        prof.put()
+        toput.append(prof)
         self.response.out.write(template.render(
                 'hall.html', {'tables': show_all_tables(prof.user), 'username': prof.user.nickname()}))
 
-class ChannelHandler(webapp.RequestHandler) :
-    @checklogin
-    def get(self, prof):
+class ChannelHandler(BaseHandler) :
+    
+    def do(self, prof, toput):
         if prof.chanid is None :
             chanid = prof.user.nickname()
             prof.chanid = chanid
         else : 
             chanid = prof.chanid
         prof.connected = False
-        prof.put()
+        toput.append(prof)
         token = channel.create_channel(chanid)
         self.response.out.write(json.dumps(token))
 
@@ -305,17 +309,20 @@ def protocol2map(curuser, p) :
     lead = bridge.num_to_suit_rank(p.moves[0])
     lead_s = lead[0][0]
     lead =  IMAGE_TEMPLATE % (lead_s, lead_s.upper()) + lead[1]
-    cntrct = p.contract[:-1].replace('d', 'x').replace('r','xx').replace('Z', 'NT')
+    cntrct = p.contract[:-1].replace('d', 'x').replace('r','xx')
     cntrct_s = cntrct[1]
-    cntrct = cntrct[0] + IMAGE_TEMPLATE % (cntrct_s.lower(), cntrct_s) + cntrct[2:]
+    if cntrct_s == 'Z' :
+        cntrct = cntrct[0] + 'NT' + cntrct[2:]
+    else :
+        cntrct = cntrct[0] + IMAGE_TEMPLATE % (cntrct_s.lower(), cntrct_s) + cntrct[2:]
     return {'N': p.N.nickname(), 'E': p.E.nickname(), 'S': p.S.nickname(), 'W': p.W.nickname(), 
             'contract': cntrct, 'decl': p.contract[-1]
             , 'lead': lead, 'tricks': '=' if p.tricks == 0 else p.tricks, 'result': p.result
             , 'highlight': curuser in [p.N, p.E, p.S, p.W] }
 
-class ProtocolHandler(webapp.RequestHandler) :
-    @checklogin
-    def get(self, prof):
+class ProtocolHandler(BaseHandler) :
+    
+    def do(self, prof, toput):
         page = self.request.path[1:]
         dealid = int(self.request.query_string)
         deal = repo.Deal.get_by_id(dealid)
@@ -332,25 +339,17 @@ class ProtocolHandler(webapp.RequestHandler) :
         self.response.out.write(template.render(page, values))
 
 
-class CronHandler(webapp.RequestHandler) :
-    TIME_LIMIT_SECS = 5 * 30
-    def get(self) :
-        def logoff(p): 
-            if p.table is not None :
-                p.table.remove_user(p)
-            p.loggedin = False
-
-        if self.request.headers['X-AppEngine-Cron'] != 'true' :
-            self.response.set_status(404)
-            return
+class CronHandler(BaseHandler) :
+    TIME_LIMIT_SECS = 1
+    def do(self, prof, toput) :
         args = arguments(self.request)
         cmd = args[0]
         if cmd == 'logoff' :
             old = time.strftime('%F %T', time.gmtime(time.time() - self.TIME_LIMIT_SECS))
             logging.info("logging out users older then %s", old)
-            profiles = repo.UserProfile.gql('WHERE lastact < DATETIME(:1)', old).fetch(100)
-            map(logoff, profiles)
-            db.put(profiles)
+            profiles = repo.UserProfile.gql('WHERE lastact < DATETIME(:1) AND loggedin = True', old).fetch(100)
+            toput.append(profiles)
+            [p.logoff(toput) for p in  profiles]
             logging.info("Logged off %s users", len(profiles))
 
 

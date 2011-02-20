@@ -62,7 +62,7 @@ def move_allowed(protocol, own_side, player_side, card, hand) :
            or (decl == own_side and player_side == bridge.partner_side(own_side))) and valid_card 
     return res
 
-def do_move(prof, tid, side, scard) :
+def do_move(prof, toput, tid, side, scard) :
     user = prof.user
     table = repo.Table.get_by_id(int(tid))
     protocol = table.protocol
@@ -89,7 +89,7 @@ def do_move(prof, tid, side, scard) :
         del umap[protocol.contract[-1]]
         mes = m('hand', cards = dummy_hand, side = dummy)
         for u in umap.itervalues() :
-            repo.UserProfile.uenqueue(u, mes)
+            toput.append(repo.UserProfile.uenqueue(u, mes))
 
     umap = table.usermap()
     table.whosmove = next
@@ -106,19 +106,21 @@ def do_move(prof, tid, side, scard) :
         t = None
     mes = m('move', card = card, next = real_move, side = side, trick = t) 
     mover_mes = m('move', card = card, next = real_move, side = side, trick = t, allowed = allowed)
-    table.broadcast(mes, **{str(next): mover_mes})
+    toput.append(table.broadcast(mes))
+    toput.append(repo.UserProfile.uenqueue(repo.TablePlace.get1(table=table, side=next).user, mover_mes))
     if protocol.finished() :
         cntrct = protocol.contract[:-1]
         protocol.result, protocol.tricks = bridge.deal_result(cntrct \
                                                              , protocol.deal.vulnerability, protocol.moves)
-        table.broadcast(m('end.play', contract = cntrct.replace('d', 'x').replace('r','xx')\
-                              , declearer = protocol.contract[-1]\
-                              , points = protocol.result\
-                              , tricks = protocol.tricks\
-                              , protocol_url = 'protocol.html?%s' % deal.key().id()))
+        toput.append(table.broadcast(m('end.play', contract = cntrct.replace('d', 'x').replace('r','xx')\
+                                           , declearer = protocol.contract[-1]\
+                                           , points = protocol.result\
+                                           , tricks = protocol.tricks\
+                                           , protocol_url = 'protocol.html?%s' % deal.key().id())))
     
         start_new_deal(table)
-    db.put([table, protocol])
+    toput.append(table)
+    toput.append(protocol)
 
 def create_new_deck(table) :
     p = table.protocol
@@ -182,7 +184,7 @@ def get_dbl_mode(bidding) :
     return dbl_mode
 
 
-def do_bid(prof, tid, player, bid, alert=None) :
+def do_bid(prof, toput, tid, player, bid, alert=None) :
     user = prof.user
     table = repo.Table.get_by_id(int(tid))
     protocol = table.protocol
@@ -207,14 +209,14 @@ def do_bid(prof, tid, player, bid, alert=None) :
             protocol.result = 0
             protocol.tricks = 0
             protocol.put()
-            table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none')
-                             , m('end.play', contract = contract
-                                 , declearer = 'N/A'
-                                 , points = protocol.result
-                                 , tricks = protocol.tricks
-                                 , protocol_url = 'protocol.html?%s' % deal.key().id())])
+            toput.append(table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none')
+                                          , m('end.play', contract = contract
+                                              , declearer = 'N/A'
+                                              , points = protocol.result
+                                              , tricks = protocol.tricks
+                                              , protocol_url = 'protocol.html?%s' % deal.key().id())]))
             start_new_deal(table)
-            table.put()
+            toput.append(table)
             return
 
         declearer = (rel_declearer + protocol.deal.dealer) % 4
@@ -226,85 +228,89 @@ def do_bid(prof, tid, player, bid, alert=None) :
         logging.info('contract %s by %s', contract, bridge.SIDES[declearer])
         start = m('start.play', contract = contract.replace('d', 'x').replace('r','xx') 
                              , lead = leadmaker)
+
         if alert is None :
-            table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start])
+            toput.append(table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start]))
         else :
-            table.broadcast([m('bid', side = cur_side, bid = bid, alert = process_chat_message(alert)
-                               , dbl_mode = 'none'), start]
-                            , **{bridge.SIDES[(cur_side + 2) % 4]
-                                 : [m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start]})
-            
+            toput.append(table.broadcast([m('bid', side = cur_side, bid = bid, alert = process_chat_message(alert)
+                               , dbl_mode = 'none'), start]))
+            toput.append(repo.UserProfile.uenqueue(
+                repo.TablePlace.get1(table=table, side=bridge.SIDES[(cur_side + 2) % 4]).user
+                , [m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start]))
         dummy = (declearer + 2) % 4
         dummy_side = bridge.SIDES[dummy]
         decl_side = bridge.SIDES[declearer]
         dummy_hand = deal.hand_by_side(dummy_side)
         mes = m('hand', cards = dummy_hand, side = dummy_side)
-        repo.UserProfile.uenqueue(table.user_by_side(decl_side), mes )
+        toput.append(repo.UserProfile.uenqueue(table.user_by_side(decl_side), mes))
         mes = m('hand', cards = deal.hand_by_side(decl_side), side = decl_side)
-        repo.UserProfile.uenqueue(table.user_by_side(dummy_side), mes )
+        toput.append(repo.UserProfile.uenqueue(table.user_by_side(dummy_side), mes))
         return
     table.nextmove()
-    db.put([protocol, table])
+    toput.append(protocol)
+    toput.append(table)
     dbl_mode = get_dbl_mode(protocol.bidding)
     if alert is None :
-        table.broadcast(m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode))
+        toput.append(table.broadcast(m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode)))
     else :
-        table.broadcast(m('bid', side = cur_side, bid = bid, alert = process_chat_message(alert)
-                          , dbl_mode = dbl_mode)
-                        , **{bridge.SIDES[(cur_side + 2) % 4]
-                             : m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode)})
+        toput.append(table.broadcast(m('bid', side = cur_side, bid = bid, alert = process_chat_message(alert)
+                          , dbl_mode = dbl_mode)))
+        toput.append(repo.UserProfile.uenqueue(
+                repo.TablePlace.get1(table=table, side=bridge.SIDES[(cur_side + 2) % 4]).user
+                , m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode)))
 
         
 
-def leave_table(prof, tid) :
-    table = repo.Table.get_by_id(int(tid))
-    table.remove_user(prof)
+def leave_table(prof, toput, tid) :
+    tp = repo.TablePlace.get1(user=user, table='KIND(\'Table\', ' + tid + ')')
+    toput.append(repo.UserProfile.broadcast(m('player.leave', tid = tid, position = tp.side)))
     return lambda x: x.redirect('hall.html')
 
-def logoff(prof) :
-    prof.loggedin = False
-    if prof.table is not None :
-        leave_table(prof, table.key().id())
-    else :
-        prof.put()
+def logoff(prof, toput) :
+    prof.logoff(toput)
     return lambda x: x.redirect(users.create_logout_url(users.create_login_url('hall.html')))
 
-def chat_message(prof, target, *args) :
+def chat_message(prof, toput, target, *args) :
     text = process_chat_message('/'.join(args))
     if target == 'global' :
-        repo.UserProfile.broadcast(
+        toput.append(repo.UserProfile.broadcast(
             m('chat.message', wid = 'global', sender = prof.user.nickname(), message = text)
-            , prof.user)
-        prof.enqueue(m('chat.message', wid = 'global', sender = 'own', message = text))
+            , prof.user))
+        if prof.enqueue(m('chat.message', wid = 'global', sender = 'own', message = text)) :
+            toput.append(prof)
     elif target == 'users' : 
         uname = unquote(text) # check for ascii
         if uname.find('@') < 0 :
             uname += '@gmail.com'
         u = repo.UserProfile.gql('WHERE user = USER(:1)', uname).get()
         if u is None :
-            prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
-                           , message = 'user %s doesn\'t exist' % uname))
+            put = prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
+                              , message = 'user %s doesn\'t exist' % uname)) 
         elif not u.loggedin :
-            prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
-                           , message = 'user %s offline' % uname))
+            put = prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
+                              , message = 'user %s offline' % uname)) 
         else :
-            prof.enqueue(m('chat.add', wid = uname, title = uname[:uname.find('@')]))
+            put = prof.enqueue(m('chat.add', wid = uname, title = uname[:uname.find('@')]))
+        if put :
+            toput.append(prof)
     elif target.startswith('table') and target.find('@') < 0 :
         tid = int(target[target.find('_') + 1:])
+        # table isn't too much needed here...
         t = repo.Table.get_by_id(tid)
         ulist = t.userlist()
-        prof.enqueue(m('chat.message', wid = target, sender = 'own', message = text))
+        if prof.enqueue(m('chat.message', wid = target, sender = 'own', message = text)) :
+            toput.append(prof)
         ulist.remove(prof.user)
         mes = m('chat.message', wid = target, sender = prof.user.nickname(), message = text)
-        [repo.UserProfile.uenqueue(u, mes) for u in ulist]
-        t.kib_broadcast(mes)
+        toput.append([repo.UserProfile.uenqueue(u, mes) for u in ulist])
+        toput.append(t.kib_broadcast(mes))
     else :
         u = repo.UserProfile.gql('WHERE user = USER(:1)', target).get()
         if u is None :
-            prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
+            put = prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
                            , message = 'user %s doesn\'t exist' % target))
         elif not u.loggedin :
-            prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
+            put = prof.enqueue(m('chat.message', wid = 'global', sender = 'sys'
                            , message = 'user %s offline' % target))
         else :
             sender = prof.user.nickname()
@@ -312,17 +318,21 @@ def chat_message(prof, target, *args) :
                 wid = sender + '@gmail.com'
             else :
                 wid = sender
-            prof.enqueue(m('chat.message', wid = target, message = text, sender = 'own'))
-            u.enqueue(m('chat.message', wid = wid, message = text))
+            put = prof.enqueue(m('chat.message', wid = target, message = text, sender = 'own'))
+            if u.enqueue(m('chat.message', wid = wid, message = text)) :
+                toput.append(u)
+        if put :
+            toput.append(prof)
         
     
             
 
-def ping(prof):
+def ping(prof, toput):
     if not prof.connected :
         prof.send_stored_messages()
+        toput.append(prof)
 
-def usernames(prof, query):
+def usernames(prof, toput, query):
     # MAYBE list of online users should be maintained in memcache
     profiles = repo.UserProfile.gql(
         'WHERE loggedin = True AND user >= USER(:1) AND user <= USER(:2)', query, query + 'z') \
