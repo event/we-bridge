@@ -145,6 +145,7 @@ class TablePlace(db.Model) :
     
     @staticmethod
     def get1(**kwargs) :
+        logging.info(kwargs)
         q = TablePlace.all()
         for k, v in kwargs.items() :
             q = q.filter(k, v)
@@ -175,12 +176,14 @@ class UserProfile(db.Model) :
         return filter(lambda x: x.enqueue(m), users)
 
     @staticmethod
-    def uenqueue(user, m) :
-        prof = UserProfile.get_or_create(user)
-        if prof.enqueue(m) :
-            return prof
-        else :
-            return None
+    def uenqueue(users, m) :
+        if not isinstance(users, list) :
+            users = [users]
+        res = []
+        for prof in UserProfile.all().filter('user in', users):
+            if prof.enqueue(m) :
+                res.append[prof]
+        return res
 
     @staticmethod
     def get_or_create(user) :

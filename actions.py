@@ -201,6 +201,8 @@ def do_bid(prof, toput, tid, player, bid, alert=None) :
         fullbid = bid
     protocol.bidding.append(fullbid)
     bid_cnt = len(protocol.bidding)
+    umap = table.usermap()
+    part = umap.pop(bridge.SIDES[(cur_side + 2) % 4])
     if bid_cnt > 3 and all([b.startswith(bridge.BID_PASS) for b in protocol.bidding[-3:]]) :
         contract, rel_declearer = bridge.get_contract_and_declearer(protocol.bidding)
         deal = protocol.deal
@@ -232,11 +234,11 @@ def do_bid(prof, toput, tid, player, bid, alert=None) :
         if alert is None :
             toput.append(table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start]))
         else :
-            toput.append(table.broadcast([m('bid', side = cur_side, bid = bid, alert = process_chat_message(alert)
-                               , dbl_mode = 'none'), start]))
             toput.append(repo.UserProfile.uenqueue(
-                repo.TablePlace.get1(table=table, side=bridge.SIDES[(cur_side + 2) % 4]).user
-                , [m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start]))
+                    umap.values(), [m('bid', side = cur_side, bid = bid
+                                      , alert = process_chat_message(alert), dbl_mode = 'none'), start]))
+            toput.append(repo.UserProfile.uenqueue(
+                    part, [m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start]))
         dummy = (declearer + 2) % 4
         dummy_side = bridge.SIDES[dummy]
         decl_side = bridge.SIDES[declearer]
@@ -253,17 +255,20 @@ def do_bid(prof, toput, tid, player, bid, alert=None) :
     if alert is None :
         toput.append(table.broadcast(m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode)))
     else :
-        toput.append(table.broadcast(m('bid', side = cur_side, bid = bid, alert = process_chat_message(alert)
-                          , dbl_mode = dbl_mode)))
         toput.append(repo.UserProfile.uenqueue(
-                repo.TablePlace.get1(table=table, side=bridge.SIDES[(cur_side + 2) % 4]).user
-                , m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode)))
+                umap.values(), m('bid', side = cur_side, bid = bid
+                                  , alert = process_chat_message(alert), dbl_mode = dbl_mode)))
+        toput.append(repo.UserProfile.uenqueue(
+                part, m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode)))
 
         
 
 def leave_table(prof, toput, tid) :
-    tp = repo.TablePlace.get1(user=user, table='KIND(\'Table\', ' + tid + ')')
-    toput.append(repo.UserProfile.broadcast(m('player.leave', tid = tid, position = tp.side)))
+    tp = repo.TablePlace.get1(user=prof.user, table=db.Key.from_path('Table', int(tid)))
+    if tp is None :
+        logging.warn('%s tried to leave table %s while not sitting', prof.user, tid)
+    else :
+        toput.append(repo.UserProfile.broadcast(m('player.leave', tid = tid, position = tp.side)))
     return lambda x: x.redirect('hall.html')
 
 def logoff(prof, toput) :
