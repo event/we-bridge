@@ -65,7 +65,6 @@ class BaseHandler(webapp.RequestHandler) :
                    else :
                        tc[id(v)] = v
            items = list(tc.values())
-           logging.info('puting items %s', items)
            db.put(items)
         
 
@@ -95,6 +94,10 @@ def current_table_state(user, place, table, allow_moves=True) :
                 for p, u in umap.iteritems()]
     p = table.protocol
     if p is None :
+        if len(umap) == 4 :
+            logging.warn('4 users @%s, but deal not dealed', tid)
+            actions.start_new_deal(table)
+            table.put()
         return messages
     deal = p.deal
     moves = p.moves
@@ -236,7 +239,9 @@ class TableHandler(BaseHandler) :
                     toput.append(repo.UserProfile.broadcast(mes))
                     prof.enqueue(current_table_state(user, place, table))
                     toput.append(table.sit(place, user))
-                    if table.full() and table.protocol is None :
+                    if table.pcount() == 3 and table.protocol is None :
+                        umap = table.usermap()
+                        umap[place] = user
                         actions.start_new_deal(table)
                     toput.append(table)   
                     self.response.out.write(htmltable(user, place, tid))

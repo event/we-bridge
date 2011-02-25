@@ -33,11 +33,7 @@ class Deal(db.Model) :
     createDate = db.DateTimeProperty(auto_now_add=True)
     @staticmethod
     def create(deal, vuln, dealer) :
-        d = Deal()
-        for side, cards in deal :
-            d.__setattr__(side, cards)
-        d.vulnerability = vuln
-        d.dealer = dealer
+        d = Deal(vulnerability=vuln, dealer=dealer, **deal)
         d.put()
         return d
 
@@ -110,11 +106,8 @@ class Table(db.Model) :
             tp.user = user
         return tp
 
-    def full(self):
-        return TablePlace.player_q(self).count(4) == 4
-
-    def empty(self):
-        return TablePlace.player_q(self).count(4) == 4
+    def pcount(self):
+        return TablePlace.player_q(self).count(4)
 
     def bcast(self, m, q) :
         res = []
@@ -136,7 +129,7 @@ class Table(db.Model) :
 
     # MAYBE store it in memory in place of each time recalculation
     def usermap(self) :
-        return dict([(tp.side, tp.user) for tp in TablePlace.player_q(self).fetch(4)])
+        return dict([(str(tp.side), tp.user) for tp in TablePlace.player_q(self).fetch(4)])
 
 class TablePlace(db.Model) :
     user = db.UserProperty(required=True)
@@ -145,7 +138,6 @@ class TablePlace(db.Model) :
     
     @staticmethod
     def get1(**kwargs) :
-        logging.info(kwargs)
         q = TablePlace.all()
         for k, v in kwargs.items() :
             q = q.filter(k, v)
@@ -182,7 +174,7 @@ class UserProfile(db.Model) :
         res = []
         for prof in UserProfile.all().filter('user in', users):
             if prof.enqueue(m) :
-                res.append[prof]
+                res.append(prof)
         return res
 
     @staticmethod

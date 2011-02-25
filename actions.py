@@ -71,9 +71,11 @@ def do_move(prof, toput, tid, side, scard) :
     hand = deal.hand_by_side(side)
     if side is None or not move_allowed(protocol, table.side(user), side, card, hand) \
             or side != table.whosmove :
-        logging.warn('bad move: %s %s %s %s %s %s %s %s', protocol.key(), card
-                     , protocol.contract, user, player, table.key(), table.whosmove, side)
+        logging.warn('bad move: %s %s %s %s %s %s %s', protocol.key(), card
+                     , protocol.contract, user, table.key(), table.whosmove, side)
         return
+    toput.append(table)
+    toput.append(protocol)
     result = []
     # some kind of locking have to be implemented here. While actions in bridge game 
     #    are strictly sequential it is generally an error 
@@ -89,7 +91,7 @@ def do_move(prof, toput, tid, side, scard) :
         del umap[protocol.contract[-1]]
         mes = m('hand', cards = dummy_hand, side = dummy)
         for u in umap.itervalues() :
-            toput.append(repo.UserProfile.uenqueue(u, mes))
+            repo.UserProfile.uenqueue(u, mes)
 
     umap = table.usermap()
     table.whosmove = next
@@ -106,23 +108,21 @@ def do_move(prof, toput, tid, side, scard) :
         t = None
     mes = m('move', card = card, next = real_move, side = side, trick = t) 
     mover_mes = m('move', card = card, next = real_move, side = side, trick = t, allowed = allowed)
-    toput.append(table.broadcast(mes))
-    toput.append(repo.UserProfile.uenqueue(repo.TablePlace.get1(table=table, side=next).user, mover_mes))
+    repo.UserProfile.uenqueue(umap.values(), mes)
+    repo.UserProfile.uenqueue(repo.TablePlace.get1(table=table, side=next).user, mover_mes)
     if protocol.finished() :
         cntrct = protocol.contract[:-1]
         protocol.result, protocol.tricks = bridge.deal_result(cntrct \
                                                              , protocol.deal.vulnerability, protocol.moves)
-        toput.append(table.broadcast(m('end.play', contract = cntrct.replace('d', 'x').replace('r','xx')\
-                                           , declearer = protocol.contract[-1]\
-                                           , points = protocol.result\
-                                           , tricks = protocol.tricks\
-                                           , protocol_url = 'protocol.html?%s' % deal.key().id())))
+        table.broadcast(m('end.play', contract = cntrct.replace('d', 'x').replace('r','xx')\
+                              , declearer = protocol.contract[-1]\
+                              , points = protocol.result\
+                              , tricks = protocol.tricks\
+                              , protocol_url = 'protocol.html?%s' % deal.key().id()))
     
         start_new_deal(table)
-    toput.append(table)
-    toput.append(protocol)
 
-def create_new_deck(table) :
+def create_new_deck(table, umap) :
     p = table.protocol
     if p is not None :
         d = p.deal
@@ -137,14 +137,15 @@ def create_new_deck(table) :
         dealer = 0
         vuln = 0
     deck = bridge.get_deck()
-    deal = repo.Deal.create(deck, vuln, dealer) 
-    table.protocol = repo.Protocol.create(deal, N=table.N, E=table.E, S=table.S, W=table.W)
+    deal = repo.Deal.create(dict(deck), vuln, dealer) 
+    table.protocol = repo.Protocol.create(deal, **umap)
     table.whosmove = bridge.SIDES[dealer]
-    return [m('hand', cards = c, side = s) for s, c in deck], vuln, dealer
+    return [(umap[s], m('hand', cards = c, side = s)) for s, c in deck], vuln, dealer
 
-def start_new_deal(table) :
-    messages, vuln, dealer = create_new_deck(table)
-    pairs = zip([table.N, table.E, table.S, table.W], messages)
+def start_new_deal(table, umap=None) :
+    if umap is None :
+        umap = table.usermap()
+    pairs, vuln, dealer = create_new_deck(table, umap)
     bid_starter = m('start.bidding', vuln = vuln, dealer = dealer)
     for p in pairs :
         repo.UserProfile.uenqueue(p[0], [p[1], bid_starter])
@@ -195,6 +196,8 @@ def do_bid(prof, toput, tid, player, bid, alert=None) :
         logging.warn('bad bid: %s %s %s %s %s %s %s %s', protocol.key(), bid
                      , protocol.contract, user, player, table.key(), table.whosmove, cur_side)
         return 
+    toput.append(protocol)
+    toput.append(table)
     if alert is not None :
         fullbid = bid + ':' + alert
     else :
@@ -210,15 +213,13 @@ def do_bid(prof, toput, tid, player, bid, alert=None) :
             protocol.contract = contract
             protocol.result = 0
             protocol.tricks = 0
-            protocol.put()
-            toput.append(table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none')
-                                          , m('end.play', contract = contract
-                                              , declearer = 'N/A'
-                                              , points = protocol.result
-                                              , tricks = protocol.tricks
-                                              , protocol_url = 'protocol.html?%s' % deal.key().id())]))
+            table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none')
+                             , m('end.play', contract = contract
+                                 , declearer = 'N/A'
+                                 , points = protocol.result
+                                 , tricks = protocol.tricks
+                                 , protocol_url = 'protocol.html?%s' % deal.key().id())])
             start_new_deal(table)
-            toput.append(table)
             return
 
         declearer = (rel_declearer + protocol.deal.dealer) % 4
@@ -226,40 +227,37 @@ def do_bid(prof, toput, tid, player, bid, alert=None) :
         contract = contract + bridge.SIDES[declearer]
         protocol.contract = contract
         table.whosmove = bridge.SIDES[leadmaker]
-        db.put([protocol, table])
-        logging.info('contract %s by %s', contract, bridge.SIDES[declearer])
+        logging.debug('contract %s by %s', contract, bridge.SIDES[declearer])
         start = m('start.play', contract = contract.replace('d', 'x').replace('r','xx') 
                              , lead = leadmaker)
 
         if alert is None :
-            toput.append(table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start]))
+            table.broadcast([m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start])
         else :
-            toput.append(repo.UserProfile.uenqueue(
+            repo.UserProfile.uenqueue(
                     umap.values(), [m('bid', side = cur_side, bid = bid
-                                      , alert = process_chat_message(alert), dbl_mode = 'none'), start]))
-            toput.append(repo.UserProfile.uenqueue(
-                    part, [m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start]))
+                                      , alert = process_chat_message(alert), dbl_mode = 'none'), start])
+            repo.UserProfile.uenqueue(
+                    part, [m('bid', side = cur_side, bid = bid, dbl_mode = 'none'), start])
         dummy = (declearer + 2) % 4
         dummy_side = bridge.SIDES[dummy]
         decl_side = bridge.SIDES[declearer]
         dummy_hand = deal.hand_by_side(dummy_side)
         mes = m('hand', cards = dummy_hand, side = dummy_side)
-        toput.append(repo.UserProfile.uenqueue(table.user_by_side(decl_side), mes))
+        repo.UserProfile.uenqueue(table.user_by_side(decl_side), mes)
         mes = m('hand', cards = deal.hand_by_side(decl_side), side = decl_side)
-        toput.append(repo.UserProfile.uenqueue(table.user_by_side(dummy_side), mes))
+        repo.UserProfile.uenqueue(table.user_by_side(dummy_side), mes)
         return
     table.nextmove()
-    toput.append(protocol)
-    toput.append(table)
     dbl_mode = get_dbl_mode(protocol.bidding)
     if alert is None :
-        toput.append(table.broadcast(m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode)))
+        table.broadcast(m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode))
     else :
-        toput.append(repo.UserProfile.uenqueue(
-                umap.values(), m('bid', side = cur_side, bid = bid
-                                  , alert = process_chat_message(alert), dbl_mode = dbl_mode)))
-        toput.append(repo.UserProfile.uenqueue(
-                part, m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode)))
+        alerted_mes = m('bid', side = cur_side, bid = bid
+                                 , alert = process_chat_message(alert), dbl_mode = dbl_mode)
+        repo.UserProfile.uenqueue(umap.values(), alerted_mes)
+        table.kib_broadcast(alerted_mes)
+        repo.UserProfile.uenqueue(part, m('bid', side = cur_side, bid = bid, dbl_mode = dbl_mode))
 
         
 
@@ -268,6 +266,7 @@ def leave_table(prof, toput, tid) :
     if tp is None :
         logging.warn('%s tried to leave table %s while not sitting', prof.user, tid)
     else :
+        tp.delete()
         toput.append(repo.UserProfile.broadcast(m('player.leave', tid = tid, position = tp.side)))
     return lambda x: x.redirect('hall.html')
 
@@ -307,7 +306,7 @@ def chat_message(prof, toput, target, *args) :
             toput.append(prof)
         ulist.remove(prof.user)
         mes = m('chat.message', wid = target, sender = prof.user.nickname(), message = text)
-        toput.append([repo.UserProfile.uenqueue(u, mes) for u in ulist])
+        toput.append(repo.UserProfile.uenqueue(ulist, mes))
         toput.append(t.kib_broadcast(mes))
     else :
         u = repo.UserProfile.gql('WHERE user = USER(:1)', target).get()
