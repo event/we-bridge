@@ -27,8 +27,9 @@ function init_chat() {
     if (rooms == null || rooms.length == 0) {
 	rooms = $(".room").map(function() {return {"wid": $(this).data("wid")
 						   , "title": $(this).find("div h3").text()}}).toArray();
+	$.cookie("we-chat-rooms", JSON.stringify(rooms))
     }
-    var messages = JSON.parse($.cookie("we-chat"));
+    var messages = JSON.parse($.cookie("we-chat"), rooms);
     if (messages == null) {
 	return;
     }
