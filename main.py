@@ -150,9 +150,9 @@ def current_table_state(user, place, table, allow_moves=True) :
     lasttrick, lasttaker = bridge.decl_tricks_and_next_move_offset(cards_to_show, trump)
     if len(cards_to_show) > 3 :
         if taker % 2 == 1 :
-            decl_tricks += lasttrick
-        else :
             decl_tricks += 2 - (rounds_total - full_rounds_played) - lasttrick
+        else :
+            decl_tricks += lasttrick
     defen_tricks = full_rounds_played - decl_tricks
     decl_idx = bridge.SIDES.index(decl_side)
     if decl_idx % 2 == 0 :
@@ -173,14 +173,11 @@ def current_table_state(user, place, table, allow_moves=True) :
         currnd = cards_to_show
         move_offs = taker
     s = (rel_idx + move_offs) % 4 
-    logging.info(s)
     for card in currnd :
         messages.append(m('move', card = card, side = bridge.SIDES[s]))
         s = (s + 1) % 4
-    logging.info(s)
 
     s = bridge.SIDES[(rel_idx + taker + lasttaker) % 4]
-    logging.info(s)
     if s == dummy_side and place == decl_side :
         messages[-1]['value']['next'] = dummy_side
         hand = actions.hand_left(deal.hand_by_side(dummy_side), moves)

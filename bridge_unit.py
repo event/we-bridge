@@ -20,22 +20,22 @@ import bridge
 
 class CheckMoveTestCase(unittest.TestCase) :
     def test_card_not_in_hand(self) :
-        self.assertFalse(bridge.check_move([2], 1, []), 'card not in hand')
+        self.assertFalse(bridge.valid_card([2], 1, []), 'card not in hand')
 
     def test_card_played_already(self) :
-        self.assertFalse(bridge.check_move([1], 1, [1]), 'card is already played')
+        self.assertFalse(bridge.valid_card([1], 1, [1]), 'card is already played')
 
     def test_card_new_round(self) :
-        self.assertTrue(bridge.check_move([1], 1, []), 'new round - everything allowed')
+        self.assertTrue(bridge.valid_card([1], 1, []), 'new round - everything allowed')
 
     def test_card_right_suit(self) :
-        self.assertTrue(bridge.check_move([1], 1, [0]), 'same suit - allowed')
+        self.assertTrue(bridge.valid_card([1], 1, [0]), 'same suit - allowed')
 
     def test_card_no_suit(self) :
-        self.assertTrue(bridge.check_move([1], 1, [15]), 'no same suit - allowed')
+        self.assertTrue(bridge.valid_card([1], 1, [15]), 'no same suit - allowed')
 
     def test_card_wrong_suit(self) :
-        self.assertFalse(bridge.check_move([1, 14], 1, [15]), 'another suit - disallowed')
+        self.assertFalse(bridge.valid_card([1, 14], 1, [15]), 'another suit - disallowed')
 
         
 class CheckResCalcTestCase(unittest.TestCase) :
@@ -90,6 +90,13 @@ class CheckTrickCalc(unittest.TestCase) :
         self.assertEquals(2, bridge.declearer_tricks([0,1,2,3,4,5,8,7], 'Z'))
         self.assertEquals(1, bridge.declearer_tricks([0,1,8,3,4,5,6,7], 'Z'))
         self.assertEquals(0, bridge.declearer_tricks([8,1,2,3,9,5,6,7], 'Z'))
+
+    def test_half_round(self) :
+        self.assertEquals((1, 3), bridge.decl_tricks_and_next_move_offset([37, 38, 27, 28, 26, 29], 'C'))
+        self.assertEquals((1, 3), bridge.decl_tricks_and_next_move_offset([19, 25, 17, 14, 6, 9], 'C'))
+        self.assertEquals((0, 0), bridge.decl_tricks_and_next_move_offset([0, 1, 12, 3, 14, 23], 'Z'))
+        self.assertEquals((2, 3), bridge.decl_tricks_and_next_move_offset(
+                [26, 28, 36, 37, 0, 1, 12, 3, 14, 23], 'Z'))
 
 class CheckContractCalc(unittest.TestCase) :
     def test_simple(self):

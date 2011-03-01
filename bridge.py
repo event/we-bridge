@@ -252,6 +252,10 @@ def tricks_to_result(contract, vuln, decl_tricks) :
         
 def decl_tricks_and_next_move_offset(moves, trump) :
     rounds = [moves[i: i+4] for i in xrange(0,len(moves),4)]
+    if len(rounds[-1]) < 4 :
+        last_offset = len(rounds.pop())
+    else :
+        last_offset = 0
     decl_tricks = 0
     decl_move = False
     old_o = 0
@@ -261,9 +265,7 @@ def decl_tricks_and_next_move_offset(moves, trump) :
         if (o % 2) == 1 :
             decl_tricks += 1
         old_o = o
-    if len(rounds) > 0 and len(rounds[-1]) < 4 :
-        decl_tricks -= 1
-    return decl_tricks, old_o
+    return decl_tricks, (old_o + last_offset) % 4
 
 def declearer_tricks(moves, trump) :
     return decl_tricks_and_next_move_offset(moves, trump)[0]
