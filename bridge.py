@@ -252,6 +252,8 @@ def tricks_to_result(contract, vuln, decl_tricks) :
         
 def decl_tricks_and_next_move_offset(moves, trump) :
     rounds = [moves[i: i+4] for i in xrange(0,len(moves),4)]
+    if len(rounds) == 0 :
+        return 0, 0
     if len(rounds[-1]) < 4 :
         last_offset = len(rounds.pop())
     else :
