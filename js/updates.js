@@ -1,9 +1,5 @@
 function start_updator(handler_array) {
-    init_channel(handler_array);
-}
-
-function init_channel(handlers) {
-    $.getJSON("channel.json", function(data){reg_channel(data, handlers)});
+    $.getJSON("channel.json", function(data){reg_channel(data, handler_array)});
 }
 
 function ping(){
@@ -18,9 +14,8 @@ function onopen(){
 function reg_channel(chid, handlers) {
     var channel = new goog.appengine.Channel(chid);
     channel.open({"onmessage": function(data){process_update(data, handlers)}
-	    , "onerror": process_error
-		  , "onopen": onopen 
-		  , "onclose": function(){}})
+	    , "onerror":  function(){start_updator(handlers);}
+	    , "onopen": onopen, "onclose": function(){start_updator(handlers);}})
 }
 
 function process_error(e) {
