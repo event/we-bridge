@@ -168,9 +168,14 @@ function process_move(v) {
 	$("#" + trick + "_tricks").text(trick_inc);
     }
 
-
     $(card_div_id).remove();
-    $(lead_div_id).append(create_card(side, card).css({"z-index": lead_count, "left": 0}));
+    var topv = 0;
+    var sidedif = Math.abs(my_side - $.inArray(side, sides));
+    if (sidedif == 3) {
+	sidedif = 1;
+    }
+    topv += sidedif * 5;
+    $(lead_div_id).append(create_card(side, card).css({"z-index": lead_count, "left": 0, "top": topv+"px"}));
     lead_count += 1;
     var np;
     if (v.next != null) {
@@ -318,7 +323,7 @@ function end_play(v) {
     $("#lead_area").addClass("hidden");
     $("#contract,#contract_by,.tricks").html("");
     $("#bidding_area tr:gt(1)").remove();
-    $("#bidding_area tr td").text("").RemoveBubblePopup();
+    $("#bidding_area tr td").text("").RemoveBubblePopup().removeClass("alertBid");
     $("#alert_text").removeClass("hidden");
     $(".hand_container").children().remove();
     $(".hand_container").append($("<img src='images/back.png' class='hand_mock'></img>"));
