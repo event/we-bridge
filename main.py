@@ -15,11 +15,12 @@
 # along with Webridge.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import inspect #TODO: remove
 import random
 import string
 import math
 
+from google.appengine.dist import use_library
+use_library('django', '1.2')
 from google.appengine.api import users, channel
 from google.appengine.ext import webapp, db
 from google.appengine.ext.webapp import util, template
