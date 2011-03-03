@@ -18,6 +18,8 @@ import logging
 import inspect
 from urllib import unquote
 
+from google.appengine.dist import use_library
+use_library('django', '1.2')
 from google.appengine.api import users
 from google.appengine.ext import db
 from django.utils  import simplejson as json
