@@ -280,3 +280,11 @@ div.popup {
     color: red;
 }
 
+div#claim_area a {
+    float: right;
+    margin-top: -10%;
+}
+
+div#claim_area a:visited {
+    color: blue;
+}

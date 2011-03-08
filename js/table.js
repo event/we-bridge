@@ -274,7 +274,14 @@ function kick_play(v) {
 	cntrct_html = contract[0] + "NT";
     }
     $("#contract").html(cntrct_html);
-    $("#contract_by").text(" by " + contract.substr(contract.length - 1))
+    var decl = contract.substr(contract.length - 1);
+    $("#contract_by").text(" by " + decl);
+    if (my_side == $.inArray(decl, sides)) {
+	$("#claim_area").removeClass("hidden");
+	var link = $("#claim_area a");
+	link.CreateBubblePopup({selectable: true, themePath: "images/popup-themes", themeName: "azure"});
+	link.FreezeBubblePopup();
+    }
 }
 
 function highlight_for_move(event) {
@@ -323,8 +330,9 @@ function end_play(v) {
     $("#lead_area").addClass("hidden");
     $("#contract,#contract_by,.tricks").html("");
     $("#bidding_area tr:gt(1)").remove();
-    $("#bidding_area tr td").text("").RemoveBubblePopup().removeClass("alertBid");
+    $("#bidding_area tr td").text("").removeClass("alertBid").RemoveBubblePopup();
     $("#alert_text").removeClass("hidden");
+    $("#claim_area").addClass("hidden");
     $(".hand_container").children().remove();
     $(".hand_container").append($("<img src='images/back.png' class='hand_mock'></img>"));
     $(".bidbox_bid,.bidbox_pass,.bidbox_dbl,.bidbox_rdbl")
@@ -384,4 +392,59 @@ function handle_table_chat_message(v) {
     if (wid != $("." + sides[(my_side + 2) % 4] + "_user").text()) {
 	handle_chat_message(v);
     }
+}
+
+function do_claim() {
+    window.alert($("#claim_select").val());
+    var link =  $("#claim_area a");
+    link.HideBubblePopup();
+    link.FreezeBubblePopup();
+}
+
+function cancel_claim() {
+    var link =  $("#claim_area a");
+    link.HideBubblePopup();
+    link.FreezeBubblePopup();
+}
+
+function get_tricks(trick_elem){
+    var s = trick_elem.text();
+    if (s.length == 0) {
+	return 0;
+    } else {
+	return parseInt(s);
+    }
+    
+}
+
+function show_claim_opts() {
+    var our_tricks = get_tricks($(".our_tricks"));
+    var our_max = 13 - get_tricks($(".their_tricks"));
+    var just_made = parseInt($("#contract").text()[0]) + 6;
+    var opts = [];
+    for (var i = our_tricks; i <= our_max; i += 1) {
+	opts.push("<option value='" + i + "'>" + i + " tricks</option>");
+    }
+    if (just_made > our_tricks) { // not made yet
+	if (just_made < our_max) { // have chances
+	    opts[just_made - our_tricks] = "<option value='" + just_made + "' selected>" + just_made 
+		+ " tricks</option>"; //just made is default
+	} else { // lost already
+	    opts[opts.length - 1] = "<option value='" + our_max + "' selected>" + our_max
+		+ " tricks</option>"; //minimum loose is default
+	}
+    } else { // made
+	    opts[0] = "<option value='" + our_tricks + "' selected>" + our_tricks
+		+ " tricks</option>"; //minimum overtricks is default
+    }
+    var claimContent = "<select id='claim_select'>" + opts.join("") + "</select>"
+	+ "<br/><input type='button' value='OK' onclick='do_claim()' />"
+	+ "<input type='button' value='Cancel' onclick='cancel_claim()'/>";
+    var link = $("#claim_area a");
+    if (link.IsBubblePopupOpen()) {
+	return;
+    }
+    link.SetBubblePopupInnerHtml(claimContent);
+    link.ShowBubblePopup();
+    link.FreezeBubblePopup();
 }

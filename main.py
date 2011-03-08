@@ -25,6 +25,7 @@ from google.appengine.api import users, channel
 from google.appengine.ext import webapp, db
 from google.appengine.ext.webapp import util, template
 from django.utils  import simplejson as json
+from django.utils.safestring import SafeString
 
 import bridge
 import actions
@@ -262,11 +263,11 @@ def nick_or_empty(umap, tid, side, cur_user):
     if umap.has_key(side) :
         user = umap[side]
         if user == cur_user:
-            return "<a href=table.html?%s/%s>%s</a>" % (tid, side, user.nickname())
+            return SafeString("<a href=\"table.html?%s/%s\">%s</a>" % (tid, side, user.nickname()))
         else :
             return user.nickname()
     else :
-        return "<a href=table.html?%s/%s>take a sit</a>" % (tid, side)
+        return SafeString("<a href=\"table.html?%s/%s\">take a sit</a>" % (tid, side))
 
 def show_all_tables(cur_user) :
     res = []
@@ -343,7 +344,7 @@ class ProtocolHandler(BaseHandler) :
 
 
 class CronHandler(BaseHandler) :
-    TIME_LIMIT_SECS = 1
+    TIME_LIMIT_SECS = 300
     def do(self, prof, toput) :
         args = arguments(self.request)
         cmd = args[0]
