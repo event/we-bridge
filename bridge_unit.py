@@ -103,12 +103,14 @@ class CheckContractCalc(unittest.TestCase) :
         self.assertEquals(('1C', 0), bridge.get_contract_and_declearer(['1C', 'pass', 'pass', 'pass']))
         self.assertEquals(('2S', 3), bridge.get_contract_and_declearer(['pass', 'pass', 'pass', '2S'\
                                                                             , 'pass', 'pass', 'pass']))
+        self.assertEquals(('3Z', 0), bridge.get_contract_and_declearer(['1Z', 'pass', '3Z', 'pass'\
+                                                                            , 'pass', 'pass']))
 
     def test_w_doubles(self):
         self.assertEquals(('1Cd', 0), bridge.get_contract_and_declearer(['1C', 'pass', 'pass', 'dbl' \
                                                                              , 'pass', 'pass', 'pass']))
 
-        self.assertEquals(('2Sr', 3), bridge.get_contract_and_declearer(['1C', '1S', 'pass', '2S'\
+        self.assertEquals(('2Sr', 1), bridge.get_contract_and_declearer(['1C', '1S', 'pass', '2S'\
                                                                              , 'dbl', 'rdbl', 'pass' \
                                                                              , 'pass', 'pass']))
 

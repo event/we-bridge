@@ -99,8 +99,13 @@ def get_contract_and_declearer(bidding) :
     # some try-catch could be here to handle erroneous bidding
     while bidding[i] in SPECIAL_BIDS :
         i -= 1
-
-    return bidding[i] + dbl, i % 4
+    contract = bidding[i]
+    suit = contract[1]
+    decl =  i % 2
+    while bidding[decl][1] != suit :
+        decl += 2
+    
+    return contract + dbl, decl
 
 
 def is_value_bid(bid) :
