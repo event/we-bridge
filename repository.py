@@ -74,7 +74,8 @@ class Protocol(db.Model) :
 class Table(db.Model) :
     protocol = db.ReferenceProperty(Protocol)
     whosmove = db.StringProperty(choices = bridge.SIDES)
-    
+    claim = db.StringProperty()
+
     def nextmove(self) :
         self.whosmove = bridge.SIDES[(bridge.SIDES.index(self.whosmove) + 1) % 4]
     
