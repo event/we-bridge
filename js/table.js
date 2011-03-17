@@ -395,10 +395,12 @@ function handle_table_chat_message(v) {
 }
 
 function do_claim() {
-    window.alert($("#claim_select").val());
+    trick_cnt = $("#claim_select").val();
     var link =  $("#claim_area a");
     link.HideBubblePopup();
     link.FreezeBubblePopup();
+    var url = "action.json?claim/" + tid + "/" + side + "/" + trick_cnt;
+    $.post(url);
 }
 
 function cancel_claim() {

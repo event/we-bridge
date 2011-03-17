@@ -138,7 +138,7 @@ def current_table_state(user, place, table, allow_moves=True) :
 
     if place == dummy_side :
         messages.append(m('hand', cards = actions.hand_left(deal.hand_by_side(decl_side), moves)
-                          , side = bridge.partner_side(place)))
+                          , side = decl_side))
     elif len(moves) > 0 or  decl_side == place:
         messages.append(m('hand', cards = actions.hand_left(deal.hand_by_side(dummy_side), moves)
                           , side = dummy_side))
@@ -192,8 +192,18 @@ def current_table_state(user, place, table, allow_moves=True) :
             messages[-1]['value']['allowed'] = currnd[0] / 13 
         else :
             messages[-1]['value']['allowed'] = 'any'
-            
-    return messages
+    if table.claim is None :
+        return messages
+    tricks_s = table.claim[:2]
+    tricks = int(table.claim[:2])
+    claim_side = table.claim[2]
+    claim_res = bridge.tricks_to_result(c, deal.vulnerability, tricks)
+    messages.append(m('claim', side=claim_side, tricks=tricks_s, result=claim_res))
+    if bridge.relation_idx(claim_side, place) % 2 == 1 : #opponent claim
+        messages.append(m('hand', cards=actions.hand_left(deal.hand_by_side(claim_side), moves), side=claim_side))
+        part_side = bridge.SIDES[part_idx]
+        messages.append(m('hand', cards=actions.hand_left(deal.hand_by_side(part_side), moves), side=part_side))
+    messages.append()
                       
 def htmltable(user, place, tid) :
     values = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
