@@ -8,7 +8,7 @@ var my_side;
 var tid;
 var ind_int = window.setInterval(function(){}, 9999);
 var first_deal = true;
-
+var claim_popup_positions = ["top", "right", "bottom", "left"];
 var update_handlers = new Array();
 update_handlers["move"] = process_move;
 update_handlers["bid"] = process_bid;
@@ -21,6 +21,8 @@ update_handlers["start.play"] = kick_play;
 update_handlers["end.play"] = end_play;
 update_handlers["chat.add"] = handle_chat_add;
 update_handlers["chat.message"] = handle_table_chat_message;
+update_handlers["claim"] = process_claim;
+update_handlers["claim.decline"] = process_claim_decline;
 
 function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
@@ -333,6 +335,7 @@ function end_play(v) {
     $("#bidding_area tr td").text("").removeClass("alertBid").RemoveBubblePopup();
     $("#alert_text").removeClass("hidden");
     $("#claim_area").addClass("hidden");
+    $(".hand_container").RemoveBubblePopup();
     $(".hand_container").children().remove();
     $(".hand_container").append($("<img src='images/back.png' class='hand_mock'></img>"));
     $(".bidbox_bid,.bidbox_pass,.bidbox_dbl,.bidbox_rdbl")
@@ -449,4 +452,36 @@ function show_claim_opts() {
     link.SetBubblePopupInnerHtml(claimContent);
     link.ShowBubblePopup();
     link.FreezeBubblePopup();
+}
+
+function answer_claim(answer) {
+    var url = "action.json?claim.answer/" + tid + "/" + sides[my_side] + "/" + answer;
+    $.post(url);
+}
+
+function process_claim(v) {
+    var side = v.side;
+    var tricks = v.tricks;
+    var res = v.result;
+    var res_str;
+    if (res > 0) {
+	res_str = "+" + res;
+    } else {
+	res_str = "" + res;
+    }
+    var pos_idx = ($.inArray(side, sides) - my_side + 4) % 4;
+    var html = "I claim <b>" + tricks + "</b> tricks<br/>resulting in " + res_str + " points<br/>";
+    if (pos_idx % 2 == 1) {
+	html += "<input type='button' value='Accept' onclick='answer_claim(1)' />"
+	+ "<input type='button' value='Decline' onclick='answer_claim(0)'/>";
+    }
+    var hand = $("#" + side + "_hand");
+    hand.CreateBubblePopup({innerHtml: html, selectable: true, themePath: "images/popup-themes"
+		, themeName: "azure", align: "center", position: claim_popup_positions[pos_idx]});
+    hand.ShowBubblePopup();
+    hand.FreezeBubblePopup();
+}
+
+function process_claim_decline(v) {
+    $(".hand_container").RemoveBubblePopup();
 }
