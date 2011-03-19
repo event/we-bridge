@@ -274,7 +274,7 @@ def do_claim(prof, toput, tid, side, tricks_s) :
         logging.warn('%s@%s/%s tries to claim %s while not in position to', prof.user, tid, side, tricks_s)
         return
 
-    if table.claim is not None and table.claim != 'REJ' :
+    if table.claim is not None and not table.claim.startswith('00') :
         logging.warn('%s@%s/%s tries to claim %s while other claim in progress', prof.user, tid, side)
         return
         
@@ -312,18 +312,18 @@ def answer_claim(prof, toput, tid, side, answer) :
         logging.warn('%s @%s/%s tries to answer absent claim', prof.user, tid, side)
         return
     proto = table.protocol
-    if table.user_by_side(side) != prof :
-        logger.warn('User %s answering claim for %s@%s/%s', prof.user, table.user_by_side(side), tid, side)
+    if table.user_by_side(side) != prof.user :
+        logging.warn('User %s answering claim for %s@%s/%s', prof.user, table.user_by_side(side), tid, side)
         return 
 
-    if bridge.relation_idx(bridproto.contract[-1], side) % 2 == 0 :
-        logger.warn('User %s@%s/%s answering claim being part of claimant or claimant himself'
+    if bridge.relation_idx(proto.contract[-1], side) % 2 == 0 :
+        logging.warn('User %s@%s/%s answering claim being part of claimant or claimant himself'
                     , prof.user, tid, side)
         return
 
     toput.append(table)
     if answer == '0' : # declined
-        table.claim = 'REJ'
+        table.claim = '00' + table.claim[2]
         table.broadcast(m('claim.decline'))
         return
     if not table.claim.endswith(bridge.partner_side(side)) : #partner didn't yet answered

@@ -192,11 +192,13 @@ def current_table_state(user, place, table, allow_moves=True) :
                 messages[-1]['value']['allowed'] = 'any'
     if table.claim is None :
         return messages
+
     tricks_s = table.claim[:2]
     tricks = int(table.claim[:2])
     claim_side = table.claim[2]
-    claim_res = bridge.tricks_to_result(c, deal.vulnerability, tricks)
-    messages.append(m('claim', side=claim_side, tricks=tricks_s, result=claim_res))
+    if tricks > 0 :
+        claim_res = bridge.tricks_to_result(c, deal.vulnerability, tricks)
+        messages.append(m('claim', side=claim_side, tricks=tricks_s, result=claim_res))
     if bridge.relation_idx(claim_side, place) % 2 == 1 : #opponent claim
         part_side = bridge.SIDES[part_idx]
         messages.append(m('hand', cards=actions.hand_left(deal.hand_by_side(claim_side), moves), side=claim_side))
