@@ -268,18 +268,18 @@ def do_claim(prof, toput, tid, side, tricks_s) :
     decl = proto.contract[2]
     umap = table.usermap()
     if decl != side or umap[side] != prof.user :
-        logger.warn('%s@%s/%s tries to claim %s while not in position to', prof.user, tid, side, tricks_s)
+        logging.warn('%s@%s/%s tries to claim %s while not in position to', prof.user, tid, side, tricks_s)
         return
 
     if table.claim is not None :
-        logger.warn('%s@%s/%s tries to claim %s while other claim in progress', prof.user, tid, side)
+        logging.warn('%s@%s/%s tries to claim %s while other claim in progress', prof.user, tid, side)
         return
         
     decl_tricks = bridge.decl_tricks_and_next_move_offset(proto.moves, proto.contract[1])[0]
     defender_tricks = (len(proto.moves) / 4) - decl_tricks
     tricks = int(tricks_s)
-    if tricks > 13 - defender_tricks || tricks < decl_tricks :
-        logger.warn('%s@%s/%s tries to claim %s while %s:%s could be taken'
+    if tricks > 13 - defender_tricks or tricks < decl_tricks :
+        logging.warn('%s@%s/%s tries to claim %s while %s:%s could be taken'
                     , prof.user, tid, side, tricks_s, decl_tricks, 13 - defender_tricks)
         return
 
@@ -287,18 +287,20 @@ def do_claim(prof, toput, tid, side, tricks_s) :
     toput.append(table)
     deal = proto.deal
     claim_res = bridge.tricks_to_result(proto.contract, deal.vulnerability, tricks)
-    si = SIDES.index(side)
+    si = bridge.SIDES.index(side)
+    claimant_part = bridge.partner_side(side)
     umap.pop(side)
-    umap.pop(bridge.partner_side(side))
+    umap.pop(claimant_part)
     x = umap.items()
     side1, def1 = x[0]
     side2, def2 = x[1]
-    claimant = m('hand', cards=deal.hand_by_side(side), side=side)
     moves = proto.moves
+    common_m = [m('hand', cards=hand_left(deal.hand_by_side(side), moves), side=side)
+                , m('hand', cards=hand_left(deal.hand_by_side(claimant_part), moves), side=claimant_part)]
     toput.append(repo.UserProfile.uenqueue(
-            def1, [claimant, m('hand', cards=actions.hand_left(deal.hand_by_side(side2), moves), side=side2)]))
+            def1, common_m + [m('hand', cards=hand_left(deal.hand_by_side(side2), moves), side=side2)]))
     toput.append(repo.UserProfile.uenqueue(
-            def2, [claimant, m('hand', cards=actions.hand_left(deal.hand_by_side(side1), moves), side=side1)]))
+            def2, common_m + [m('hand', cards=hand_left(deal.hand_by_side(side1), moves), side=side1)]))
     toput.append(table.broadcast(m('claim', side=side, tricks=tricks_s, result=claim_res)))
     
 def answer_claim(prof, toput, tid, side, answer) :
@@ -315,20 +317,18 @@ def answer_claim(prof, toput, tid, side, answer) :
         table.claim += side
         return
     # partner answered, so deal is done
-    proto = table.proto
+    proto = table.protocol
     toput.append(proto)
     deal = proto.deal
     proto.tricks = int(table.claim[:2])
     proto.result = bridge.tricks_to_result(proto.contract, deal.vulnerability, proto.tricks)
     toput.append(table.broadcast(m('end.play', contract = proto.contract.replace('d', 'x').replace('r','xx')\
-                          , declearer = protocol.contract[-1]\
-                          , points = protocol.result\
-                          , tricks = protocol.tricks\
+                          , declearer = proto.contract[-1]\
+                          , points = proto.result\
+                          , tricks = proto.tricks\
                           , protocol_url = 'protocol.html?%s' % deal.key().id())))
     start_new_deal(table)
     
-        
-
 def leave_table(prof, toput, tid) :
     tp = repo.TablePlace.get1(user=prof.user, table=db.Key.from_path('Table', int(tid)))
     if tp is None :
@@ -395,9 +395,6 @@ def chat_message(prof, toput, target, *args) :
                 toput.append(u)
         if put :
             toput.append(prof)
-        
-    
-            
 
 def ping(prof, toput):
     if not prof.connected :

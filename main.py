@@ -54,20 +54,19 @@ class BaseHandler(webapp.RequestHandler) :
         prof = repo.UserProfile.get_or_create(user)
         prof.loggedin = True
         toput = [prof]
-        try :
-            self.do(prof, toput)
-        finally :
-           tc = {}
-           for v in toput :
-               if isinstance(v, list) :
-                   tc.update([(i.key(), i) for i in v])
-               elif v is not None :
-                   if v.is_saved() :
-                       tc[v.key()] = v 
-                   else :
-                       tc[id(v)] = v
-           items = list(tc.values())
-           db.put(items)
+        self.do(prof, toput)
+        logging.debug(toput)
+        tc = {}
+        for v in toput :
+            if isinstance(v, list) :
+                tc.update([(i.key(), i) for i in v])
+            elif v is not None :
+                if v.is_saved() :
+                    tc[v.key()] = v 
+                else :
+                    tc[id(v)] = v
+        items = list(tc.values())
+        db.put(items)
         
 
 class Redirector(BaseHandler) :
@@ -135,63 +134,62 @@ def current_table_state(user, place, table, allow_moves=True) :
     dummy_side = p.dummy() 
     messages.append(m('start.play', contract = c.replace('d', 'x').replace('r','xx') 
                       , lead = (bridge.SIDES.index(c[-1]) + 1) % 4))
-
+    move_done = len(moves) > 0
     if place == dummy_side :
         messages.append(m('hand', cards = actions.hand_left(deal.hand_by_side(decl_side), moves)
                           , side = decl_side))
-    elif len(moves) > 0 or  decl_side == place:
+    elif move_done  or  decl_side == place:
         messages.append(m('hand', cards = actions.hand_left(deal.hand_by_side(dummy_side), moves)
                           , side = dummy_side))
-    if len(moves) == 0 :
-        return messages
-    trump = c[1]
-    full_rounds_played = len(moves) / 4
-    rounds_total = int(math.ceil(float(len(moves)) / 4))
-    decl_tricks, taker = bridge.decl_tricks_and_next_move_offset(moves[:(rounds_total - 2) * 4], trump)
-    cards_to_show = moves[(rounds_total - 2) * 4:]
-    lasttrick, lasttaker = bridge.decl_tricks_and_next_move_offset(cards_to_show, trump)
-    if len(cards_to_show) > 3 :
-        if taker % 2 == 1 :
-            decl_tricks += 2 - (rounds_total - full_rounds_played) - lasttrick
+    if move_done :
+        trump = c[1]
+        full_rounds_played = len(moves) / 4
+        rounds_total = int(math.ceil(float(len(moves)) / 4))
+        decl_tricks, taker = bridge.decl_tricks_and_next_move_offset(moves[:(rounds_total - 2) * 4], trump)
+        cards_to_show = moves[(rounds_total - 2) * 4:]
+        lasttrick, lasttaker = bridge.decl_tricks_and_next_move_offset(cards_to_show, trump)
+        if len(cards_to_show) > 3 :
+            if taker % 2 == 1 :
+                decl_tricks += 2 - (rounds_total - full_rounds_played) - lasttrick
+            else :
+                decl_tricks += lasttrick
+        defen_tricks = full_rounds_played - decl_tricks
+        decl_idx = bridge.SIDES.index(decl_side)
+        if decl_idx % 2 == 0 :
+            ns_t = decl_tricks
+            ew_t = defen_tricks
         else :
-            decl_tricks += lasttrick
-    defen_tricks = full_rounds_played - decl_tricks
-    decl_idx = bridge.SIDES.index(decl_side)
-    if decl_idx % 2 == 0 :
-        ns_t = decl_tricks
-        ew_t = defen_tricks
-    else :
-        ns_t = defen_tricks
-        ew_t = decl_tricks
-    messages.append(m('tricks', NS = ns_t, EW = ew_t))
-    rel_idx = (decl_idx + 1)
-    if len(cards_to_show) > 3 :
-        lastrnd = cards_to_show[:4]
-        lt_base = taker + rel_idx
-        messages += [m('move', card = lastrnd[i], side = bridge.SIDES[(lt_base + i)%4]) for i in xrange(4)]
-        move_offs = bridge.decl_tricks_and_next_move_offset(lastrnd, trump)[1] + taker
-        currnd = cards_to_show[4:]
-    else :
-        currnd = cards_to_show
-        move_offs = taker
-    s = (rel_idx + move_offs) % 4 
-    for card in currnd :
-        messages.append(m('move', card = card, side = bridge.SIDES[s]))
-        s = (s + 1) % 4
-
-    s = bridge.SIDES[(rel_idx + taker + lasttaker) % 4]
-    if s == dummy_side and place == decl_side :
-        messages[-1]['value']['next'] = dummy_side
-        hand = actions.hand_left(deal.hand_by_side(dummy_side), moves)
-        s = decl_side
-    else :
-        messages[-1]['value']['next'] = s
-
-    if allow_moves and s == place: 
-        if rounds_total != full_rounds_played and bridge.has_same_suit(hand, currnd[0]):
-            messages[-1]['value']['allowed'] = currnd[0] / 13 
+            ns_t = defen_tricks
+            ew_t = decl_tricks
+        messages.append(m('tricks', NS = ns_t, EW = ew_t))
+        rel_idx = (decl_idx + 1)
+        if len(cards_to_show) > 3 :
+            lastrnd = cards_to_show[:4]
+            lt_base = taker + rel_idx
+            messages += [m('move', card = lastrnd[i], side = bridge.SIDES[(lt_base + i)%4]) for i in xrange(4)]
+            move_offs = bridge.decl_tricks_and_next_move_offset(lastrnd, trump)[1] + taker
+            currnd = cards_to_show[4:]
         else :
-            messages[-1]['value']['allowed'] = 'any'
+            currnd = cards_to_show
+            move_offs = taker
+        s = (rel_idx + move_offs) % 4 
+        for card in currnd :
+            messages.append(m('move', card = card, side = bridge.SIDES[s]))
+            s = (s + 1) % 4
+
+        s = bridge.SIDES[(rel_idx + taker + lasttaker) % 4]
+        if s == dummy_side and place == decl_side :
+            messages[-1]['value']['next'] = dummy_side
+            hand = actions.hand_left(deal.hand_by_side(dummy_side), moves)
+            s = decl_side
+        else :
+            messages[-1]['value']['next'] = s
+
+        if allow_moves and s == place: 
+            if rounds_total != full_rounds_played and bridge.has_same_suit(hand, currnd[0]):
+                messages[-1]['value']['allowed'] = currnd[0] / 13 
+            else :
+                messages[-1]['value']['allowed'] = 'any'
     if table.claim is None :
         return messages
     tricks_s = table.claim[:2]
@@ -200,10 +198,11 @@ def current_table_state(user, place, table, allow_moves=True) :
     claim_res = bridge.tricks_to_result(c, deal.vulnerability, tricks)
     messages.append(m('claim', side=claim_side, tricks=tricks_s, result=claim_res))
     if bridge.relation_idx(claim_side, place) % 2 == 1 : #opponent claim
-        messages.append(m('hand', cards=actions.hand_left(deal.hand_by_side(claim_side), moves), side=claim_side))
         part_side = bridge.SIDES[part_idx]
+        messages.append(m('hand', cards=actions.hand_left(deal.hand_by_side(claim_side), moves), side=claim_side))
         messages.append(m('hand', cards=actions.hand_left(deal.hand_by_side(part_side), moves), side=part_side))
-    messages.append()
+        messages.append(m('hand', cards=actions.hand_left(deal.hand_by_side(dummy_side), moves), side=dummy_side))
+    return messages
                       
 def htmltable(user, place, tid) :
     values = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])

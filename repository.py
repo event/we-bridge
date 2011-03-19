@@ -111,13 +111,7 @@ class Table(db.Model) :
         return TablePlace.player_q(self).count(4)
 
     def bcast(self, m, q) :
-        res = []
-        for tp in q :
-            p = UserProfile.uenqueue(tp.user, m)
-            if p is not None :
-                res.append(p)
-        return res
-        
+        return UserProfile.uenqueue([tp.user for tp in q], m)
  
     def broadcast(self, m) :
         return self.bcast(m, TablePlace.all().filter('table', self))
