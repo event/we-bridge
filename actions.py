@@ -274,7 +274,7 @@ def do_claim(prof, toput, tid, side, tricks_s) :
         logging.warn('%s@%s/%s tries to claim %s while not in position to', prof.user, tid, side, tricks_s)
         return
 
-    if table.claim is not None :
+    if table.claim is not None and table.claim != 'REJ' :
         logging.warn('%s@%s/%s tries to claim %s while other claim in progress', prof.user, tid, side)
         return
         
@@ -323,7 +323,7 @@ def answer_claim(prof, toput, tid, side, answer) :
 
     toput.append(table)
     if answer == '0' : # declined
-        table.claim = None
+        table.claim = 'REJ'
         table.broadcast(m('claim.decline'))
         return
     if not table.claim.endswith(bridge.partner_side(side)) : #partner didn't yet answered
