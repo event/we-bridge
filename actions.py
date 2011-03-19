@@ -265,6 +265,9 @@ def do_bid(prof, toput, tid, player, bid, alert=None) :
 def do_claim(prof, toput, tid, side, tricks_s) :
     table = repo.Table.get_by_id(int(tid))
     proto = table.protocol
+    if proto.contract is None :
+        logging.warn('%s@%s/%s tries to claim %s while nothing declared', prof.user, tid, side, tricks_s)
+        return
     decl = proto.contract[2]
     umap = table.usermap()
     if decl != side or umap[side] != prof.user :
@@ -308,6 +311,16 @@ def answer_claim(prof, toput, tid, side, answer) :
     if table.claim is None :
         logging.warn('%s @%s/%s tries to answer absent claim', prof.user, tid, side)
         return
+    proto = table.protocol
+    if table.user_by_side(side) != prof :
+        logger.warn('User %s answering claim for %s@%s/%s', prof.user, table.user_by_side(side), tid, side)
+        return 
+
+    if bridge.relation_idx(bridproto.contract[-1], side) % 2 == 0 :
+        logger.warn('User %s@%s/%s answering claim being part of claimant or claimant himself'
+                    , prof.user, tid, side)
+        return
+
     toput.append(table)
     if answer == '0' : # declined
         table.claim = None
@@ -317,7 +330,6 @@ def answer_claim(prof, toput, tid, side, answer) :
         table.claim += side
         return
     # partner answered, so deal is done
-    proto = table.protocol
     toput.append(proto)
     deal = proto.deal
     proto.tricks = int(table.claim[:2])
