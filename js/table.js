@@ -335,7 +335,7 @@ function end_play(v) {
     $("#bidding_area tr td").text("").removeClass("alertBid").RemoveBubblePopup();
     $("#alert_text").removeClass("hidden");
     $("#claim_area").addClass("hidden");
-    $(".hand_container").RemoveBubblePopup();
+    $(".user").RemoveBubblePopup();
     $(".hand_container").children().remove();
     $(".hand_container").append($("<img src='images/back.png' class='hand_mock'></img>"));
     $(".bidbox_bid,.bidbox_pass,.bidbox_dbl,.bidbox_rdbl")
@@ -475,13 +475,13 @@ function process_claim(v) {
 	html += "<input type='button' value='Accept' onclick='answer_claim(1)' />"
 	+ "<input type='button' value='Decline' onclick='answer_claim(0)'/>";
     }
-    var hand = $("#" + side + "_hand");
+    var hand = $("." + side + "_user");
     hand.CreateBubblePopup({innerHtml: html, selectable: true, themePath: "images/popup-themes"
-		, themeName: "azure", align: "center", position: claim_popup_positions[pos_idx]});
+		, themeName: "azure", align: "bottom", position: claim_popup_positions[pos_idx]});
     hand.ShowBubblePopup();
     hand.FreezeBubblePopup();
 }
 
 function process_claim_decline(v) {
-    $(".hand_container").RemoveBubblePopup();
+    $(".user").RemoveBubblePopup();
 }
