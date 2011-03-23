@@ -132,8 +132,11 @@ function remove_chat(wid) {
     var rooms = JSON.parse($.cookie("we-chat-rooms"));
     var messages = JSON.parse($.cookie("we-chat"));
     var roomidx = 0;
-    while (rooms[roomidx].wid != wid) {
+    while (roomidx < rooms.length && rooms[roomidx].wid != wid) {
 	roomidx += 1;
+    }
+    if (roomidx == rooms.length) {
+	return;
     }
     var newmessages = [];
     var prefix = "" + roomidx + ".";

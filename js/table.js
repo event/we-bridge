@@ -28,8 +28,14 @@ function on_body_load() {
     $("body").ajaxError(ajaxErrorHandler);
     parse_params();
     start_updator(update_handlers);
-    $("#table").data("wid", "table_" + tid);
+    var chat_wid = "table_" + tid;
+    $("#table").data("wid", chat_wid);
     init_chat();
+    var other_table_room = $(".room").filter(function(idx){return $(this).data("wid").indexOf("table_") == 0 
+							   && $(this).data("wid") != chat_wid;});
+    if (other_table_room != null) {
+	remove_chat(other_table_room.data("wid"));
+    }
     $("#alert_text").width($("#bidbox").width());
     $("#popup_res").text("Waiting for partners");
     $(".popup").bPopup();
