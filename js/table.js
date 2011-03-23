@@ -332,7 +332,7 @@ function end_play(v) {
     $("#lead_area").addClass("hidden");
     $("#contract,#contract_by,.tricks").html("");
     $("#bidding_area tr:gt(1)").remove();
-    $("#bidding_area tr td").text("").removeClass("alertBid").RemoveBubblePopup();
+    $("#bidding_area tr td").text("").removeClass("alert_bid").RemoveBubblePopup();
     $("#alert_text").removeClass("hidden");
     $("#claim_area").addClass("hidden");
     $(".user").RemoveBubblePopup();
