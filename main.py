@@ -229,8 +229,7 @@ class TableHandler(BaseHandler) :
             t = repo.Table()
             t.N = user
             ident = t.put().id()
-            repo.UserProfile.broadcast([m('table.add', tid=ident)
-                                        , m('player.sit', tid = ident, position = 'N', name = user.nickname())])
+            repo.UserProfile.broadcast(m('table.add', tid=ident))
             self.redirect('table.html?%s/N' % ident)
         else :
             prof.connected = False
@@ -246,8 +245,9 @@ class TableHandler(BaseHandler) :
                 if current is None :
                     nick = user.nickname()
                     mes = m('player.sit', tid = tid, position = place, name = nick)
-                    toput.append(repo.UserProfile.broadcast(mes))
+                    toput.append(repo.UserProfile.broadcast(mes, user))
                     prof.enqueue(current_table_state(user, place, table))
+                    prof.enqueue(mes)
                     toput.append(table.sit(place, user))
                     if table.pcount() == 3 and table.protocol is None :
                         umap = table.usermap()
