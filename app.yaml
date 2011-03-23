@@ -13,10 +13,6 @@ handlers:
 - url: /images
   static_dir: images
 
-- url: /cron.html
-  script: main.py
-  login: admin
-
 - url: /favicon.ico
   static_files: images/favicon.ico
   upload: images/favicon.ico
