@@ -416,8 +416,9 @@ def ping(prof, toput):
 def usernames(prof, toput, query):
     # MAYBE list of online users should be maintained in memcache
     profiles = repo.UserProfile.gql(
-        'WHERE loggedin = True AND user >= USER(:1) AND user <= USER(:2)', query, query + 'z') \
-        .fetch(10)
+        'WHERE loggedin = True AND user >= USER(:1) AND user <= USER(:2) AND user != :3'\
+            , query, query + 'z', prof.user) \
+            .fetch(10)
         
     return lambda x: x.response.out.write(json.dumps([p.user.nickname() for p in profiles]))
 
