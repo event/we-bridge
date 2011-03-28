@@ -30,6 +30,7 @@ function init_chat() {
 	$.cookie("we-chat-rooms", JSON.stringify(rooms))
     }
     var messages = JSON.parse($.cookie("we-chat"), rooms);
+    $(".user").bind("dblclick", onuserclick);
     if (messages == null) {
 	return;
     }
@@ -102,6 +103,13 @@ function onenter(e){
 }
 
 function add_chat(wid, title, open){
+    var room = $(".room").filter(function(idx){return $(this).data("wid") == wid});
+    if (room.length > 0) {
+	if (!room.find("div").is(":visible") && open) {
+	    room.find("a").click();
+	}
+	return;
+    }
     var ta = $("<textarea></textarea>").attr("rows", "1").bind("keypress", onenter)
 	.bind("click", stop_propagation);
     var d = $("<div></div>").addClass("roompanel")
@@ -148,6 +156,15 @@ function remove_chat(wid) {
     }
     $.cookie("we-chat", JSON.stringify(newmessages));
     $(".room").filter(function(idx){return $(this).data("wid") == wid}).remove();
+}
+
+function onuserclick() {
+    var uname = $(this).text();
+    var wid = uname;
+    if (wid.indexOf("@") < 0) {
+	wid += "@gmail.com";
+    }
+    add_chat(wid, uname, true);
 }
 
 function stop_propagation(e) { 

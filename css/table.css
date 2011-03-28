@@ -109,6 +109,7 @@ body {
 
 .user {
     text-align: center;
+    cursor: default;
 }
 
 #lead_area{
