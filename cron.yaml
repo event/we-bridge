@@ -1,4 +1,4 @@
 cron:
 - description: logoff inactive users
   url: /cron.html?logoff
-  schedule: every 5 minutes
+  schedule: every 10 minutes
