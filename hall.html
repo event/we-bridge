@@ -36,19 +36,19 @@
       <button onclick="add_new_table()">New<br/>Table</button>
       <table id="table_list">
 	<tr class="table">
-	  <th class="player">N</th>
-	  <th class="player">S</th>
-	  <th class="player">E</th>
-	  <th class="player">W</th>
-	  <th class="player">Kibitz</th>
+	  <th class="user">N</th>
+	  <th class="user">S</th>
+	  <th class="user">E</th>
+	  <th class="user">W</th>
+	  <th class="user">Kibitz</th>
 	</tr>
 	{% for table in tables %}
 	<tr id="table_{{table.tid}}" class="table">
-	  <td class="player">{{table.N}}</td>
-	  <td class="player">{{table.S}}</td>
-	  <td class="player">{{table.E}}</td>
-	  <td class="player">{{table.W}}</td>
-	  <td class="player"><a href="table.html?{{table.tid}}">{{table.kibcount}}</a></td>
+	  <td class="user">{{table.N}}</td>
+	  <td class="user">{{table.S}}</td>
+	  <td class="user">{{table.E}}</td>
+	  <td class="user">{{table.W}}</td>
+	  <td class="user"><a href="table.html?{{table.tid}}">{{table.kibcount}}</a></td>
 	</tr>
 	{% endfor %}
       </table>
