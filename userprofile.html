@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+  <head>
+    <title>Webridge</title>
+    <link rel="stylesheet" type="text/css" href="css/userprofile.css"/>
+    <meta http-equiv="vary" content="*"></meta>
+    <meta http-equiv="cache-control" content="no-store"></meta>
+  <body>
+    <a href="hall.html"><img class="logo" src="images/logo.png" alt="We-bridge"></img></a>
+    
+    <span id="user_header">
+      {{username}}
+      <a href="action.json?logoff">Log out</a>
+    </span>
+    
+    <form method="POST" action="userprofile.html" id="profile_form">
+      <div>Name <small>(visible to other players)</small><br/><input type="text" name="name"></div> </div>
+      <div>Bridge Preference <small>(enter your bidding and play preferences)</small><br/>
+	<textarea name="bridgepref"></textarea> </div>
+      <div>Name<br/><input type="text" name="name"></div>
+      <div>Name<br/><input type="text" name="name"></div>
+      <div>Name<br/><input type="text" name="name"></div>
+    </form>
+    <div id="footpanel">
+      <span class="room" id="users"> 
+        <a href="#" class="roomname">Users</a> 
+        <div class="roompanel"> 
+          <h3>Users</h3> 
+          <ul> 
+	    <li>Type in user name</li>
+	  </ul> 
+	  <textarea rows="1"></textarea>
+	</div> 
+      </span>
+      <span class="room" id="global">
+        <a href="#" class="roomname">Global</a>
+        <div class="roompanel">
+          <h3>Global</h3>
+          <ul>
+          </ul>
+	  <textarea rows="1"></textarea>
+        </div>
+      </span>
+    </div>
+  </body>
+</html>
