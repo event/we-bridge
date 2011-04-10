@@ -17,10 +17,6 @@ handlers:
   static_files: images/favicon.ico
   upload: images/favicon.ico
 
-- url: /cron.html.*
-  script: main.py
-  login: admin
-
 - url: /.*
   script: main.py
 

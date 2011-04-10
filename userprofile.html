@@ -15,12 +15,22 @@
     </span>
     
     <form method="POST" action="userprofile.html" id="profile_form">
-      <div>Name <small>(visible to other players)</small><br/><input type="text" name="name"></div> </div>
-      <div>Bridge Preference <small>(enter your bidding and play preferences)</small><br/>
-	<textarea name="bridgepref"></textarea> </div>
-      <div>Name<br/><input type="text" name="name"></div>
-      <div>Name<br/><input type="text" name="name"></div>
-      <div>Name<br/><input type="text" name="name"></div>
+      <div>Name <small>(visible to other players)</small><br/><input type="text" name="name"> </input>
+      </div>
+      <div>Bridge Preference <small>(please enter your bidding and play preferences)</small><br/>
+	<textarea name="bridgepref" cols="50" rows="10"></textarea> 
+      </div>
+      <div><input type="checkbox" name="1ton_autoplay"> </input>Autoplay Singletons</div>
+      <h3>Social networking</h3>
+      <div><img src="images/skype_logo.png" alt="skype" style="width: 100px; height: 40px;"/> 
+	<br/><input type="text" name="skypeid"> </input>
+      </div>
+      <div><img src="images/f_logo.jpg" style="width: 16px; height: 16px;"/> profile page <br/>
+	<input type="text" name="facebookid"> </input> 
+      </div>
+      <div><img src="images/twitter_logo.png" alt="twitter" style="width: 150px; height: 30px;"/> <br/>
+	<input type="text" name="twitterid"> </input>
+      </div>
     </form>
     <div id="footpanel">
       <span class="room" id="users"> 

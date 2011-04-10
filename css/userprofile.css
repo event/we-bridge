@@ -19,26 +19,14 @@ body {
     overflow: auto;
 }
 
-#hall_holder button {
-    float: right; 
-    width: 90px;
+#profile_form div{
+    margin: 6px auto;
+    width: 50%;
 }
 
-#table_list {
-    width:90%;
-    margin:4px;
-    font-weight:bold;
-    background-color:gray;
-    text-align: center; 
-    border-collapse: collapse;
-}
-
-button {
-    margin-left: 4px;
-}
-
-.table {
-    width:90%;
+#profile_form h3{
+    margin: 20px auto 6px auto;
+    width: 50%;
 }
 
 .user {
@@ -58,15 +46,4 @@ button {
     padding-right: 3%;
     padding-bottom: 1%;
 }
-
-.copyright{
-    text-align: left;
-    color: grey;
-    font-size: small;
-}
-
-.copyright a{
-    color: grey;
-}
-
 
