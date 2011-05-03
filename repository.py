@@ -153,7 +153,13 @@ class UserProfile(db.Model) :
     connected = db.BooleanProperty()
     messages = db.StringListProperty()
     lastact = db.DateTimeProperty(auto_now = True)
-
+    nickname = db.StringProperty(default='')
+    bridgeinfo = db.StringProperty(default='')
+    autosingleton = db.BooleanProperty(default=False)
+    skypeid = db.StringProperty(default='')
+    facebookid = db.StringProperty(default='')
+    twitterid = db.StringProperty(default='')
+    
     # MAYBE time consuming, optimize using background task
     @staticmethod
     def broadcast(m, exclude = None) :          

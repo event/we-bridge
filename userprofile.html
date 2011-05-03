@@ -10,27 +10,40 @@
     <a href="hall.html"><img class="logo" src="images/logo.png" alt="We-bridge"></img></a>
     
     <span id="user_header">
-      {{username}}
+      {{p.user}}
       <a href="action.json?logoff">Log out</a>
     </span>
     
-    <form method="POST" action="userprofile.html" id="profile_form">
-      <div>Name <small>(visible to other players)</small><br/><input type="text" name="name"> </input>
+    <form method="POST" action="userprofile.html?{{username}}" id="profile_form">
+      <div>Name <small>(visible to other players)</small><br/>
+	<input type="text" name="name" value="{{p.nickname}}"{% if ro %} disabled="disabled" {% endif %} ></input>
       </div>
       <div>Bridge Preference <small>(please enter your bidding and play preferences)</small><br/>
-	<textarea name="bridgepref" cols="50" rows="10"></textarea> 
+	<textarea name="bridgepref" cols="50" rows="10" {% if ro %} disabled="disabled" {% endif %}>
+	  {{p.brigeinfo}}</textarea> 
       </div>
-      <div><input type="checkbox" name="1ton_autoplay"> </input>Autoplay Singletons</div>
-      <h3>Social networking</h3>
+      {% if not ro %}
+      <div><input type="checkbox" name="1ton_autoplay" {% if p.autosingleton %} checked="checked" {% endif %}> 
+	</input>Autoplay Singletons</div>
+      {% endif %}
+      <h3>Social</h3>
       <div><img src="images/skype_logo.png" alt="skype" style="width: 100px; height: 40px;"/> 
-	<br/><input type="text" name="skypeid"> </input>
+	<br/><input type="text" name="skypeid" value="{{p.skypeid}}" {% if ro %} disabled="disabled" {% endif %}>
+	</input>
       </div>
-      <div><img src="images/f_logo.jpg" style="width: 16px; height: 16px;"/> profile page <br/>
-	<input type="text" name="facebookid"> </input> 
+      <div><img src="images/f_logo.jpg" style="vertical-align: middle; width: 16px; height: 16px;"/> profile <br/>
+	<input type="text" name="facebookid" value="{{p.facebookid}}" {% if ro %} disabled="disabled" {% endif %}>
+	</input> 
       </div>
       <div><img src="images/twitter_logo.png" alt="twitter" style="width: 150px; height: 30px;"/> <br/>
-	<input type="text" name="twitterid"> </input>
+	<input type="text" name="twitterid"  value="{{p.twitterid}}" {% if ro %} disabled="disabled" {% endif %}>
+	</input>
       </div>
+      {% if not ro %}
+      <div>
+	<input type="submit" title="Submit"/> <input type="reset" title="Cancel"/>
+      </div>
+      {% endif %}
     </form>
     <div id="footpanel">
       <span class="room" id="users"> 

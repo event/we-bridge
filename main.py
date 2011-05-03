@@ -67,7 +67,9 @@ class BaseHandler(webapp.RequestHandler) :
                     tc[id(v)] = v
         items = list(tc.values())
         db.put(items)
-        
+
+    def do(self, prof, toput) :
+        raise NotImplementedError('Implement!')
 
 class Redirector(BaseHandler) :
     def do(self, *args) :
@@ -338,7 +340,7 @@ def protocol2map(curuser, p) :
 class ProtocolHandler(BaseHandler) :
     
     def do(self, prof, toput):
-        page = self.request.path[1:]
+        page = 'protocol.html'
         dealid = int(self.request.query_string)
         deal = repo.Deal.get_by_id(dealid)
         hands = map(bridge.split_by_suits, [deal.N, deal.E, deal.S, deal.W])
@@ -352,6 +354,30 @@ class ProtocolHandler(BaseHandler) :
                   , 'records': map(lambda x: protocol2map(prof.user, x), protoiter)}
         values.update(h_val)
         self.response.out.write(template.render(page, values))
+
+
+class ProfileHandler(BaseHandler) :
+
+    def do(self, prof, toput):
+        args = arguments(self.request)
+        page = 'userprofile.html'
+        if self.request.method == 'GET' :
+            self.response.out.write(template.render(page, {'p': prof
+                                                           , 'ro': args[0] != prof.user.nickname()
+                                                           , 'username': args[0]}))
+        elif self.request.method == 'POST' :
+            if prof.user.nickname() != args[0] :
+                self.response.out.write(template.render(page, {'p': prof, 'ro': True}))
+                return
+            toput.append(prof)
+            prof.nickname = self.request.headers['name']
+            prof.bridgeinfo = self.request.headers['bridgepref']
+            prof.autosingleton = self.request.headers['1ton_autoplay']
+            prof.skypeid = self.request.headers['skypeid']
+            prof.facebookid = self.request.headers['facebookid']
+            prof.twitterid = self.request.headers['twitterid']
+            self.response.out.write(template.render(page, {'p': prof, 'ro': False}))
+            
 
 
 class CronHandler(BaseHandler) :
@@ -374,6 +400,7 @@ def main():
                                           , ('/hall.html', HallHandler)
                                           , ('/table.html', TableHandler)
                                           , ('/protocol.html', ProtocolHandler)
+                                          , ('/userprofile.html', ProfileHandler)
                                           , ('/channel.json', ChannelHandler)
                                           , ('/action.json', ActionHandler)],
                                          debug=True)
