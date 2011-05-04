@@ -180,11 +180,19 @@ class UserProfile(db.Model) :
 
     @staticmethod
     def get_or_create(user) :
-        res = UserProfile.gql('WHERE user = :1', user).get()
+        res = UserProfile.get(user)
         if res is None :
             res = UserProfile(user = user)
             res.put()
         return res
+            
+    @staticmethod
+    def get(user) :
+        if isinstance(user, users.User) :
+            return UserProfile.gql('WHERE user = :1', user).get()
+        elif isinstance(user, str) : 
+            return UserProfile.gql('WHERE user = USER(:1)', user).get()
+           
             
     def enqueue(self, m) :
         if not self.loggedin :

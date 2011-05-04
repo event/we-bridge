@@ -362,21 +362,26 @@ class ProfileHandler(BaseHandler) :
         args = arguments(self.request)
         page = 'userprofile.html'
         if self.request.method == 'GET' :
-            self.response.out.write(template.render(page, {'p': prof
-                                                           , 'ro': args[0] != prof.user.nickname()
-                                                           , 'username': args[0]}))
+            p = repo.UserProfile.get(args[0])
+            if p is None :
+                self.redirect('hall.html')
+            else :
+                self.response.out.write(template.render(page, {'p': p
+                                                               , 'ro': args[0] != prof.user.nickname()
+                                                               , 'username': args[0]}))
         elif self.request.method == 'POST' :
             if prof.user.nickname() != args[0] :
-                self.response.out.write(template.render(page, {'p': prof, 'ro': True}))
+                logging.warn('user %s tried to change other users data', prof.user.nickname())
+                self.redirect('hall.html')
                 return
             toput.append(prof)
-            prof.nickname = self.request.headers['name']
-            prof.bridgeinfo = self.request.headers['bridgepref']
-            prof.autosingleton = self.request.headers['1ton_autoplay']
-            prof.skypeid = self.request.headers['skypeid']
-            prof.facebookid = self.request.headers['facebookid']
-            prof.twitterid = self.request.headers['twitterid']
-            self.response.out.write(template.render(page, {'p': prof, 'ro': False}))
+            prof.nickname = self.request.get('name')
+            prof.bridgeinfo = self.request.get('bridgepref')
+            prof.autosingleton = self.request.get('1ton_autoplay') == 'on'
+            prof.skypeid = self.request.get('skypeid')
+            prof.facebookid = self.request.get('facebookid')
+            prof.twitterid = self.request.get('twitterid')
+            self.response.out.write(template.render(page, {'p': prof, 'ro': False, 'username': args[0]}))
             
 
 

@@ -19,8 +19,7 @@
 	<input type="text" name="name" value="{{p.nickname}}"{% if ro %} disabled="disabled" {% endif %} ></input>
       </div>
       <div>Bridge Preference <small>(please enter your bidding and play preferences)</small><br/>
-	<textarea name="bridgepref" cols="50" rows="10" {% if ro %} disabled="disabled" {% endif %}>
-	  {{p.brigeinfo}}</textarea> 
+	<textarea name="bridgepref" cols="50" rows="10" {% if ro %} disabled="disabled" {% endif %}>{{p.bridgeinfo}}</textarea> 
       </div>
       {% if not ro %}
       <div><input type="checkbox" name="1ton_autoplay" {% if p.autosingleton %} checked="checked" {% endif %}> 
