@@ -15,6 +15,14 @@ function on_body_load() {
     start_updator(update_handlers);
     window.setInterval(function(){$.post("action.json?ping");}, 2 * 60 * 1000);
     init_chat();
+    init_users();
+}
+
+function init_users() {
+    
+    $(".user").append(
+		      $("<img src='images/menu_arrow.png'").bind("click", show_usermenu)
+		      );
 }
 
 function empty_if_none(player, id, pos) {
