@@ -28,7 +28,7 @@ body {
     width:90%;
     margin:4px;
     font-weight:bold;
-    background-color:gray;
+    background-color:grey;
     text-align: center; 
     border-collapse: collapse;
 }
@@ -67,6 +67,16 @@ button {
 
 .copyright a{
     color: grey;
+}
+
+.popup {
+    position: fixed;
+    z-index: 100;
+    background-color: lightGrey;
+}
+
+.imageButton {
+    cursor: pointer;
 }
 
 

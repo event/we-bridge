@@ -18,11 +18,28 @@ function on_body_load() {
     init_users();
 }
 
+function show_usermenu(evt) {
+    var img = $(evt.target);
+    var popup = img.next(".popup");
+    if (popup.is(":visible")) {
+	popup.hide();
+    } else {
+	var imgoffset = img.offset();
+	popup.offset({"left": imgoffset.left + img.width()/2, "top": imgoffset.top + img.height + 1 });
+	popup.show();
+    }
+}
+
 function init_users() {
-    
-    $(".user").append(
-		      $("<img src='images/menu_arrow.png'").bind("click", show_usermenu)
-		      );
+    $("td.user:not(:has(a))").append($("<img class=\"imageButton\" src=\"images/menu_arrow.png\"/>"))
+	.append(function(i, html){
+		var uname = html.substring(0, html.indexOf("<img"));
+		var menu = $("<div class=\"popup\"><div><a href=\"userprofile.html?" + uname + "\">View Info</a>"
+			     + "</div><br/><div>Chat</div></div>").hide();
+		return menu;
+	    });
+    $(".user .popup div:eq(1)").bind("click", function(evt){start_chat($(evt.target).parent().parent().text())});
+    $(".user .imageButton").bind("click", show_usermenu);
 }
 
 function empty_if_none(player, id, pos) {
@@ -40,11 +57,11 @@ function add_table(v) {
 	kibcount = 0
     }
     $("#table_list").append("<tr id='table_" + id + "' class='table'>" 
-			    + "<td class='player'>" + empty_if_none(v.N, id, "N") + "</td>" 
-			    + "<td class='player'>" + empty_if_none(v.S, id, "S") + "</td>" 
-			    + "<td class='player'>" + empty_if_none(v.E, id, "E") + "</td>" 
-			    + "<td class='player'>" + empty_if_none(v.W, id, "W") + "</td>" 
-			    + "<td class='player'><a href='table.html?" + id + "'>" 
+			    + "<td class='user'>" + empty_if_none(v.N, id, "N") + "</td>" 
+			    + "<td class='user'>" + empty_if_none(v.S, id, "S") + "</td>" 
+			    + "<td class='user'>" + empty_if_none(v.E, id, "E") + "</td>" 
+			    + "<td class='user'>" + empty_if_none(v.W, id, "W") + "</td>" 
+			    + "<td class='user'><a href='table.html?" + id + "'>" 
 			                  + kibcount + "</a></td></tr>");
 }
 

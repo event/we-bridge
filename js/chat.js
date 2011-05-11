@@ -158,13 +158,16 @@ function remove_chat(wid) {
     $(".room").filter(function(idx){return $(this).data("wid") == wid}).remove();
 }
 
-function onuserclick() {
-    var uname = $(this).text();
-    var wid = uname;
+function start_chat(nametxt) {
+    var wid = nametxt;
     if (wid.indexOf("@") < 0) {
 	wid += "@gmail.com";
     }
-    add_chat(wid, uname, true);
+    add_chat(wid, nametxt, true);
+}
+
+function onuserclick() {
+    start_chat($(this).text());
 }
 
 function stop_propagation(e) { 
