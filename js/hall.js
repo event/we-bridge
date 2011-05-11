@@ -25,7 +25,7 @@ function show_usermenu(evt) {
 	popup.hide();
     } else {
 	var imgoffset = img.offset();
-	popup.offset({"left": imgoffset.left + img.width()/2, "top": imgoffset.top + img.height + 1 });
+	popup.css({"left": imgoffset.left + img.width()/2, "top": imgoffset.top + img.height + 1 });
 	popup.show();
     }
 }
@@ -35,10 +35,16 @@ function init_users() {
 	.append(function(i, html){
 		var uname = html.substring(0, html.indexOf("<img"));
 		var menu = $("<div class=\"popup\"><div><a href=\"userprofile.html?" + uname + "\">View Info</a>"
-			     + "</div><br/><div>Chat</div></div>").hide();
+			     + "</div><div><a class=\"chstart\" href=\"#\">Send Message</a></div></div>").hide();
 		return menu;
 	    });
-    $(".user .popup div:eq(1)").bind("click", function(evt){start_chat($(evt.target).parent().parent().text())});
+    $(".user .popup div a.chstart")
+	.bind("click", function(evt){
+		var popup = $(evt.target).parent().parent();
+		var html = popup.parent().html();
+		start_chat(html.substring(0, html.indexOf("<img")));
+		popup.hide();
+		    });
     $(".user .imageButton").bind("click", show_usermenu);
 }
 

@@ -51,7 +51,7 @@
     right: 0; 
     bottom: 29px;
     display: none;	
-    width: 160px;
+
     border: 1px solid #555;
     background: #fff;
     overflow: hidden;
@@ -83,10 +83,12 @@
     cursor: pointer;
     margin: 0;
     height: 25px;
+    white-space: nowrap;
 }
 
 .roompanel h3 img { 
     float: right;
+    margin-left: 3px;
 }
 
 .roompanel ul{
