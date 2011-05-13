@@ -377,11 +377,43 @@ function end_play(v) {
     $(".popup").bPopup();
 }
 
+function show_usermenu(evt) {
+    var img = $(evt.target);
+    var popup = img.next(".umenu_popup");
+    if (popup.is(":visible")) {
+	popup.hide();
+    } else {
+	var imgoffset = img.offset();
+	popup.css({"left": imgoffset.left + img.width()/2, "top": imgoffset.top + img.height + 1 });
+	popup.show();
+    }
+}
+
 function user_sit(v) {
     if (v.tid == tid) {
 	var pos = v.position;
 	var name = v.name;
-	$("." + pos + "_user").text(name);
+	var usel = "." + pos + "_user";
+	$(usel).text(name);
+	if (my_side != $.inArray(pos, sides)) {
+	    $(usel).append($("<img class=\"imageButton\" src=\"images/menu_arrow.png\"/>"))
+		.append(function(i, html){
+			var uname = html.substring(0, html.indexOf("<img"));
+			var menu = $("<div class=\"umenu_popup\"><div><a href=\"userprofile.html?" 
+				     + uname + "\">View Info</a>"
+				     + "</div><div><a class=\"chstart\" href=\"#\">Send Message</a></div></div>")
+			    .hide();
+			return menu;
+		    });
+	    $(".user .popup div a.chstart")
+		.bind("click", function(evt){
+			var popup = $(evt.target).parent().parent();
+			var html = popup.parent().html();
+			start_chat(html.substring(0, html.indexOf("<img")));
+			popup.hide();
+		    });
+	    $(".user .imageButton").bind("click", show_usermenu);
+	}
     }
 }
 

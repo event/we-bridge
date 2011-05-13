@@ -70,14 +70,15 @@ button {
     color: grey;
 }
 
-.popup {
+.umenu_popup {
     position: fixed;
     z-index: 100;
     background-color: lightGrey;
     border-bottom: 1px solid grey;
+    text-align: left;
 }
 
-.popup div {
+.umenu_popup div {
     border: 1px solid grey;
     border-bottom: none;
     padding: 3px;

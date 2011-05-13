@@ -20,7 +20,7 @@ function on_body_load() {
 
 function show_usermenu(evt) {
     var img = $(evt.target);
-    var popup = img.next(".popup");
+    var popup = img.next(".umenu_popup");
     if (popup.is(":visible")) {
 	popup.hide();
     } else {
@@ -34,7 +34,8 @@ function init_users() {
     $("td.user:not(:has(a))").append($("<img class=\"imageButton\" src=\"images/menu_arrow.png\"/>"))
 	.append(function(i, html){
 		var uname = html.substring(0, html.indexOf("<img"));
-		var menu = $("<div class=\"popup\"><div><a href=\"userprofile.html?" + uname + "\">View Info</a>"
+		var menu = $("<div class=\"umenu_popup\"><div><a href=\"userprofile.html?" 
+			     + uname + "\">View Info</a>"
 			     + "</div><div><a class=\"chstart\" href=\"#\">Send Message</a></div></div>").hide();
 		return menu;
 	    });
