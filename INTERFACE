@@ -1,0 +1,62 @@
+This file describes the interface messages between we-bridge server and client.
+
+These messages are sent from server to user by means of Google App Engine Channel API. Each messages describes some change in application state be it new player taking place at the table or declearer claiming certain deal result. Messages are JSON objects. Each message contains 2 fields: 'type' and 'data'. 'type' is string, while 'data' is object.
+
+Messages :
+
+01. Type: 'table.add'
+    Description: Table was added to the table list in the hall
+    Data: 'tid':string - table id
+    	  'N':string - user id of user sitting on North
+	  'E':string - user id of user sitting on East
+	  'S':string - user id of user sitting on South
+	  'W':string - user id of user sitting on West
+	  'kibcount':numerical - number of kibitzers at this table
+
+02. Type: 'table.remove'
+    Description: Table was removed from table list in the hall
+    Data: 'tid':string - table id 
+
+03. Type: 'player.sit'
+    Description: Player took place at some table
+    Data: 'tid':string - table id 
+    	  'name':string - username
+ 	  'position':string - position taken at table. One of 'N', 'E', 'S' or 'W'
+
+04. Type: 'player.leave'
+    Description: Player left some table
+    Data: 'tid':string - table id 
+	  'position':string - position cleared. One of 'N', 'E', 'S' or 'W'
+
+05. Type: 'chat.add'
+    Description: Add new chat window
+    Data: 'wid':string - chat window id, usually chat partner user id
+   	  'title':string - title of the chat window - visible on screen
+
+06. Type: 'chat.message'
+    Description: Message is sent through we-bridge chat system
+    Data: 'wid':string - chat window id. Message will be shown in chat window with this id
+   	  'sender':string - issuer of the message name. Could be empty in certain cases, like in p2p chats
+   	  'message':string - URI encoded message text
+
+07. Type: 'hand'
+    Description: Show cards for particular player
+    Data: 'side':string - side whoose hand is to be shown
+    	  'cards':list of number - each number represents a card. 0 is 2 of clubs, 1 is 3 of club 51 - for ace of spades
+
+08. Type: 'start.bidding'
+    Description: All the places are taken and players can start bidding
+    Data: 'dealer':string - side which starts bidding in this round. One of 'N', 'E', 'S' or 'W'
+
+09. Type: 'bid'
+    Description: Bid done by one of the players
+    Data: 'side':string - bid issuer side. One of 'N', 'E', 'S' or 'W'
+   	  'bid':string - bid itself. Value bids are of the form <level><suit> where level is a number from 1 to 7 and suit is one of 'C', 'D', 'H', 'S', 'Z' for clubs, diamonds, hearts, spades and no-trump. Could also be one of 'pass', 'dbl' or 'rdbl'
+   	  'alert':string - arbitary message accompaning bid
+	  'dbl_mode':string - is double or redouble allowed for next bidder. Could be 'dbl' or 'rdbl'
+
+10. Type: 'start.play'
+    Description: Bidding is over. Start play
+    Data: 'contract':string - which contract is played. Uses same format 
+    	  'lead':string - indicates whose lead is it One of 'N', 'E', 'S' or 'W'
+
