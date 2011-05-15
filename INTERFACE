@@ -57,6 +57,36 @@ Messages :
 
 10. Type: 'start.play'
     Description: Bidding is over. Start play
-    Data: 'contract':string - which contract is played. Uses same format 
+    Data: 'contract':string - <level><suit>[X|XX]. <level> and <suit> same as for bid message. X and XX stand for double and redouble resp.
     	  'lead':string - indicates whose lead is it One of 'N', 'E', 'S' or 'W'
 
+11. Type: 'move'
+    Description: Move done by one of the players
+    Data: 'side':string - the one who done the move. One of 'N', 'E', 'S' or 'W'
+   	  'card':string - card itself. Card is represented by numbers from 0 (2 of clubs) to 51 (ace of spades)
+   	  'allowed':string - suit allowed for move. Sent only to the player whose turn is next. If any suit is allowed then string 'all' is sent
+	  'trick':int - '+1' or '-1' if move changes made a trick for player or opponents resp.
+    
+
+12. Type: 'tricks'
+    Description: Trick count. Usually sent on refresh
+    Data: 'NS':int - trick count for NS
+   	  'EW':int - trick count for EN
+    
+13. Type: 'claim'
+    Description: someone claimed certain number of tricks
+    Data: 'side':string - claimant side. One of 'N', 'E', 'S' or 'W'
+   	  'tricks':int - trick count claim
+   	  'result':int - result which deal would have if claim accepted. For info only
+
+14. Type: 'claim.decline'
+    Description: claim is declined
+    Data: none
+
+15. Type: 'end.play'
+    Description: deal is over
+    Data: 'contract':string - contract played same as in 'start.play' massage + one additional option 'pass' for passed out deals
+    	  'declearer':string - One of 'N', 'E', 'S' or 'W'
+	  'points':int - deal result in points
+	  'tricks':int - how many tricks
+	  'protocol_url':string - url where protocol could be observed
