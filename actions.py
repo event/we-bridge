@@ -124,22 +124,28 @@ def do_move(prof, toput, tid, side, scard) :
     
         start_new_deal(table)
 
-def create_new_deck(table, umap) :
-    p = table.protocol
-    if p is not None :
-        d = p.deal
-        cvuln = d.vulnerability
-        cdealer = d.dealer
-        vinc = 1
-        if cdealer == 3 :
-            vinc += 1
-        dealer = (cdealer + 1) % 4 
-        vuln = (cvuln + vinc) % 4
+def get_next_deck(table, umap) :
+    deal = repo.Protocol.get_unused_deal(umap.values())
+    if deal is None :
+        p = table.protocol
+        if p is not None :
+            d = p.deal
+            cvuln = d.vulnerability
+            cdealer = d.dealer
+            vinc = 1
+            if cdealer == 3 :
+                vinc += 1
+            dealer = (cdealer + 1) % 4 
+            vuln = (cvuln + vinc) % 4
+        else :
+            dealer = 0
+            vuln = 0
+        deck = bridge.get_deck()
+        deal = repo.Deal.create(dict(deck), vuln, dealer) 
     else :
-        dealer = 0
-        vuln = 0
-    deck = bridge.get_deck()
-    deal = repo.Deal.create(dict(deck), vuln, dealer) 
+        deck = deal.todeck()
+        dealer = deal.dealer
+        vuln = deal.vulnerability
     table.protocol = repo.Protocol.create(deal, **umap)
     table.whosmove = bridge.SIDES[dealer]
     return [(umap[s], m('hand', cards = c, side = s)) for s, c in deck], vuln, dealer
@@ -147,7 +153,7 @@ def create_new_deck(table, umap) :
 def start_new_deal(table, umap=None) :
     if umap is None :
         umap = table.usermap()
-    pairs, vuln, dealer = create_new_deck(table, umap)
+    pairs, vuln, dealer = get_next_deck(table, umap)
     bid_starter = m('start.bidding', vuln = vuln, dealer = dealer)
     table.claim = None
     for p in pairs :

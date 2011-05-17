@@ -39,6 +39,9 @@ class Deal(db.Model) :
 
     def hand_by_side(self, side) :
         return self.__getattribute__(side)
+
+    def todeck(self) :
+        return {'N': self.N, 'E': self.E, 'S': self.S, 'W': self.W}
     
 
 class Protocol(db.Model) :
@@ -61,6 +64,23 @@ class Protocol(db.Model) :
     @staticmethod
     def get_by_deal(deal) :
         return Protocol.all().filter('deal =', deal).order('playStarted')
+
+    @staticmethod
+    def get_unused_deal(playerlist) :
+        used = set()
+        for player in playerlist :
+            for p : Protocol.all().filter('N = ', player) :
+               used.add(p.deal) 
+            for p : Protocol.all().filter('S = ', player) :
+               used.add(p.deal) 
+            for p : Protocol.all().filter('E = ', player) :
+               used.add(p.deal) 
+            for p : Protocol.all().filter('W = ', player) :
+               used.add(p.deal) 
+        for d in Deal.all() :
+            if d not in used :
+                return d
+        return None
 
     def round_ended(self) :
         return len(self.moves) % 4 == 0
