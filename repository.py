@@ -66,20 +66,25 @@ class Protocol(db.Model) :
         return Protocol.all().filter('deal =', deal).order('playStarted')
 
     @staticmethod
+    def get_deals(protoq, deals) :
+        proceed = True
+        while proceed :
+            ps = protoq.fetch(100)
+            deals.update([p.deal for p in ps])
+            protoq.with_cursor(protoq.cursor())
+            proceed = ps.size() > 0
+            
+    @staticmethod
     def get_unused_deal(playerlist) :
         used = set()
         for player in playerlist :
-            for p : Protocol.all().filter('N = ', player) :
-               used.add(p.deal) 
-            for p : Protocol.all().filter('S = ', player) :
-               used.add(p.deal) 
-            for p : Protocol.all().filter('E = ', player) :
-               used.add(p.deal) 
-            for p : Protocol.all().filter('W = ', player) :
-               used.add(p.deal) 
-        for d in Deal.all() :
+            Protocol.get_deals(Protocol.all().filter('N = ', player), used)
+            Protocol.get_deals(Protocol.all().filter('S = ', player), used)
+            Protocol.get_deals(Protocol.all().filter('E = ', player), used)
+            Protocol.get_deals(Protocol.all().filter('W = ', player), used)
+        for d in GqlQuery("select __key__ from Deal") :
             if d not in used :
-                return d
+                return db.get(d)
         return None
 
     def round_ended(self) :
