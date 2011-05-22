@@ -18,6 +18,7 @@ import logging
 import random
 import string
 import math
+import time
 
 from google.appengine.dist import use_library
 use_library('django', '1.2')
@@ -31,7 +32,6 @@ import bridge
 import actions
 from utils import *
 import repository as repo
-import time
 
 IMAGE_TEMPLATE = '<img src="images/%s.png" alt="%s"/>'
 
@@ -385,18 +385,19 @@ class ProfileHandler(BaseHandler) :
             
 
 
-class CronHandler(BaseHandler) :
+class CronHandler(webapp.RequestHandler) :
     TIME_LIMIT_SECS = 300
-    def do(self, prof, toput) :
+    def get(self) :
         args = arguments(self.request)
         cmd = args[0]
         if cmd == 'logoff' :
             old = time.strftime('%F %T', time.gmtime(time.time() - self.TIME_LIMIT_SECS))
             logging.info("logging out users older then %s", old)
             profiles = repo.UserProfile.gql('WHERE lastact < DATETIME(:1) AND loggedin = True', old).fetch(100)
-            toput.append(profiles)
-            [p.logoff(toput) for p in  profiles]
+            mes_recepients = []
+            [p.logoff(mes_recepients) for p in  profiles]
             logging.info("Logged off %s users", len(profiles))
+            db.put(profiles + mes_recepients)
 
 
 def main():
