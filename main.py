@@ -66,7 +66,8 @@ class BaseHandler(webapp.RequestHandler) :
                 else :
                     tc[id(v)] = v
         items = list(tc.values())
-        db.put(items)
+        if len(items) > 0 :
+            db.put(items)
 
     def do(self, prof, toput) :
         raise NotImplementedError('Implement!')
