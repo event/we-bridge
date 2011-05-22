@@ -397,7 +397,9 @@ class CronHandler(webapp.RequestHandler) :
             mes_recepients = []
             [p.logoff(mes_recepients) for p in  profiles]
             logging.info("Logged off %s users", len(profiles))
-            db.put(profiles + mes_recepients)
+            models = profiles + mes_recepients
+            if len(models) > 0 :
+                db.put(profiles + mes_recepients)
 
 
 def main():
