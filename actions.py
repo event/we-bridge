@@ -348,12 +348,16 @@ def answer_claim(prof, toput, tid, side, answer) :
     start_new_deal(table)
     
 def leave_table(prof, toput, tid) :
-    tp = repo.TablePlace.get1(user=prof.user, table=db.Key.from_path('Table', int(tid)))
+    tabkey = db.Key.from_path('Table', int(tid));
+    tp = repo.TablePlace.get1(user=prof.user, table=tabkey)
     if tp is None :
         logging.warn('%s tried to leave table %s while not sitting', prof.user, tid)
     else :
         tp.delete()
         toput.append(repo.UserProfile.broadcast(m('player.leave', tid = tid, position = tp.side)))
+        if repo.TablePlace.player_q(tabkey).count(1) == 0 :
+            db.delete(tabkey)
+            toput.append(repo.UserProfile.broadcast(m('table.remove', tid = tid)))
     return lambda x: x.redirect('hall.html')
 
 def logoff(prof, toput) :

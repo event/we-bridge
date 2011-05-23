@@ -249,3 +249,6 @@ class UserProfile(db.Model) :
         for tp in tps :
             table = tp.table
             toput.append(UserProfile.broadcast(m('player.leave', tid = table.key().id(), position = tp.side)))
+            if repo.TablePlace.player_q(table).count(1) == 0 :
+                db.delete(table)
+                toput.append(repo.UserProfile.broadcast(m('table.remove', tid = table.key().id())))
