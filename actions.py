@@ -338,12 +338,13 @@ def answer_claim(prof, toput, tid, side, answer) :
     # partner answered, so deal is done
     toput.append(proto)
     deal = proto.deal
-    proto.tricks = int(table.claim[:2])
-    proto.result = bridge.tricks_to_result(proto.contract, deal.vulnerability, proto.tricks)
+    trickcnt = int(table.claim[:2])
+    proto.tricks = int(proto.contract[0]) + 6 - trickcnt
+    proto.result = bridge.tricks_to_result(proto.contract, deal.vulnerability, trickcnt)
     toput.append(table.broadcast(m('end.play', contract = proto.contract.replace('d', 'x').replace('r','xx')\
                           , declearer = proto.contract[-1]\
                           , points = proto.result\
-                          , tricks = proto.tricks\
+                          , tricks = trickcnt\
                           , protocol_url = 'protocol.html?%s' % deal.key().id())))
     start_new_deal(table)
     
