@@ -70,7 +70,7 @@ class Protocol(db.Model) :
         proceed = True
         while proceed :
             ps = protoq.fetch(100)
-            deals.update([p.deal for p in ps])
+            deals.update([p.deal.key() for p in ps])
             protoq.with_cursor(protoq.cursor())
             proceed = len(ps) > 0
             
