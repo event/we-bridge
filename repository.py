@@ -72,7 +72,7 @@ class Protocol(db.Model) :
             ps = protoq.fetch(100)
             deals.update([p.deal for p in ps])
             protoq.with_cursor(protoq.cursor())
-            proceed = ps.size() > 0
+            proceed = len(ps) > 0
             
     @staticmethod
     def get_unused_deal(playerlist) :
