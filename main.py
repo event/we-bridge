@@ -323,18 +323,26 @@ def protocol2map(curuser, p) :
         return {'N': p.N.nickname(), 'E': p.E.nickname(), 'S': p.S.nickname(), 'W': p.W.nickname(), 
                 'contract': p.contract, 'result': 0
                 , 'highlight': curuser in [p.N, p.E, p.S, p.W] }
-        
-    lead = bridge.num_to_suit_rank(p.moves[0])
-    lead_s = lead[0][0]
-    lead =  IMAGE_TEMPLATE % (lead_s, lead_s.upper()) + lead[1]
-    cntrct = p.contract[:-1].replace('d', 'x').replace('r','xx')
-    cntrct_s = cntrct[1]
-    if cntrct_s == 'Z' :
-        cntrct = cntrct[0] + 'NT' + cntrct[2:]
+    if p.moves is not None and len(p.moves) > 0 :
+        lead = bridge.num_to_suit_rank(p.moves[0])
+        lead_s = lead[0][0]
+        lead =  SafeString(IMAGE_TEMPLATE % (lead_s, lead_s.upper()) + lead[1])
     else :
-        cntrct = cntrct[0] + IMAGE_TEMPLATE % (cntrct_s.lower(), cntrct_s) + cntrct[2:]
+        lead = None
+    if p.contract is not None and len(p.contract) > 0 :
+        cntrct = p.contract[:-1].replace('d', 'x').replace('r','xx')
+        cntrct_s = cntrct[1]
+        if cntrct_s == 'Z' :
+            cntrct = SafeString(cntrct[0] + 'NT' + cntrct[2:])
+        else :
+            cntrct = SafeString(cntrct[0] + IMAGE_TEMPLATE % (cntrct_s.lower(), cntrct_s) + cntrct[2:])
+        decl = p.contract[-1]
+    else :
+        cntrct = None
+        decl = None
+
     return {'N': p.N.nickname(), 'E': p.E.nickname(), 'S': p.S.nickname(), 'W': p.W.nickname(), 
-            'contract': cntrct, 'decl': p.contract[-1]
+            'contract': cntrct, 'decl': decl
             , 'lead': lead, 'tricks': '=' if p.tricks == 0 else p.tricks, 'result': p.result
             , 'highlight': curuser in [p.N, p.E, p.S, p.W] }
 
