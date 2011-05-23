@@ -440,7 +440,7 @@ function do_claim() {
     var link =  $("#claim_area a");
     link.HideBubblePopup();
     link.FreezeBubblePopup();
-    var url = "action.json?claim/" + tid + "/" + side + "/" + trick_cnt;
+    var url = "action.json?claim/" + tid + "/" + sides[my_side] + "/" + trick_cnt;
     $.post(url);
 }
 
