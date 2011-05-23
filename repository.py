@@ -41,7 +41,7 @@ class Deal(db.Model) :
         return self.__getattribute__(side)
 
     def todeck(self) :
-        return {'N': self.N, 'E': self.E, 'S': self.S, 'W': self.W}
+        return [('N', self.N), ('E', self.E), ('S', self.S), ('W', self.W)]
     
 
 class Protocol(db.Model) :
@@ -82,7 +82,7 @@ class Protocol(db.Model) :
             Protocol.get_deals(Protocol.all().filter('S = ', player), used)
             Protocol.get_deals(Protocol.all().filter('E = ', player), used)
             Protocol.get_deals(Protocol.all().filter('W = ', player), used)
-        for d in GqlQuery("select __key__ from Deal") :
+        for d in db.GqlQuery("select __key__ from Deal") :
             if d not in used :
                 return db.get(d)
         return None
