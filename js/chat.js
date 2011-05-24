@@ -30,7 +30,6 @@ function init_chat() {
 	$.cookie("we-chat-rooms", JSON.stringify(rooms))
     }
     var messages = JSON.parse($.cookie("we-chat"), rooms);
-    $(".user").bind("dblclick", onuserclick);
     if (messages == null) {
 	return;
     }
@@ -118,8 +117,9 @@ function add_chat(wid, title, open){
 			.bind("click", function(){remove_chat(wid)})))
 	.append($("<ul></ul>").bind("click", stop_propagation))
 	.append(ta);
+    var link = $("<a></a>").addClass("roomname").bind("click", onroomclick).text(title);
     var res = $("<span></span>").data("wid", wid).addClass("room")
-	.append($("<a></a>").addClass("roomname").bind("click", onroomclick).text(title))
+	.append(link)
 	.append(d);
     $("#footpanel").append(res);
     adjust_panel(d);
@@ -131,7 +131,7 @@ function add_chat(wid, title, open){
     rooms.push({"wid": wid, "title": title});
     $.cookie("we-chat-rooms", JSON.stringify(rooms));
     if (open) {
-	res.find("a").click();
+	setTimeout(function(){link.click()}, 100);
     }
     return res;
 }
