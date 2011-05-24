@@ -399,20 +399,23 @@ function user_sit(v) {
 	    $(usel).append($("<img class=\"imageButton\" src=\"images/menu_arrow.png\"/>"))
 		.append(function(i, html){
 			var uname = html.substring(0, html.indexOf("<img"));
+			if (uname.indexOf("@") < 0) {
+			    uname += "@gmail.com";
+			}
 			var menu = $("<div class=\"umenu_popup\"><div><a href=\"userprofile.html?" 
 				     + uname + "\">View Info</a>"
 				     + "</div><div><a class=\"chstart\" href=\"#\">Send Message</a></div></div>")
 			    .hide();
 			return menu;
 		    });
-	    $(".user .popup div a.chstart")
+	    $(usel + " .umenu_popup .chstart")
 		.bind("click", function(evt){
 			var popup = $(evt.target).parent().parent();
 			var html = popup.parent().html();
 			start_chat(html.substring(0, html.indexOf("<img")));
 			popup.hide();
 		    });
-	    $(".user .imageButton").bind("click", show_usermenu);
+	    $(usel + " .imageButton").bind("click", show_usermenu);
 	}
     }
 }
