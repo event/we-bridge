@@ -153,7 +153,7 @@ class Table(db.Model) :
 
 class TablePlace(db.Model) :
     user = db.UserProperty(required=True)
-    side = db.StringProperty(required=True, choices = bridge.SIDES) #None for kibitzers
+    side = db.StringProperty(choices = bridge.SIDES) #None for kibitzers
     table = db.ReferenceProperty(Table, required=True)
     
     @staticmethod
