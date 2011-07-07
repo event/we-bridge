@@ -150,8 +150,9 @@ def get_next_deck(table, umap) :
     table.whosmove = bridge.SIDES[dealer]
     return [(umap[s], m('hand', cards = c, side = s)) for s, c in deck], vuln, dealer
 
-def start_new_deal(table, umap=None) :
-    if table.pcount() < 4 :
+def start_new_deal(table, umap=None, check_tps=True) :
+    if check_tps and table.pcount() < 4 :
+        table.protocol = None
         return
     if umap is None :
         umap = table.usermap()

@@ -255,7 +255,7 @@ class TableHandler(BaseHandler) :
                     if table.pcount() == 3 and table.protocol is None :
                         umap = table.usermap()
                         umap[place] = user
-                        actions.start_new_deal(table, umap)
+                        actions.start_new_deal(table, umap, False)
                     toput.append(table)   
                     self.response.out.write(htmltable(user, place, tid))
                 elif current == user :
