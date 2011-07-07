@@ -89,8 +89,8 @@ def do_move(prof, toput, tid, side, scard) :
     if len(protocol.moves) == 1 :
         dummy_hand = protocol.deal.hand_by_side(dummy)
         umap = table.usermap()
-        del umap[dummy]
-        del umap[protocol.contract[-1]]
+        umap.pop(dummy, None)
+        umap.pop(protocol.contract[-1], None)
         mes = m('hand', cards = dummy_hand, side = dummy)
         for u in umap.itervalues() :
             repo.UserProfile.uenqueue(u, mes)
@@ -100,7 +100,7 @@ def do_move(prof, toput, tid, side, scard) :
     real_move = next
     if next == dummy :
         next = protocol.contract[-1]
-    next_user = umap.pop(next)
+    next_user = umap.pop(next, None)
     if rndend :
         if next in ['N', 'S'] :
             t = 'NS' 
@@ -111,7 +111,7 @@ def do_move(prof, toput, tid, side, scard) :
     mes = m('move', card = card, next = real_move, side = side, trick = t) 
     mover_mes = m('move', card = card, next = real_move, side = side, trick = t, allowed = allowed)
     repo.UserProfile.uenqueue(umap.values(), mes)
-    repo.UserProfile.uenqueue(repo.TablePlace.get1(table=table, side=next).user, mover_mes)
+    repo.UserProfile.uenqueue(next_user, mover_mes)
     if protocol.finished() :
         cntrct = protocol.contract[:-1]
         protocol.result, protocol.tricks = bridge.deal_result(cntrct \
@@ -214,7 +214,7 @@ def do_bid(prof, toput, tid, player, bid, alert=None) :
     protocol.bidding.append(fullbid)
     bid_cnt = len(protocol.bidding)
     umap = table.usermap()
-    part = umap.pop(bridge.SIDES[(cur_side + 2) % 4])
+    part = umap.pop(bridge.SIDES[(cur_side + 2) % 4], None)
     if bid_cnt > 3 and all([b.startswith(bridge.BID_PASS) for b in protocol.bidding[-3:]]) :
         contract, rel_declearer = bridge.get_contract_and_declearer(protocol.bidding)
         deal = protocol.deal

@@ -94,6 +94,8 @@ class Protocol(db.Model) :
         return len(self.moves) == 52
 
     def dummy(self) :
+        if self.contract is None or self.contract == 'pass' :
+            return None
         return bridge.SIDES[(bridge.SIDES.index(self.contract[-1]) + 2) % 4]
 
 class Table(db.Model) :
@@ -195,6 +197,8 @@ class UserProfile(db.Model) :
 
     @staticmethod
     def uenqueue(users, m) :
+        if users is None :
+            return [] 
         if not isinstance(users, list) :
             users = [users]
         res = []
