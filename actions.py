@@ -151,6 +151,8 @@ def get_next_deck(table, umap) :
     return [(umap[s], m('hand', cards = c, side = s)) for s, c in deck], vuln, dealer
 
 def start_new_deal(table, umap=None) :
+    if table.pcount() < 4 :
+        return
     if umap is None :
         umap = table.usermap()
     pairs, vuln, dealer = get_next_deck(table, umap)
@@ -298,19 +300,26 @@ def do_claim(prof, toput, tid, side, tricks_s) :
     claim_res = bridge.tricks_to_result(proto.contract, deal.vulnerability, tricks)
     si = bridge.SIDES.index(side)
     claimant_part = bridge.partner_side(side)
-    umap.pop(side, None)
-    umap.pop(claimant_part, None)
-    x = umap.items()
-    # FIXME: process situation when one or both defenders are not at the table
-    side1, def1 = x[0]
-    side2, def2 = x[1]
     moves = proto.moves
     common_m = [m('hand', cards=hand_left(deal.hand_by_side(side), moves), side=side)
                 , m('hand', cards=hand_left(deal.hand_by_side(claimant_part), moves), side=claimant_part)]
-    toput.append(repo.UserProfile.uenqueue(
-            def1, common_m + [m('hand', cards=hand_left(deal.hand_by_side(side2), moves), side=side2)]))
-    toput.append(repo.UserProfile.uenqueue(
-            def2, common_m + [m('hand', cards=hand_left(deal.hand_by_side(side1), moves), side=side1)]))
+
+    umap.pop(side, None)
+    umap.pop(claimant_part, None)
+    items = umap.items()
+    # FIXME: process situation when one or both defenders are not at the table
+    if len(items) > 0 :
+        side1, def1 = items[0]
+        if len(items) > 1 :
+            side2, def2 = items[1]
+            toput.append(repo.UserProfile.uenqueue(
+                    def1, common_m + [m('hand', cards=hand_left(deal.hand_by_side(side2), moves), side=side2)]))
+            toput.append(repo.UserProfile.uenqueue(
+                    def2, common_m + [m('hand', cards=hand_left(deal.hand_by_side(side1), moves), side=side1)]))
+        else :
+            side2 = bridge.partner_side(side1)
+            toput.append(repo.UserProfile.uenqueue(
+                    def1, common_m + [m('hand', cards=hand_left(deal.hand_by_side(side2), moves), side=side2)]))
     toput.append(table.broadcast(m('claim', side=side, tricks=tricks_s, result=claim_res)))
     
 def answer_claim(prof, toput, tid, side, answer) :
