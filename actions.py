@@ -276,7 +276,7 @@ def do_claim(prof, toput, tid, side, tricks_s) :
         return
     decl = proto.contract[2]
     umap = table.usermap()
-    if decl != side or umap[side] != prof.user :
+    if decl != side or umap.get(side) != prof.user :
         logging.warn('%s@%s/%s tries to claim %s while not in position to', prof.user, tid, side, tricks_s)
         return
 
@@ -298,9 +298,10 @@ def do_claim(prof, toput, tid, side, tricks_s) :
     claim_res = bridge.tricks_to_result(proto.contract, deal.vulnerability, tricks)
     si = bridge.SIDES.index(side)
     claimant_part = bridge.partner_side(side)
-    umap.pop(side)
-    umap.pop(claimant_part)
+    umap.pop(side, None)
+    umap.pop(claimant_part, None)
     x = umap.items()
+    # FIXME: process situation when one or both defenders are not at the table
     side1, def1 = x[0]
     side2, def2 = x[1]
     moves = proto.moves
