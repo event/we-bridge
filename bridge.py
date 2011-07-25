@@ -153,9 +153,15 @@ def valid_card(hand, card, all_moves):
 
 def get_deck() :
     res = range(52)
-    random = rand.Random()
-    random.shuffle(res)
+    rand.shuffle(res)
     return zip(SIDES, [res[i:i + CARDS_IN_HAND] for i in xrange(0, len(res), CARDS_IN_HAND)])
+
+def get_test_deck() :
+    return [('N', [21, 51, 35, 4, 7, 12, 22, 37, 15, 44, 24, 19, 26])
+            , ('E', [27, 41, 1, 16, 30, 32, 25, 34, 28, 29, 14, 2, 11])
+            , ('S', [18, 39, 3, 46, 8, 13, 47, 23, 40, 45, 33, 10, 38])
+            , ('W', [31, 36, 43, 9, 50, 20, 49, 5, 17, 0, 42, 6, 48])]
+
 
 def split_by_suits(hand) :
     def as_str(suit) : 

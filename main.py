@@ -91,15 +91,15 @@ class ActionHandler(BaseHandler):
                 cont(self)
 
 def current_table_state(user, place, table, allow_moves=True) :
-    tid = table.key().id()
+    tkey = table.key()
     umap = table.usermap()
     
-    messages = [m('player.sit', position = p, name = u.nickname(), tid = tid) 
+    messages = [m('player.sit', position = p, name = u.nickname(), tid = str(tkey)) 
                 for p, u in umap.iteritems()]
     p = table.protocol
     if p is None :
         if len(umap) == 4 :
-            logging.warn('4 users @%s, but deal not dealed', tid)
+            logging.warn('4 users @%s, but deal not dealed', tkey)
             actions.start_new_deal(table)
             table.put()
         return messages
@@ -209,10 +209,10 @@ def current_table_state(user, place, table, allow_moves=True) :
         messages.append(m('hand', cards=actions.hand_left(deal.hand_by_side(dummy_side), moves), side=dummy_side))
     return messages
                       
-def htmltable(user, place, tid) :
+def htmltable(user, place, tkey) :
     values = dict([(bridge.relation(p, place), p) for p in bridge.SIDES])
     values['username'] = user.nickname()
-    values['tid'] = tid
+    values['tid'] = str(tkey)
     if place in ['N', 'S'] :
         values['we'] = 'NS'
         values['they'] = 'EW'
@@ -231,15 +231,22 @@ class TableHandler(BaseHandler) :
         if args[0] == 'new' :
             t = repo.Table()
             t.N = user
-            ident = t.put().id()
-            repo.UserProfile.broadcast(m('table.add', tid=ident))
-            self.redirect('table.html?%s/N' % ident)
+            key = t.put()
+            repo.UserProfile.broadcast(m('table.add', tid=str(key)))
+            self.redirect('table.html?%s/N' % key)
+        elif args[0].startswith('newtest') :
+            key = args[0][3:]
+            t = repo.Table(key_name = args[0][3:])
+            t.N = user
+            t.put()
+            self.redirect('table.html?%s/N' % key)
         else :
             prof.connected = False
             toput.append(prof)
-            tid = int(args[0]) 
-            table = repo.Table.get_by_id(tid)
+            key = args[0]
+            table = repo.Table.get(key)
             if table is None :
+                logging.info('get %s failed', key)
                 self.redirect('hall.html')
                 return
             if len(args) > 1 :
@@ -247,7 +254,7 @@ class TableHandler(BaseHandler) :
                 current = table.user_by_side(place)
                 if current is None :
                     nick = user.nickname()
-                    mes = m('player.sit', tid = tid, position = place, name = nick)
+                    mes = m('player.sit', tid = str(key), position = place, name = nick)
                     toput.append(repo.UserProfile.broadcast(mes, user))
                     prof.enqueue(current_table_state(user, place, table))
                     prof.enqueue(mes)
@@ -257,44 +264,45 @@ class TableHandler(BaseHandler) :
                         umap[place] = user
                         actions.start_new_deal(table, umap, False)
                     toput.append(table)   
-                    self.response.out.write(htmltable(user, place, tid))
+                    self.response.out.write(htmltable(user, place, key))
                 elif current == user :
                     prof.enqueue(current_table_state(user, place, table))
                     toput.append(prof)
-                    self.response.out.write(htmltable(user, place, tid))
+                    self.response.out.write(htmltable(user, place, key))
                 else : # user tried to pick someones place
                     self.redirect('hall.html')
             else :
                 place = 'S'
                 toput.append(repo.TablePlace(table=table, user=user))
                 prof.enqueue(current_table_state(user, place, table, False))
-                repo.UserProfile.broadcast(m('player.sit', tid = tid))
-                self.response.out.write(htmltable(user, place, tid))
+                repo.UserProfile.broadcast(m('player.sit', tid = str(key)))
+                self.response.out.write(htmltable(user, place, key))
 
                     
 
-def nick_or_empty(umap, tid, side, cur_user):
+def nick_or_empty(umap, key, side, cur_user):
     if umap.has_key(side) :
         user = umap[side]
         if user == cur_user:
-            return SafeString("<a href=\"table.html?%s/%s\">%s</a>" % (tid, side, user.nickname()))
+            return SafeString("<a href=\"table.html?%s/%s\">%s</a>" % (key, side, user.nickname()))
         else :
             return user.nickname()
     else :
-        return SafeString("<a href=\"table.html?%s/%s\">take a sit</a>" % (tid, side))
+        return SafeString("<a href=\"table.html?%s/%s\">take a sit</a>" % (key, side))
 
 def show_all_tables(cur_user) :
     res = []
     # obvious cache candidate
     for t in repo.Table.all():
-        tid = t.key().id()
-        umap = t.usermap()
-        res.append({'tid': tid
-                    , 'N': nick_or_empty(umap, tid, 'N', cur_user)
-                    , 'E': nick_or_empty(umap, tid, 'E', cur_user)
-                    , 'S': nick_or_empty(umap, tid, 'S', cur_user)
-                    , 'W': nick_or_empty(umap, tid, 'W', cur_user)
-                    , 'kibcount': repo.TablePlace.kibitzer_q(t).count()})
+        key = t.key()
+        if key.name() is None : # named keys are for test tables only
+            umap = t.usermap()
+            res.append({'tid': key
+                        , 'N': nick_or_empty(umap, key, 'N', cur_user)
+                        , 'E': nick_or_empty(umap, key, 'E', cur_user)
+                        , 'S': nick_or_empty(umap, key, 'S', cur_user)
+                        , 'W': nick_or_empty(umap, key, 'W', cur_user)
+                        , 'kibcount': repo.TablePlace.kibitzer_q(t).count()})
     return res
 
 class HallHandler(BaseHandler) :
@@ -350,15 +358,15 @@ class ProtocolHandler(BaseHandler) :
     
     def do(self, prof, toput):
         page = 'protocol.html'
-        dealid = int(self.request.query_string)
-        deal = repo.Deal.get_by_id(dealid)
+        key = self.request.query_string
+        deal = repo.Deal.get(key)
         hands = map(bridge.split_by_suits, [deal.N, deal.E, deal.S, deal.W])
         h_val = dict(zip(bridge.SIDES
                          , [dict(zip(['clubs',  'diamonds', 'hearts', 'spades'], h)) for h in hands]))
 
         protoiter = repo.Protocol.get_by_deal(deal)
         
-        values = {'protocol_id': dealid, 'vuln_EW': deal.vulnerability & bridge.VULN_EW
+        values = {'protocol_id': key, 'vuln_EW': deal.vulnerability & bridge.VULN_EW
                   , 'vuln_NS': deal.vulnerability & bridge.VULN_NS, 'dealer': bridge.SIDES[deal.dealer]
                   , 'records': map(lambda x: protocol2map(prof.user, x), protoiter)}
         values.update(h_val)
