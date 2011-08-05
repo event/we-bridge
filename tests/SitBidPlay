@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head profile="http://selenium-ide.openqa.org/profiles/test-case">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<link rel="selenium.base" href="http://localhost:8080/" />
+<title>SitBidPlay</title>
+</head>
+<body>
+<table cellpadding="1" cellspacing="1" border="1">
+<thead>
+<tr><td rowspan="1" colspan="3">SitBidPlay</td></tr>
+</thead><tbody>
+<tr>
+	<td>click</td>
+	<td>id=bid_1D</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForValue</td>
+	<td>xpath=//table[@id='bidding_area']//tr[2]/td[2]</td>
+	<td>pass</td>
+</tr>
+<tr>
+	<td>waitForValue</td>
+	<td>xpath=//table[@id='bidding_area']//tr[2]/td[3]</td>
+	<td>pass</td>
+</tr>
+<tr>
+	<td>waitForValue</td>
+	<td>xpath=//table[@id='bidding_area']//tr[2]/td[4]</td>
+	<td>pass</td>
+</tr>
+<tr>
+	<td>assertNotVisible</td>
+	<td>id=bidbox</td>
+	<td></td>
+</tr>
+<tr>
+	<td>assertVisible</td>
+	<td>id=lead_area</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='W_lead']/div[@id='card_14']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_13</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_13</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='E_lead']/div[@id='card_20']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_21</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_21</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_15</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_15</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='W_lead']/div[@id='card_25']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_18</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_18</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='E_lead']/div[@id='card_17']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='W_lead']/div[@id='card_16']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_23</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_23</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='E_lead']/div[@id='card_42']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_19</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_19</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_3</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_3</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='E_lead']/div[@id='card_0']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_7</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_7</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='W_lead']/div[@id='card_11']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='W_lead']/div[@id='card_41']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_39</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_39</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='E_lead']/div[@id='card_48']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_51</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_51</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_26</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_26</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='W_lead']/div[@id='card_27']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_38</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_38</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='E_lead']/div[@id='card_31']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_33</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_33</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='E_lead']/div[@id='card_36']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_37</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_37</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='W_lead']/div[@id='card_28']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_35</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_35</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='W_lead']/div[@id='card_29']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_40</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_40</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>\xpath=//div[@id='E_lead']/div[@id='card_5']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_12</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_12</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='W_lead']/div[@id='card_1']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_8</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_8</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='E_lead']/div[@id='card_6']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_4</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_4</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='W_lead']/div[@id='card_2']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_10</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_10</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='E_lead']/div[@id='card_9']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_45</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_45</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='E_lead']/div[@id='card_49']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_44</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_44</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='W_lead']/div[@id='card_30']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='E_lead']/div[@id='card_50']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_22</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_22</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='W_lead']/div[@id='card_32']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_46</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_46</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_24</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_24</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='W_lead']/div[@id='card_34']</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_47</td>
+	<td></td>
+</tr>
+<tr>
+	<td>click</td>
+	<td>id=card_47</td>
+	<td></td>
+</tr>
+<tr>
+	<td>waitForElementPresent</td>
+	<td>xpath=//div[@id='E_lead']/div[@id='card_43']</td>
+	<td></td>
+</tr>
+<tr>
+	<td></td>
+	<td></td>
+	<td></td>
+</tr>
+</tbody></table>
+</body>
+</html>
