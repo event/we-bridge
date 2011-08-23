@@ -15,6 +15,7 @@
 # along with Webridge.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
+import sys
 
 from google.appengine.ext import db
 from google.appengine.api import users, channel
@@ -226,12 +227,13 @@ class UserProfile(db.Model) :
     def enqueue(self, m) :
         if not self.loggedin :
             return False
-        logging.info('%s: %s', self.user.nickname(), m)
+        logging.info('%s - %s: %s', self.user.nickname(), self.connected, m)
         if self.connected :
             try :
                 channel.send_message(self.chanid, json.dumps(m))
-            except channel.InvalidChannelClientIdError :
-                logging.warn('broadcast to %s failed', self.user.nickname())
+            except :
+                einfo = sys.exc_info()
+                logging.warn('send to %s failed: %s - %s', self.user.nickname(), einfo[0], einfo[1])
                 self.connected = False
             else :
                 return False
@@ -242,6 +244,7 @@ class UserProfile(db.Model) :
         return True
 
     def send_stored_messages(self) :
+        logging.warn('%s: release messages %s', self.user, self.messages)
         channel.send_message(self.chanid, '[' + ','.join(self.messages) + ']')
         self.messages = []
         self.connected = True

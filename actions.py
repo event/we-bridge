@@ -122,7 +122,7 @@ def do_move(prof, toput, key, side, scard) :
                               , tricks = protocol.tricks\
                               , protocol_url = 'protocol.html?%s' % deal.key().id()))
     
-        start_new_deal(table)
+        start_new_deal(table, toput)
 
 def get_next_deck(table, umap) :
     testtable = table.key().name().startswith('test')
@@ -157,7 +157,7 @@ def get_next_deck(table, umap) :
     table.whosmove = bridge.SIDES[dealer]
     return [(umap[s], m('hand', cards = c, side = s)) for s, c in deck], vuln, dealer
 
-def start_new_deal(table, umap=None, check_tps=True) :
+def start_new_deal(table, toput, umap=None, check_tps=True) :
     if check_tps and table.pcount() < 4 :
         table.protocol = None
         return
@@ -167,7 +167,7 @@ def start_new_deal(table, umap=None, check_tps=True) :
     bid_starter = m('start.bidding', vuln = vuln, dealer = dealer)
     table.claim = None
     for p in pairs :
-        repo.UserProfile.uenqueue(p[0], [p[1], bid_starter])
+        toput += repo.UserProfile.uenqueue(p[0], [p[1], bid_starter])
 
 def bid_allowed(bidding, bid, contract) :
     if contract is not None :
@@ -238,7 +238,7 @@ def do_bid(prof, toput, key, player, bid, alert=None) :
                                  , points = protocol.result
                                  , tricks = protocol.tricks
                                  , protocol_url = 'protocol.html?%s' % deal.key().id())])
-            start_new_deal(table)
+            start_new_deal(table, toput)
             return
 
         declearer = (rel_declearer + protocol.deal.dealer) % 4
@@ -364,7 +364,7 @@ def answer_claim(prof, toput, key, side, answer) :
                           , points = proto.result\
                           , tricks = trickcnt\
                           , protocol_url = 'protocol.html?%s' % deal.key())))
-    start_new_deal(table)
+    start_new_deal(table, toput)
     
 def leave_table(prof, toput, key) :
     keylit = db.Key(key)

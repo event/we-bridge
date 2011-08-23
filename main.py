@@ -100,7 +100,7 @@ def current_table_state(user, place, table, allow_moves=True) :
     if p is None :
         if len(umap) == 4 :
             logging.warn('4 users @%s, but deal not dealed', tkey)
-            actions.start_new_deal(table)
+            actions.start_new_deal(table, [])
             table.put()
         return messages
     deal = p.deal
@@ -235,10 +235,9 @@ class TableHandler(BaseHandler) :
             repo.UserProfile.broadcast(m('table.add', tid=str(key)))
             self.redirect('table.html?%s/N' % key)
         elif args[0].startswith('newtest') :
-            key = args[0][3:]
             t = repo.Table(key_name = args[0][3:])
             t.N = user
-            t.put()
+            key = t.put()
             self.redirect('table.html?%s/N' % key)
         else :
             prof.connected = False
@@ -262,7 +261,8 @@ class TableHandler(BaseHandler) :
                     if table.pcount() == 3 and table.protocol is None :
                         umap = table.usermap()
                         umap[place] = user
-                        actions.start_new_deal(table, umap, False)
+                        prof.put()
+                        actions.start_new_deal(table, toput, umap, False)
                     toput.append(table)   
                     self.response.out.write(htmltable(user, place, key))
                 elif current == user :
